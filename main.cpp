@@ -12,7 +12,8 @@
 #include <fstream>
 #include <cmath>
 
-#include "Shader.h"
+#include "worldmap.h"
+#include "shader.h"
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
@@ -44,7 +45,7 @@ int main(void) {
         return -1;
     }
 
-    glViewport(0, 0, 800, 600);
+    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
     float cubeVertices[24];
     for (int i = 0; i < 8; ++i) {
@@ -90,18 +91,35 @@ int main(void) {
     Shader shader = Shader("shaders\\shader.vs", "shaders\\shader.fs");
 
     glClearColor(0.2f, 0.1f, 0.3f, 1.0f);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glEnable(GL_DEPTH_TEST);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+
+    glm::vec3 cubePositions[] = {
+      glm::vec3( 0.0f,  0.0f,  0.0f),
+      glm::vec3( 2.0f,  5.0f, -15.0f),
+      glm::vec3(-1.5f, -2.2f, -2.5f),
+      glm::vec3(-3.8f, -2.0f, -12.3f),
+      glm::vec3( 2.4f, -0.4f, -3.5f),
+      glm::vec3(-1.7f,  3.0f, -7.5f),
+      glm::vec3( 1.3f, -2.0f, -2.5f),
+      glm::vec3( 1.5f,  2.0f, -2.5f),
+      glm::vec3( 1.5f,  0.2f, -1.5f),
+      glm::vec3(-1.3f,  1.0f, -1.5f)
+    };
+
+    shader.use();
 
     while(!glfwWindowShouldClose(window)) {
         processInput(window);
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        float radius = 10.0f;
+        float radius = 5.0f;
         float camX = sin(glfwGetTime()) * radius;
         float camZ = cos(glfwGetTime()) * radius;
 
-        glm::mat4 model = glm::mat4();
+
         glm::mat4 view = glm::lookAt(glm::vec3(camX, 3.0f, camZ),
                                      glm::vec3(0.0f, 0.0f, 0.0f),
                                      glm::vec3(0.0f, 1.0f, 0.0f));
@@ -110,11 +128,16 @@ int main(void) {
         // Draw the cube
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
-        shader.setMat4("model", model);
-        shader.use();
+
         glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+        for(int i = 0; i < 10; i++) {
+            glm::mat4 model;
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            shader.setMat4("model", model);
+            glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        }
 
         glfwPollEvents();
         glfwSwapBuffers(window);

@@ -13,6 +13,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
+					<Add directory="include" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -22,6 +23,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -44,7 +46,12 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="include/shader.h" />
+		<Unit filename="include/worldmap.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="shaders/shader.fs" />
+		<Unit filename="shaders/shader.vs" />
+		<Unit filename="src/shader.cpp" />
+		<Unit filename="src/worldmap.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

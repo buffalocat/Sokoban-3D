@@ -20,12 +20,23 @@
 
 #include <vector>
 #include <memory>
+#include <unordered_map>
 
 #include "shader.h"
 
 struct Point {
     int x;
     int y;
+};
+
+bool operator==(const Point& a, const Point& b);
+
+struct PointHash {
+public:
+    std::size_t operator()(const Point &p) const
+    {
+        return (p.x << 8) + p.y;
+    }
 };
 
 enum class Layer {
@@ -167,7 +178,7 @@ public:
     std::unique_ptr<GameObject> take_quiet(Point, Layer, unsigned int id);
     void put(std::unique_ptr<GameObject>, DeltaFrame*);
     void put_quiet(std::unique_ptr<GameObject>);
-    void move_player(GameObject* player, Point dir);
+    void try_move(std::unordered_map<Point, unsigned int, PointHash>& to_check, Point dir);
     void draw(Shader*);
 
 private:

@@ -23,6 +23,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <unordered_map>
 
 #include "worldmap.h"
 #include "shader.h"
@@ -33,7 +34,6 @@ const int SCREEN_HEIGHT = 600;
 
 /*
 void processInput(GLFWwindow *window, Point& pos) {
-
 }*/
 
 int main(void) {
@@ -115,6 +115,9 @@ int main(void) {
     auto player = std::make_unique<Car>(5,5);
     Car* player_ptr = player.get();
     world_map.put_quiet(std::move(player));
+    world_map.put_quiet(std::make_unique<Block>(8,8));
+    world_map.put_quiet(std::make_unique<Block>(7,8));
+    world_map.put_quiet(std::make_unique<Block>(5,8));
     for (int i = 3; i != 8; ++i) {
         world_map.put_quiet(std::make_unique<Wall>(2,i));
         world_map.put_quiet(std::make_unique<Wall>(i,3));
@@ -128,22 +131,50 @@ int main(void) {
     glm::mat4 view;
     glm::mat4 projection;
 
+    float cam_radius = 14.0f;
+    float cam_incline = 1.0f;
+    float cam_rotation = 0.0f;
+    float cam_x;
+    float cam_y;
+    float cam_z;
+
     while(!glfwWindowShouldClose(window)) {
         // Handle input
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, true);
-        } else if (cooldown == 0) {
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+                cam_rotation -= .01f;
+            }
+            if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+                cam_rotation += .01f;
+            }
+            if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+                cam_incline += .01f;
+            }
+            if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+                cam_incline -= .01f;
+        }
+        if (cooldown == 0) {
             if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-                world_map.move_player(player_ptr, Point {1,0});
+                std::unordered_map<Point, unsigned int, PointHash> to_move;
+                to_move[player_ptr->pos()] = player_ptr->id();
+                world_map.try_move(to_move, Point {1,0});
                 cooldown = 10;
             } else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-                world_map.move_player(player_ptr, Point {-1,0});
+                std::unordered_map<Point, unsigned int, PointHash> to_move;
+                to_move[player_ptr->pos()] = player_ptr->id();
+                world_map.try_move(to_move, Point {-1,0});
                 cooldown = 10;
             } else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-                world_map.move_player(player_ptr, Point {0,-1});
+                std::unordered_map<Point, unsigned int, PointHash> to_move;
+                to_move[player_ptr->pos()] = player_ptr->id();
+                world_map.try_move(to_move, Point {0,-1});
                 cooldown = 10;
             } else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-                world_map.move_player(player_ptr, Point {0,1});
+                std::unordered_map<Point, unsigned int, PointHash> to_move;
+                to_move[player_ptr->pos()] = player_ptr->id();
+                world_map.try_move(to_move, Point {0,1});
                 cooldown = 10;
             }
         } else {
@@ -152,14 +183,15 @@ int main(void) {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        /*float radius = 10.0f;
-        float camX = sin(glfwGetTime()/3) * radius;
-        float camZ = cos(glfwGetTime()/3) * radius;*/
+        cam_x = cos(cam_incline) * sin(cam_rotation) * cam_radius;
+        cam_y = sin(cam_incline) * cam_radius;
+        cam_z = cos(cam_incline) * cos(cam_rotation) * cam_radius;
 
-        view = glm::lookAt(glm::vec3(0.0f, 10.0f, 10.0f),
+        view = glm::lookAt(glm::vec3(cam_x, cam_y, cam_z),
                            glm::vec3(0.0f, 0.0f, 0.0f),
                            glm::vec3(0.0f, 1.0f, 0.0f));
-        projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT, 0.1f, 100.0f);
+        view = glm::translate(view, glm::vec3(0.5, 0.0, 0.5));
+        projection = glm::perspective(glm::radians(60.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT, 0.1f, 100.0f);
 
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);

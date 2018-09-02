@@ -1,9 +1,15 @@
 #include "worldmap.h"
 #include <iostream>
+#include <unordered_map>
 
 const glm::vec4 GREEN = glm::vec4(0.6f, 0.9f, 0.7f, 1.0f);
 const glm::vec4 PINK = glm::vec4(0.9f, 0.6f, 0.7f, 1.0f);
 const glm::vec4 BLACK = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+bool operator==(const Point& a, const Point& b)
+{
+    return a.x == b.x && a.y == b.y;
+}
 
 unsigned int GameObject::GLOBAL_ID_COUNT = 0;
 
@@ -251,11 +257,37 @@ void WorldMap::put_quiet(std::unique_ptr<GameObject> object) {
     }
 }
 
-void WorldMap::move_player(GameObject* player, Point dir) {
-    Point cur_pos = player->pos();
-    Point new_pos {cur_pos.x + dir.x, cur_pos.y + dir.y};
-    if (valid(new_pos) && !view(new_pos, player->layer())) {
-        auto object = take_quiet(cur_pos, player->layer(), player->id());
+void WorldMap::try_move(std::unordered_map<Point ,unsigned int, PointHash>& to_move, Point dir) {
+    std::vector<std::pair<Point, unsigned int>> to_check;
+    for (auto pos_id : to_move) {
+        to_check.push_back(pos_id);
+    }
+    Point cur_pos, new_pos;
+    unsigned int id;
+    while (!to_check.empty()) {
+        std::tie(cur_pos, id) = to_check.back();
+        to_check.pop_back();
+        new_pos = Point {cur_pos.x + dir.x, cur_pos.y + dir.y};
+        if (!valid(new_pos)) {
+            return;
+        }
+        const GameObject* obj = view(new_pos, Layer::Solid);
+        if (obj) {
+            if (obj->pushable()) {
+                if (to_move.count(obj->pos()) == 0) {
+                    auto pos_id = std::make_pair<Point, unsigned int>(obj->pos(), obj->id());
+                    to_move.insert(pos_id);
+                    to_check.push_back(pos_id);
+                }
+            } else {
+                return;
+            }
+        }
+    }
+    for (auto pos_id : to_move) {
+        std::tie(cur_pos, id) = pos_id;
+        // Hardcode layer for now - it might be more complicated later.
+        auto object = take_quiet(cur_pos, Layer::Solid, id);
         // We'll implement deltas soon, but not yet
         object->shift_pos(dir, nullptr);
         put_quiet(std::move(object));

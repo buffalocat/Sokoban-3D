@@ -1,15 +1,32 @@
 #ifndef WORLDMAP_H
 #define WORLDMAP_H
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma GCC diagnostic ignored "-Weffc++"
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wswitch-default"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wmissing-declarations"
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#pragma GCC diagnostic pop
+
 #include <vector>
 #include <memory>
+
+#include "shader.h"
 
 struct Point {
     int x;
     int y;
 };
-
-Point negate(Point p);
 
 enum class Layer {
     Floor,
@@ -50,15 +67,47 @@ private:
 class GameObject {
 public:
     GameObject(int x, int y);
+    virtual ~GameObject();
     unsigned int id() const;
-    Layer layer() const;
     Point pos() const;
     void shift_pos(Point d, DeltaFrame*);
+    virtual void draw(Shader*) = 0;
+    // This should be virtual, probably, but for now it's not
+    Layer layer() const;
+    virtual bool pushable() const = 0;
+    static unsigned int GLOBAL_ID_COUNT;
 
-private:
+protected:
+    unsigned int gen_id();
     unsigned int id_;
-    Layer layer_;
     Point pos_;
+};
+
+class Car: public GameObject {
+public:
+    Car(int x, int y);
+    ~Car();
+    void draw(Shader*);
+    Layer layer() const;
+    bool pushable() const;
+};
+
+class Block: public GameObject {
+public:
+    Block(int x, int y);
+    ~Block();
+    void draw(Shader*);
+    Layer layer() const;
+    bool pushable() const;
+};
+
+class Wall: public GameObject {
+public:
+    Wall(int x, int y);
+    ~Wall();
+    void draw(Shader*);
+    Layer layer() const;
+    bool pushable() const;
 };
 
 class CreationDelta: public Delta {
@@ -102,7 +151,7 @@ public:
     std::unique_ptr<GameObject> take_quiet(Layer, unsigned int id);
     void put(std::unique_ptr<GameObject>, DeltaFrame*);
     void put_quiet(std::unique_ptr<GameObject>);
-
+    void draw(Shader*);
 
 private:
     std::array<std::vector<std::unique_ptr<GameObject>>, static_cast<unsigned int>(Layer::COUNT)> layers_;
@@ -119,6 +168,7 @@ public:
     void put(std::unique_ptr<GameObject>, DeltaFrame*);
     void put_quiet(std::unique_ptr<GameObject>);
     void move_player(GameObject* player, Point dir);
+    void draw(Shader*);
 
 private:
     int width_;

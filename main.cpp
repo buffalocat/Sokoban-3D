@@ -107,32 +107,21 @@ int main(void) {
     glEnable(GL_DEPTH_TEST);
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-
-    /*glm::vec3 cubePositions[] = {
-      glm::vec3( 0.0f,  0.0f,  0.0f),
-      glm::vec3( 2.0f,  5.0f, -15.0f),
-      glm::vec3(-1.5f, -2.2f, -2.5f),
-      glm::vec3(-3.8f, -2.0f, -12.3f),
-      glm::vec3( 2.4f, -0.4f, -3.5f),
-      glm::vec3(-1.7f,  3.0f, -7.5f),
-      glm::vec3( 1.3f, -2.0f, -2.5f),
-      glm::vec3( 1.5f,  2.0f, -2.5f),
-      glm::vec3( 1.5f,  0.2f, -1.5f),
-      glm::vec3(-1.3f,  1.0f, -1.5f)
-    };*/
-
     shader.use();
 
     // Init game logic stuff
 
     WorldMap world_map(10, 10);
-    auto player = std::make_unique<GameObject>(5,5);
-    GameObject* player_ptr = player.get();
+    auto player = std::make_unique<Car>(5,5);
+    Car* player_ptr = player.get();
     world_map.put_quiet(std::move(player));
+    for (int i = 3; i != 8; ++i) {
+        world_map.put_quiet(std::make_unique<Wall>(2,i));
+        world_map.put_quiet(std::make_unique<Wall>(i,3));
+    }
+
     int cooldown = 0;
 
-    const glm::vec4 GREEN = glm::vec4(0.6f, 0.9f, 0.7f, 1.0f);
-    const glm::vec4 PINK = glm::vec4(0.9f, 0.6f, 0.7f, 1.0f);
     const glm::vec4 YELLOW = glm::vec4(0.9f, 0.9f, 0.4f, 1.0f);
 
     glm::mat4 model;
@@ -163,32 +152,19 @@ int main(void) {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        float radius = 10.0f;
+        /*float radius = 10.0f;
         float camX = sin(glfwGetTime()/3) * radius;
-        float camZ = cos(glfwGetTime()/3) * radius;
+        float camZ = cos(glfwGetTime()/3) * radius;*/
 
-        Point player_pos = player_ptr->pos();
-
-        model = glm::translate(glm::mat4(), glm::vec3(player_pos.x - 5.0f, 0.5f, player_pos.y - 5.0f));
-        view = glm::lookAt(glm::vec3(camX, 3.0f, camZ),
+        view = glm::lookAt(glm::vec3(0.0f, 10.0f, 10.0f),
                            glm::vec3(0.0f, 0.0f, 0.0f),
                            glm::vec3(0.0f, 1.0f, 0.0f));
         projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT, 0.1f, 100.0f);
 
-        // Draw the player cube
-        shader.setMat4("model", model);
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
 
-
-        if (camX * camZ > 0) {
-            shader.setVec4("color", GREEN);
-        } else {
-            shader.setVec4("color", PINK);
-        }
-
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+        world_map.draw(&shader);
 
         // Draw the floor
         model = glm::translate(glm::mat4(), glm::vec3(-0.5, -0.1, -0.5));
@@ -197,16 +173,6 @@ int main(void) {
 
         shader.setVec4("color", YELLOW);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-
-
-        /*for(int i = 0; i < 10; i++) {
-            glm::mat4 model;
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            shader.setMat4("model", model);
-            glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-        }*/
 
         glfwPollEvents();
         glfwSwapBuffers(window);

@@ -1,13 +1,11 @@
 #include "worldmap.h"
+#include <iostream>
 
 Point negate(Point p) {
-    return Point {.x = -p.x, .y = -p.y};
+    return Point {-p.x, -p.y};
 }
 
-GameObject::GameObject(int x, int y) {
-    pos_ = {.x = x, .y = y};
-
-}
+GameObject::GameObject(int x, int y): id_ (1), layer_(Layer::Solid), pos_({x, y}) {}
 
 unsigned int GameObject::id() const {
     return id_;
@@ -29,9 +27,7 @@ void GameObject::shift_pos(Point d, DeltaFrame* delta_frame) {
     }
 }
 
-DeltaFrame::DeltaFrame() {
-    std::vector<std::unique_ptr<Delta>> deltas_();
-}
+DeltaFrame::DeltaFrame(): deltas_ {} {}
 
 void DeltaFrame::revert(WorldMap* world_map) {
     for (auto& delta : deltas_) {
@@ -47,46 +43,33 @@ bool DeltaFrame::trivial() {
     return deltas_.empty();
 }
 
-DeletionDelta::DeletionDelta(std::unique_ptr<GameObject> object) {
-    object_ = std::move(object);
-}
+DeletionDelta::DeletionDelta(std::unique_ptr<GameObject> object): object_ {std::move(object)} {}
 
 void DeletionDelta::revert(WorldMap* world_map) {
     world_map->put_quiet(std::move(object_));
 }
 
-CreationDelta::CreationDelta(GameObject const& object) {
-    pos_ = object.pos();
-    layer_ = object.layer();
-    id_ = object.id();
-}
+CreationDelta::CreationDelta(GameObject const& object): pos_ {object.pos()}, layer_ {object.layer()}, id_ {object.id()} {}
 
 void CreationDelta::revert(WorldMap* world_map) {
     world_map->take_quiet(pos_, layer_, id_);
 }
 
-MotionDelta::MotionDelta(GameObject const& object, Point d) {
-    pos_ = object.pos();
-    layer_ = object.layer();
-    id_ = object.id();
-    d_ = d;
-}
+MotionDelta::MotionDelta(GameObject const& object, Point d): pos_ {object.pos()}, layer_ {object.layer()}, id_ {object.id()}, d_ {d} {}
 
 void MotionDelta::revert(WorldMap* world_map) {
     auto object = world_map->take_quiet(pos_, layer_, id_);
     // We don't want to create any deltas while undoing a delta (yet, at least)
-    object->shift_pos(negate(d_), NULL);
+    object->shift_pos(negate(d_), nullptr);
     world_map->put_quiet(std::move(object));
 }
 
-MapCell::MapCell() {
-    std::array<std::vector<std::unique_ptr<GameObject>>, static_cast<unsigned int>(Layer::COUNT)> layers_;
-}
+MapCell::MapCell(): layers_(std::array<std::vector<std::unique_ptr<GameObject>>, static_cast<unsigned int>(Layer::COUNT)>()) {}
 
 // NULL means this Layer of this Cell was empty (this may happen often)
 GameObject const* MapCell::view(Layer layer) {
     if (layers_[static_cast<unsigned int>(layer)].empty()) {
-        return NULL;
+        return nullptr;
     } else {
         return layers_[static_cast<unsigned int>(layer)].front().get();
     }
@@ -136,13 +119,10 @@ void MapCell::put_quiet(std::unique_ptr<GameObject> object) {
     layers_[static_cast<unsigned int>(object->layer())].push_back(std::move(object));
 }
 
-WorldMap::WorldMap(int width, int height) {
-    width_ = width;
-    height_ = height;
-    std::vector<std::vector<MapCell>> map_;
-    for (int i = 0; i < width; ++i) {
-        map_.push_back(std::vector<MapCell>());
-        for (int j = 0; j < height; ++j) {
+WorldMap::WorldMap(int width, int height): width_ {width}, height_ {height}, map_ {} {
+    for (int i = 0; i != width; ++i) {
+        map_.push_back({});
+        for (int j = 0; j != height; ++j) {
             map_[i].push_back(MapCell());
         }
     }
@@ -188,10 +168,29 @@ std::unique_ptr<GameObject> WorldMap::take_quiet(Point pos, Layer layer, unsigne
 
 void WorldMap::put(std::unique_ptr<GameObject> object, DeltaFrame* delta_frame) {
     auto pos = object->pos();
-    map_[pos.x][pos.y].put(std::move(object), delta_frame);
+    if (valid(pos)) {
+        map_[pos.x][pos.y].put(std::move(object), delta_frame);
+    } else {
+        throw "Tried to put an object in an invalid location!";
+    }
 }
 
 void WorldMap::put_quiet(std::unique_ptr<GameObject> object) {
     auto pos = object->pos();
-    map_[pos.x][pos.y].put_quiet(std::move(object));
+    if (valid(pos)) {
+        map_[pos.x][pos.y].put_quiet(std::move(object));
+    } else {
+        throw "Tried to (quietly) put an object in an invalid location!";
+    }
+}
+
+void WorldMap::move_player(GameObject* player, Point dir) {
+    Point cur_pos = player->pos();
+    Point new_pos {cur_pos.x + dir.x, cur_pos.y + dir.y};
+    if (valid(new_pos)) {
+        auto object = take_quiet(cur_pos, player->layer(), player->id());
+        // We'll implement deltas soon, but not yet
+        object->shift_pos(dir, nullptr);
+        put_quiet(std::move(object));
+    }
 }

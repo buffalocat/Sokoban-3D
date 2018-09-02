@@ -118,6 +118,7 @@ public:
     std::unique_ptr<GameObject> take_quiet(Point, Layer, unsigned int id);
     void put(std::unique_ptr<GameObject>, DeltaFrame*);
     void put_quiet(std::unique_ptr<GameObject>);
+    void move_player(GameObject* player, Point dir);
 
 private:
     int width_;

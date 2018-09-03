@@ -91,6 +91,26 @@ void Wall::draw(Shader* shader) {
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 }
 
+UndoStack::UndoStack(unsigned int max_depth): max_depth_ {max_depth}, size_ {0}, frames_ {} {}
+
+void UndoStack::push(std::unique_ptr<DeltaFrame> delta_frame) {
+    if (!(*delta_frame).trivial()) {
+        if (size_ == max_depth_) {
+            frames_.pop_front();
+        } else {
+            ++size_;
+        }
+        frames_.push_back(std::move(delta_frame));
+    }
+}
+
+void UndoStack::pop(WorldMap* world_map) {
+    if (size_ > 0) {
+        (*frames_.back()).revert(world_map);
+        frames_.pop_back();
+        --size_;
+    }
+}
 
 DeltaFrame::DeltaFrame(): deltas_ {} {}
 
@@ -257,7 +277,7 @@ void WorldMap::put_quiet(std::unique_ptr<GameObject> object) {
     }
 }
 
-void WorldMap::try_move(std::unordered_map<Point ,unsigned int, PointHash>& to_move, Point dir) {
+void WorldMap::try_move(std::unordered_map<Point ,unsigned int, PointHash>& to_move, Point dir, DeltaFrame* delta_frame) {
     std::vector<std::pair<Point, unsigned int>> to_check;
     for (auto pos_id : to_move) {
         to_check.push_back(pos_id);
@@ -288,8 +308,7 @@ void WorldMap::try_move(std::unordered_map<Point ,unsigned int, PointHash>& to_m
         std::tie(cur_pos, id) = pos_id;
         // Hardcode layer for now - it might be more complicated later.
         auto object = take_quiet(cur_pos, Layer::Solid, id);
-        // We'll implement deltas soon, but not yet
-        object->shift_pos(dir, nullptr);
+        object->shift_pos(dir, delta_frame);
         put_quiet(std::move(object));
     }
 }

@@ -21,6 +21,7 @@
 #include <vector>
 #include <memory>
 #include <unordered_map>
+#include <deque>
 
 #include "shader.h"
 
@@ -62,17 +63,19 @@ public:
     bool trivial();
 
 private:
-    std::vector<std::unique_ptr<Delta>> deltas_;
+    std::deque<std::unique_ptr<Delta>> deltas_;
 };
 
 class UndoStack {
 public:
-    UndoStack(int max_depth);
+    UndoStack(unsigned int max_depth);
+    void push(std::unique_ptr<DeltaFrame>);
+    void pop(WorldMap*);
 
 private:
     unsigned int max_depth_;
     unsigned int size_;
-    std::vector<DeltaFrame> frames_;
+    std::deque<std::unique_ptr<DeltaFrame>> frames_;
 };
 
 class GameObject {
@@ -178,7 +181,7 @@ public:
     std::unique_ptr<GameObject> take_quiet(Point, Layer, unsigned int id);
     void put(std::unique_ptr<GameObject>, DeltaFrame*);
     void put_quiet(std::unique_ptr<GameObject>);
-    void try_move(std::unordered_map<Point, unsigned int, PointHash>& to_check, Point dir);
+    void try_move(std::unordered_map<Point, unsigned int, PointHash>& to_check, Point dir, DeltaFrame* delta_frame);
     void draw(Shader*);
 
 private:

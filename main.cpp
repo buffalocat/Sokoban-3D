@@ -138,8 +138,13 @@ int main(void) {
     float cam_y;
     float cam_z;
 
+    UndoStack undo_stack(1000);
+
     while(!glfwWindowShouldClose(window)) {
         // Handle input
+
+        auto delta_frame = std::make_unique<DeltaFrame>();
+
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, true);
         }
@@ -159,22 +164,25 @@ int main(void) {
             if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
                 std::unordered_map<Point, unsigned int, PointHash> to_move;
                 to_move[player_ptr->pos()] = player_ptr->id();
-                world_map.try_move(to_move, Point {1,0});
+                world_map.try_move(to_move, Point {1,0}, delta_frame.get());
                 cooldown = 10;
             } else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
                 std::unordered_map<Point, unsigned int, PointHash> to_move;
                 to_move[player_ptr->pos()] = player_ptr->id();
-                world_map.try_move(to_move, Point {-1,0});
+                world_map.try_move(to_move, Point {-1,0}, delta_frame.get());
                 cooldown = 10;
             } else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
                 std::unordered_map<Point, unsigned int, PointHash> to_move;
                 to_move[player_ptr->pos()] = player_ptr->id();
-                world_map.try_move(to_move, Point {0,-1});
+                world_map.try_move(to_move, Point {0,-1}, delta_frame.get());
                 cooldown = 10;
             } else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
                 std::unordered_map<Point, unsigned int, PointHash> to_move;
                 to_move[player_ptr->pos()] = player_ptr->id();
-                world_map.try_move(to_move, Point {0,1});
+                world_map.try_move(to_move, Point {0,1}, delta_frame.get());
+                cooldown = 10;
+            } else if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+                undo_stack.pop(&world_map);
                 cooldown = 10;
             }
         } else {
@@ -208,6 +216,8 @@ int main(void) {
 
         glfwPollEvents();
         glfwSwapBuffers(window);
+
+        undo_stack.push(std::move(delta_frame));
     }
 
     glfwTerminate();

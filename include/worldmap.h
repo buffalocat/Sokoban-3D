@@ -21,9 +21,13 @@
 #include <vector>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 #include <deque>
 
 #include "shader.h"
+
+const float BOARD_SIZE = 16.0f;
+
 
 struct Point {
     int x;
@@ -32,13 +36,15 @@ struct Point {
 
 bool operator==(const Point& a, const Point& b);
 
-struct PointHash {
-public:
-    std::size_t operator()(const Point &p) const
+struct PosHash {
+    std::size_t operator()(const Point& p) const
     {
         return (p.x << 8) + p.y;
     }
 };
+
+typedef std::vector<std::pair<Point, unsigned int>> PosIdVec;
+typedef std::unordered_map<Point, unsigned int, PosHash> PosIdMap;
 
 enum class Layer {
     Floor,
@@ -86,6 +92,12 @@ public:
     Point pos() const;
     void shift_pos(Point d, DeltaFrame*);
     virtual void draw(Shader*) = 0;
+    PosIdMap const& get_strong_links();
+    PosIdMap const& get_weak_links();
+    void insert_strong_link(Point, unsigned int id);
+    void insert_weak_link(Point, unsigned int id);
+    bool sticky();
+    bool weak_sticky();
     // This should be virtual, probably, but for now it's not
     Layer layer() const;
     virtual bool pushable() const = 0;
@@ -95,6 +107,10 @@ protected:
     unsigned int gen_id();
     unsigned int id_;
     Point pos_;
+    bool sticky_;
+    bool weak_sticky_;
+    PosIdMap sticky_links_;
+    PosIdMap weak_sticky_links_;
 };
 
 class Car: public GameObject {
@@ -113,6 +129,16 @@ public:
     void draw(Shader*);
     Layer layer() const;
     bool pushable() const;
+};
+
+class StickyBlock: public Block {
+public:
+    StickyBlock(int x, int y);
+    void draw(Shader*);
+};
+
+class WeakStickyBlock: public Block {
+
 };
 
 class Wall: public GameObject {
@@ -159,8 +185,8 @@ private:
 class MapCell {
 public:
     MapCell();
-    GameObject const* view(Layer);
-    GameObject const* view_id(Layer, unsigned int id);
+    GameObject * view(Layer);
+    GameObject * view_id(Layer, unsigned int id);
     void take(Layer, unsigned int id, DeltaFrame*);
     std::unique_ptr<GameObject> take_quiet(Layer, unsigned int id);
     void put(std::unique_ptr<GameObject>, DeltaFrame*);
@@ -175,14 +201,15 @@ class WorldMap {
 public:
     WorldMap(int width, int height);
     bool valid(Point pos);
-    GameObject const* view(Point, Layer);
-    GameObject const* view_id(Point, Layer, unsigned int id);
+    GameObject* view(Point, Layer);
+    GameObject* view_id(Point, Layer, unsigned int id);
     void take(Point, Layer, unsigned int id, DeltaFrame*);
     std::unique_ptr<GameObject> take_quiet(Point, Layer, unsigned int id);
     void put(std::unique_ptr<GameObject>, DeltaFrame*);
     void put_quiet(std::unique_ptr<GameObject>);
-    void try_move(std::unordered_map<Point, unsigned int, PointHash>& to_check, Point dir, DeltaFrame* delta_frame);
+    void try_move(PosIdMap& to_move, Point dir, DeltaFrame* delta_frame);
     void draw(Shader*);
+    void init_sticky();
 
 private:
     int width_;

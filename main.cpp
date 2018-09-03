@@ -24,10 +24,12 @@
 #include <fstream>
 #include <cmath>
 #include <unordered_map>
+#include <unordered_set>
+#include <thread>
+#include <chrono>
 
 #include "worldmap.h"
 #include "shader.h"
-
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
@@ -68,7 +70,7 @@ int main(void) {
 
     int cubeTriangles[36];
 
-    {int i = 0;
+    int i = 0;
     for (int a : {1,2,4}) {
         for (int b : {1,2,4}) {
             if (a == b) continue;
@@ -77,7 +79,7 @@ int main(void) {
                 ++i;
             }
         }
-    }}
+    }
 
     // Vertex Array Object
     unsigned int VAO;
@@ -111,7 +113,7 @@ int main(void) {
 
     // Init game logic stuff
 
-    WorldMap world_map(10, 10);
+    WorldMap world_map(BOARD_SIZE, BOARD_SIZE);
     auto player = std::make_unique<Car>(5,5);
     Car* player_ptr = player.get();
     world_map.put_quiet(std::move(player));
@@ -123,22 +125,35 @@ int main(void) {
         world_map.put_quiet(std::make_unique<Wall>(i,3));
     }
 
+    world_map.put_quiet(std::make_unique<StickyBlock>(12,5));
+    world_map.put_quiet(std::make_unique<StickyBlock>(12,6));
+    world_map.init_sticky();
+
     int cooldown = 0;
 
-    const glm::vec4 YELLOW = glm::vec4(0.9f, 0.9f, 0.4f, 1.0f);
+    const glm::vec4 YELLOW = glm::vec4(0.7f, 0.7f, 0.3f, 1.0f);
 
     glm::mat4 model;
     glm::mat4 view;
     glm::mat4 projection;
 
-    float cam_radius = 14.0f;
+    float cam_radius = 16.0f;
     float cam_incline = 1.0f;
     float cam_rotation = 0.0f;
     float cam_x;
     float cam_y;
     float cam_z;
 
+    std::unordered_map<int, Point> movement_keys {
+        {GLFW_KEY_RIGHT, Point {1, 0}},
+        {GLFW_KEY_LEFT,  Point {-1,0}},
+        {GLFW_KEY_DOWN,  Point {0, 1}},
+        {GLFW_KEY_UP,    Point {0,-1}},
+    };
+
     UndoStack undo_stack(1000);
+
+    glfwSwapInterval(0);
 
     while(!glfwWindowShouldClose(window)) {
         // Handle input
@@ -161,27 +176,22 @@ int main(void) {
                 cam_incline -= .01f;
         }
         if (cooldown == 0) {
-            if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-                std::unordered_map<Point, unsigned int, PointHash> to_move;
-                to_move[player_ptr->pos()] = player_ptr->id();
-                world_map.try_move(to_move, Point {1,0}, delta_frame.get());
-                cooldown = 10;
-            } else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-                std::unordered_map<Point, unsigned int, PointHash> to_move;
-                to_move[player_ptr->pos()] = player_ptr->id();
-                world_map.try_move(to_move, Point {-1,0}, delta_frame.get());
-                cooldown = 10;
-            } else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-                std::unordered_map<Point, unsigned int, PointHash> to_move;
-                to_move[player_ptr->pos()] = player_ptr->id();
-                world_map.try_move(to_move, Point {0,-1}, delta_frame.get());
-                cooldown = 10;
-            } else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-                std::unordered_map<Point, unsigned int, PointHash> to_move;
-                to_move[player_ptr->pos()] = player_ptr->id();
-                world_map.try_move(to_move, Point {0,1}, delta_frame.get());
-                cooldown = 10;
-            } else if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+            for (auto p : movement_keys) {
+                // For starters, we'll use a naive input processing method.
+                // In particular, the precedence of keys is arbitrary
+                // and there is no buffering.
+                if (glfwGetKey(window, p.first) == GLFW_PRESS) {
+                    PosIdMap to_move {};
+                    to_move.insert(std::make_pair(player_ptr->pos(), player_ptr->id()));
+                    world_map.try_move(to_move, p.second, delta_frame.get());
+                    cooldown = 10;
+                    break;
+                }
+            }
+        }
+        // Only allow undo if we didn't just move
+        if (cooldown == 0) {
+            if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
                 undo_stack.pop(&world_map);
                 cooldown = 10;
             }
@@ -208,7 +218,7 @@ int main(void) {
 
         // Draw the floor
         model = glm::translate(glm::mat4(), glm::vec3(-0.5, -0.1, -0.5));
-        model = glm::scale(model, glm::vec3(10,0.1,10));
+        model = glm::scale(model, glm::vec3(BOARD_SIZE, 0.1, BOARD_SIZE));
         shader.setMat4("model", model);
 
         shader.setVec4("color", YELLOW);
@@ -218,6 +228,8 @@ int main(void) {
         glfwSwapBuffers(window);
 
         undo_stack.push(std::move(delta_frame));
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
     }
 
     glfwTerminate();

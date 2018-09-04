@@ -28,8 +28,10 @@
 #include <thread>
 #include <chrono>
 
+#include "delta.h"
 #include "worldmap.h"
 #include "shader.h"
+#include "gameobject.h"
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
@@ -114,19 +116,20 @@ int main(void) {
     // Init game logic stuff
 
     WorldMap world_map(BOARD_SIZE, BOARD_SIZE);
-    auto player = std::make_unique<Car>(5,5);
-    Car* player_ptr = player.get();
+    auto player = std::make_unique<PushBlock>(5,5);
+    player->set_car(true);
+    Block* player_ptr = player.get();
     world_map.put_quiet(std::move(player));
-    world_map.put_quiet(std::make_unique<Block>(8,8));
-    world_map.put_quiet(std::make_unique<Block>(7,8));
-    world_map.put_quiet(std::make_unique<Block>(5,8));
+    world_map.put_quiet(std::make_unique<PushBlock>(8,8));
+    world_map.put_quiet(std::make_unique<PushBlock>(7,8));
+    world_map.put_quiet(std::make_unique<PushBlock>(5,8));
     for (int i = 3; i != 8; ++i) {
         world_map.put_quiet(std::make_unique<Wall>(2,i));
         world_map.put_quiet(std::make_unique<Wall>(i,3));
     }
 
-    world_map.put_quiet(std::make_unique<StickyBlock>(12,5));
-    world_map.put_quiet(std::make_unique<StickyBlock>(12,6));
+    world_map.put_quiet(std::make_unique<PushBlock>(12,5));
+    world_map.put_quiet(std::make_unique<PushBlock>(12,6));
     world_map.init_sticky();
 
     int cooldown = 0;
@@ -181,9 +184,7 @@ int main(void) {
                 // In particular, the precedence of keys is arbitrary
                 // and there is no buffering.
                 if (glfwGetKey(window, p.first) == GLFW_PRESS) {
-                    PosIdMap to_move {};
-                    to_move.insert(std::make_pair(player_ptr->pos(), player_ptr->id()));
-                    world_map.try_move(to_move, p.second, delta_frame.get());
+                    world_map.try_move(player_ptr->pos(), p.second, delta_frame.get());
                     cooldown = 10;
                     break;
                 }

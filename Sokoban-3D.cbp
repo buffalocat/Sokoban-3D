@@ -23,7 +23,6 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-Wall" />
-					<Add option="-std=c++14" />
 					<Add option="-g" />
 					<Add option="-isystem" />
 					<Add directory="include" />
@@ -42,12 +41,11 @@
 			<Add option="-Wunreachable-code" />
 			<Add option="-Wswitch-enum" />
 			<Add option="-Wswitch-default" />
-			<Add option="-Weffc++" />
 			<Add option="-Wzero-as-null-pointer-constant" />
 			<Add option="-Wmain" />
 			<Add option="-pedantic" />
 			<Add option="-Wextra" />
-			<Add option="-std=c++11" />
+			<Add option="-std=c++14" />
 			<Add directory="include" />
 		</Compiler>
 		<Linker>
@@ -60,13 +58,21 @@
 		<Unit filename="glad.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="include/common.h" />
+		<Unit filename="include/delta.h" />
+		<Unit filename="include/gameobject.h" />
 		<Unit filename="include/shader.h" />
 		<Unit filename="include/worldmap.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="shaders/shader.fs" />
 		<Unit filename="shaders/shader.vs" />
+		<Unit filename="src/delta.cpp" />
+		<Unit filename="src/gameobject.cpp" />
 		<Unit filename="src/shader.cpp" />
 		<Unit filename="src/worldmap.cpp" />
+		<Unit filename="testMain.cpp">
+			<Option target="Debug" />
+		</Unit>
 		<Extensions>
 			<code_completion />
 			<envvars />

@@ -2,194 +2,8 @@
 #include <iostream>
 #include <unordered_map>
 
-const glm::vec4 GREEN = glm::vec4(0.6f, 0.9f, 0.7f, 1.0f);
-const glm::vec4 PINK = glm::vec4(0.9f, 0.6f, 0.7f, 1.0f);
-const glm::vec4 BLACK = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-const glm::vec4 ORANGE = glm::vec4(1.0f, 0.7f, 0.3f, 1.0f);
-
-// This is just a temporary thing to throw in the drawing function.
-// Obviously, must be fixed when a more dynamic camera is implemented.
-
-bool operator==(const Point& a, const Point& b)
-{
-    return a.x == b.x && a.y == b.y;
-}
-
-unsigned int GameObject::GLOBAL_ID_COUNT = 0;
-
-unsigned int GameObject::gen_id() {
-    return GLOBAL_ID_COUNT++;
-}
-
-GameObject::GameObject(int x, int y): id_ {GameObject::gen_id()}, pos_ {x, y}, sticky_ {false}, weak_sticky_ {false}, sticky_links_ {}, weak_sticky_links_ {} {}
-
-GameObject::~GameObject() {}
-
-unsigned int GameObject::id() const {
-    return id_;
-}
-
-Point GameObject::pos() const {
-    return pos_;
-}
-
-Layer GameObject::layer() const {
-    return Layer::Solid;
-}
-
-void GameObject::shift_pos(Point d, DeltaFrame* delta_frame) {
-    pos_.x += d.x;
-    pos_.y += d.y;
-    if (delta_frame) {
-        delta_frame->push(std::make_unique<MotionDelta>(*this, d));
-    }
-}
-
-bool GameObject::sticky() {
-    return sticky_;
-}
-
-bool GameObject::weak_sticky() {
-    return weak_sticky_;
-}
-
-// By default, GameObjects don't have any links
-// But we still need to be able to "check for them"!
-PosIdMap const& GameObject::get_strong_links(){
-    return sticky_links_;
-}
-
-void GameObject::insert_strong_link(Point p, unsigned int id) {
-    sticky_links_.insert(std::make_pair(p, id));
-}
-
-PosIdMap const& GameObject::get_weak_links(){
-    return weak_sticky_links_;
-}
-
-void GameObject::insert_weak_link(Point p, unsigned int id) {
-    weak_sticky_links_.insert(std::make_pair(p, id));
-}
-
-Car::Car(int x, int y): GameObject(x, y) {}
-
-Car::~Car() {}
-
-bool Car::pushable() const { return true; }
-
-Layer Car::layer() const { return Layer::Solid; }
-
-void Car::draw(Shader* shader) {
-    Point p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 0.5f, p.y - BOARD_SIZE/2));
-    shader->setMat4("model", model);
-    shader->setVec4("color", PINK);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-}
-
-
-Block::Block(int x, int y): GameObject(x, y) {}
-
-Block::~Block() {}
-
-bool Block::pushable() const { return true; }
-
-Layer Block::layer() const { return Layer::Solid; }
-
-void Block::draw(Shader* shader) {
-    Point p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 0.5f, p.y - BOARD_SIZE/2));
-    shader->setMat4("model", model);
-    shader->setVec4("color", GREEN);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-}
-
-StickyBlock::StickyBlock(int x, int y): Block(x, y) {
-    sticky_ = true;
-}
-
-void StickyBlock::draw(Shader* shader) {
-    Point p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 0.5f, p.y - BOARD_SIZE/2));
-    shader->setMat4("model", model);
-    shader->setVec4("color", ORANGE);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-}
-
-
-Wall::Wall(int x, int y): GameObject(x, y) {}
-
-Wall::~Wall() {}
-
-bool Wall::pushable() const { return false; }
-
-Layer Wall::layer() const { return Layer::Solid; }
-
-void Wall::draw(Shader* shader) {
-    Point p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 0.5f, p.y - BOARD_SIZE/2));
-    shader->setMat4("model", model);
-    shader->setVec4("color", BLACK);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-}
-
-UndoStack::UndoStack(unsigned int max_depth): max_depth_ {max_depth}, size_ {0}, frames_ {} {}
-
-void UndoStack::push(std::unique_ptr<DeltaFrame> delta_frame) {
-    if (!(*delta_frame).trivial()) {
-        if (size_ == max_depth_) {
-            frames_.pop_front();
-        } else {
-            ++size_;
-        }
-        frames_.push_back(std::move(delta_frame));
-    }
-}
-
-void UndoStack::pop(WorldMap* world_map) {
-    if (size_ > 0) {
-        (*frames_.back()).revert(world_map);
-        frames_.pop_back();
-        --size_;
-    }
-}
-
-DeltaFrame::DeltaFrame(): deltas_ {} {}
-
-void DeltaFrame::revert(WorldMap* world_map) {
-    for (auto& delta : deltas_) {
-        (*delta).revert(world_map);
-    }
-}
-
-void DeltaFrame::push(std::unique_ptr<Delta> delta) {
-    deltas_.push_back(std::move(delta));
-}
-
-bool DeltaFrame::trivial() {
-    return deltas_.empty();
-}
-
-DeletionDelta::DeletionDelta(std::unique_ptr<GameObject> object): object_ {std::move(object)} {}
-
-void DeletionDelta::revert(WorldMap* world_map) {
-    world_map->put_quiet(std::move(object_));
-}
-
-CreationDelta::CreationDelta(GameObject const& object): pos_ {object.pos()}, layer_ {object.layer()}, id_ {object.id()} {}
-
-void CreationDelta::revert(WorldMap* world_map) {
-    world_map->take_quiet(pos_, layer_, id_);
-}
-
-MotionDelta::MotionDelta(GameObject const& object, Point d): pos_ {object.pos()}, layer_ {object.layer()}, id_ {object.id()}, d_ {d} {}
-
-void MotionDelta::revert(WorldMap* world_map) {
-    auto object = world_map->take_quiet(pos_, layer_, id_);
-    // We don't want to create any deltas while undoing a delta (yet, at least)
-    object->shift_pos(Point{-d_.x, -d_.y}, nullptr);
-    world_map->put_quiet(std::move(object));
-}
+#include "gameobject.h"
+#include "delta.h"
 
 MapCell::MapCell(): layers_(std::array<std::vector<std::unique_ptr<GameObject>>, static_cast<unsigned int>(Layer::COUNT)>()) {}
 
@@ -320,51 +134,97 @@ void WorldMap::put_quiet(std::unique_ptr<GameObject> object) {
     }
 }
 
-// Note: many things are predicated on the assumption that, in any consistent game state,
-// certain layers allow at most one object per MapCell.  These include Solid and Player.
-void WorldMap::try_move(PosIdMap& to_move, Point dir, DeltaFrame* delta_frame) {
-    PosIdVec to_check;
-    for (auto pos_id : to_move) {
-        to_check.push_back(pos_id);
-    }
-    Point cur_pos, new_pos;
-    unsigned int id;
+//bool WorldMap::move_component(PosId& seen, PosIdMap& result, PosIdMap& not_move, ...)
+
+
+/** Part of the movement algorithm
+ * Attempts to move the object in cur_move in direction dir
+ * with the knowledge that the objects in seen have been seen
+ * and the objects in not_move cannot move (even if they are not walls).
+ * Returns whether the object in cur_move was able to move.
+ */
+bool WorldMap::move_strong_component(PosIdMap& seen, PosIdMap& not_move, PosIdMap& result, Point start_point, Point dir) {
+    std::vector<Point> to_check {start_point};
+    PosIdMap cur_group {};
+    unsigned int cur_id, new_id;
+    Point cur_pos, new_pos, rel_pos;
+    // First find all strongly linked objects, because they share the same fate.
+    // Either they'll all move or none of them will.
     while (!to_check.empty()) {
-        std::tie(cur_pos, id) = to_check.back();
+        cur_pos = to_check.back();
         to_check.pop_back();
-        // First, check whether the thing you'll be displacing can move
+        // It's possible (likely even, with complex groups) that we've seen this before
+        if (cur_group.count(new_pos) > 0) {
+            continue;
+        }
+        Block* cur_obj = static_cast<Block*>(view(cur_pos, Layer::Solid));
+        cur_id = cur_obj->id();
+        auto cur_pos_id = std::make_pair(cur_pos, cur_id);
+        seen.insert(cur_pos_id);
+        cur_group.insert(cur_pos_id);
+        for (auto pos_id : cur_obj->get_strong_links()) {
+            std::tie(rel_pos, new_id) = pos_id;
+            new_pos = {cur_pos.x + rel_pos.x, cur_pos.y + rel_pos.y};
+            to_check.push_back(new_pos);
+        }
+    }
+    // Now we determine whether they can all move.
+    // If any can't, then we immediately return
+    bool move_cancelled = false;
+    PosIdVec weak_connections;
+    for (auto cur_pos_id : cur_group) {
+        std::tie(cur_pos, cur_id) = cur_pos_id;
+        // First make sure the object can actually move in direction dir
         new_pos = Point {cur_pos.x + dir.x, cur_pos.y + dir.y};
-        if (!valid(new_pos)) {
-            return;
+        if (!valid(new_pos) || not_move.count(new_pos) > 0) {
+            // We can't move forward; this whole branch is bad
+            move_cancelled = true;
+            result = {};
+            break;
+        } else if (seen.count(new_pos) > 0) {
+            // If it was in seen but not in not_move, then it has already been verified ok
+            continue;
         }
         GameObject* new_obj = view(new_pos, Layer::Solid);
         if (new_obj) {
-            if (new_obj->pushable()) {
-                if (to_move.count(new_obj->pos()) == 0) {
-                    auto pos_id = std::make_pair(new_obj->pos(), new_obj->id());
-                    to_move.insert(pos_id);
-                    to_check.push_back(pos_id);
-                }
-            } else {
-                return;
+            if (new_obj->wall()) {
+                move_cancelled = true;
+                result = {};
+                break;
             }
-        }
-        // Now check strong links (like stickiness)
-        GameObject* cur_obj = view(cur_pos, Layer::Solid);
-        for (auto p : cur_obj->get_strong_links()) {
-            new_pos = Point {cur_pos.x + p.first.x, cur_pos.y + p.first.y};
-            if (to_move.count(new_pos) == 0) {
-                auto pos_id = std::make_pair(new_pos, p.second);
-                to_move.insert(pos_id);
-                to_check.push_back(pos_id);
+            // If this branch is good, insert it into the current result
+            // If it's bad, we ONLY return the bad branch
+            PosIdMap branch {};
+            if (move_strong_component(seen, not_move, branch, new_pos, dir)) {
+                result.insert(branch.begin(), branch.end());
+            } else {
+                result = branch;
             }
         }
     }
-    for (auto pos_id : to_move) {
-        std::tie(cur_pos, id) = pos_id;
+    if (move_cancelled) {
+        result.insert(cur_group.begin(), cur_group.end());
+        not_move.insert(cur_group.begin(), cur_group.end());
+        return false;
+    } else {
+        return true;
+    }
+}
+
+// Note: many things are predicated on the assumption that, in any consistent game state,
+// certain layers allow at most one object per MapCell.  These include Solid and Player.
+void WorldMap::try_move(Point player_pos, Point dir, DeltaFrame* delta_frame) {
+    PosIdMap seen {};
+    PosIdMap not_move {};
+    PosIdMap result {};
+    move_strong_component(seen, not_move, result, player_pos, dir);
+    Point pos;
+    unsigned int id;
+    for (auto pos_id : result) {
+        std::tie(pos, id) = pos_id;
         // Hardcode layer for now - it might be more complicated later.
-        auto object = take_quiet(cur_pos, Layer::Solid, id);
-        object->shift_pos(dir, delta_frame);
+        auto object = take_quiet(pos, Layer::Solid, id);
+        static_cast<Block*>(object.get())->shift_pos(dir, delta_frame);
         put_quiet(std::move(object));
     }
 }
@@ -382,19 +242,22 @@ void WorldMap::init_sticky() {
     for (int i = 0; i < width_; ++i) {
         for (int j = 0; j < height_; ++j) {
             GameObject* obj = map_[i][j].view(Layer::Solid);
-            if (obj && obj->sticky()) {
+            if (obj && !(obj->wall()) && static_cast<Block*>(obj)->type() == BlockType::Push
+            && static_cast<PushBlock*>(obj)->sticky() == StickyLevel::Strong) {
                 for (int di : {1,-1}) {
                     GameObject* adj_obj = view(Point{i+di,j}, Layer::Solid);
-                    if (adj_obj && adj_obj->sticky()) {
-                        obj->insert_strong_link(Point {di,0}, adj_obj->id());
-                        adj_obj->insert_strong_link(Point {-di,0}, obj->id());
+                    if (adj_obj && !(adj_obj->wall()) && static_cast<Block*>(adj_obj)->type() == BlockType::Push
+                    && static_cast<PushBlock*>(adj_obj)->sticky() == StickyLevel::Strong) {
+                        static_cast<PushBlock*>(obj)->insert_link(std::make_pair(Point {di,0}, adj_obj->id()));
+                        static_cast<PushBlock*>(adj_obj)->insert_link(std::make_pair(Point {-di,0}, obj->id()));
                     }
                 }
                 for (int dj : {1,-1}) {
                     GameObject* adj_obj = view(Point{i,j+dj}, Layer::Solid);
-                    if (adj_obj && adj_obj->sticky()) {
-                        obj->insert_strong_link(Point {0,dj}, adj_obj->id());
-                        adj_obj->insert_strong_link(Point {0,-dj}, obj->id());
+                    if (adj_obj && !(adj_obj->wall()) && static_cast<Block*>(adj_obj)->type() == BlockType::Push
+                    && static_cast<PushBlock*>(adj_obj)->sticky() == StickyLevel::Strong) {
+                        static_cast<PushBlock*>(obj)->insert_link(std::make_pair(Point {0,dj}, adj_obj->id()));
+                        static_cast<PushBlock*>(adj_obj)->insert_link(std::make_pair(Point {0,-dj}, obj->id()));
                     }
                 }
             }

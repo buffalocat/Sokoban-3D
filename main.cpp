@@ -36,6 +36,8 @@
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
+const int MAX_COOLDOWN = 5;
+
 /*
 void processInput(GLFWwindow *window, Point& pos) {
 }*/
@@ -123,13 +125,17 @@ int main(void) {
     world_map.put_quiet(std::make_unique<PushBlock>(8,8));
     world_map.put_quiet(std::make_unique<PushBlock>(7,8));
     world_map.put_quiet(std::make_unique<PushBlock>(5,8));
-    for (int i = 3; i != 8; ++i) {
-        world_map.put_quiet(std::make_unique<Wall>(2,i));
-        world_map.put_quiet(std::make_unique<Wall>(i,3));
+    for (int j = 3; j != 8; ++j) {
+        world_map.put_quiet(std::make_unique<Wall>(2,j));
+        world_map.put_quiet(std::make_unique<Wall>(j,3));
     }
 
-    world_map.put_quiet(std::make_unique<PushBlock>(12,5));
-    world_map.put_quiet(std::make_unique<PushBlock>(12,6));
+    world_map.put_quiet(std::make_unique<PushBlock>(12,5,StickyLevel::Strong));
+    world_map.put_quiet(std::make_unique<PushBlock>(12,6,StickyLevel::Strong));
+
+    world_map.put_quiet(std::make_unique<PushBlock>(12,7,StickyLevel::Weak));
+    world_map.put_quiet(std::make_unique<PushBlock>(12,8,StickyLevel::Weak));
+
     world_map.init_sticky();
 
     int cooldown = 0;
@@ -185,7 +191,7 @@ int main(void) {
                 // and there is no buffering.
                 if (glfwGetKey(window, p.first) == GLFW_PRESS) {
                     world_map.try_move(player_ptr->pos(), p.second, delta_frame.get());
-                    cooldown = 10;
+                    cooldown = MAX_COOLDOWN;
                     break;
                 }
             }
@@ -194,7 +200,7 @@ int main(void) {
         if (cooldown == 0) {
             if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
                 undo_stack.pop(&world_map);
-                cooldown = 10;
+                cooldown = MAX_COOLDOWN;
             }
         } else {
             --cooldown;

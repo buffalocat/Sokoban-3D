@@ -95,6 +95,7 @@ enum class StickyLevel {
 class PushBlock: public Block {
 public:
     PushBlock(int x, int y);
+    PushBlock(int x, int y, StickyLevel sticky);
     ~PushBlock();
     void set_sticky(StickyLevel sticky);
     void draw(Shader*);

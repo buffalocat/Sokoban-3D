@@ -4,6 +4,7 @@
 
 const glm::vec4 GREEN = glm::vec4(0.6f, 0.9f, 0.7f, 1.0f);
 const glm::vec4 PINK = glm::vec4(0.9f, 0.6f, 0.7f, 1.0f);
+const glm::vec4 RED = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
 const glm::vec4 BLACK = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 const glm::vec4 ORANGE = glm::vec4(1.0f, 0.7f, 0.3f, 1.0f);
 
@@ -12,7 +13,7 @@ PosIdMap GameObject::EMPTY_POS_ID_MAP {};
 unsigned int GameObject::GLOBAL_ID_COUNT = 0;
 
 unsigned int GameObject::gen_id() {
-    return GLOBAL_ID_COUNT++;
+    return ++GLOBAL_ID_COUNT;
 }
 
 GameObject::GameObject(int x, int y): id_ {GameObject::gen_id()}, pos_ {x, y}, wall_ {true} {}
@@ -49,7 +50,9 @@ void Wall::draw(Shader* shader) {
 }
 
 // Push is the "default" BlockType
-Block::Block(int x, int y): GameObject(x, y), type_ {BlockType::Push}, car_ {false} {}
+Block::Block(int x, int y): GameObject(x, y), type_ {BlockType::Push}, car_ {false} {
+    wall_ = false;
+}
 
 Block::~Block() {}
 
@@ -58,12 +61,14 @@ void Block::set_car(bool car) {
 }
 
 void Block::draw(Shader* shader) {
-    Point p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 1.0f, p.y - BOARD_SIZE/2));
-    model = glm::scale(model, glm::vec3(0.5f, 0.2f, 0.5f));
-    shader->setMat4("model", model);
-    shader->setVec4("color", PINK);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    if (car_) {
+        Point p = pos();
+        glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 1.0f, p.y - BOARD_SIZE/2));
+        model = glm::scale(model, glm::vec3(0.5f, 0.2f, 0.5f));
+        shader->setMat4("model", model);
+        shader->setVec4("color", PINK);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    }
 }
 
 BlockType Block::type() {
@@ -79,6 +84,7 @@ void Block::shift_pos(Point d, DeltaFrame* delta_frame) {
 }
 
 PushBlock::PushBlock(int x, int y): Block(x, y), sticky_ {StickyLevel::None}, links_ {} {}
+PushBlock::PushBlock(int x, int y, StickyLevel sticky): Block(x, y), sticky_ {sticky}, links_ {} {}
 
 PushBlock::~PushBlock() {}
 
@@ -90,7 +96,13 @@ void PushBlock::draw(Shader* shader) {
     Point p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 0.5f, p.y - BOARD_SIZE/2));
     shader->setMat4("model", model);
-    shader->setVec4("color", GREEN);
+    if (sticky_ == StickyLevel::None) {
+        shader->setVec4("color", GREEN);
+    } else if (sticky_ == StickyLevel::Strong) {
+        shader->setVec4("color", ORANGE);
+    } else /* sticky_ == StickyLevel::Weak */ {
+        shader->setVec4("color", RED);
+    }
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
     Block::draw(shader);
 }

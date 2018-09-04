@@ -45,16 +45,22 @@ void DeletionDelta::revert(WorldMap* world_map) {
     world_map->put_quiet(std::move(object_));
 }
 
-CreationDelta::CreationDelta(GameObject const& object): pos_ {object.pos()}, layer_ {object.layer()}, id_ {object.id()} {}
+CreationDelta::CreationDelta(GameObject* object): object_ {object} {}
 
 void CreationDelta::revert(WorldMap* world_map) {
-    world_map->take_quiet(pos_, layer_, id_);
+    world_map->take_quiet_id(object_->pos(), object_->layer(), object_);
 }
 
 MotionDelta::MotionDelta(Block* object, Point d): object_ {object}, d_ {d} {}
 
 void MotionDelta::revert(WorldMap* world_map) {
-    auto object_unique = world_map->take_quiet(object_->pos(), object_->layer(), object_->id());
+    auto object_unique = world_map->take_quiet_id(object_->pos(), object_->layer(), object_);
     object_->shift_pos(Point{-d_.x, -d_.y}, nullptr);
     world_map->put_quiet(std::move(object_unique));
+}
+
+LinkUpdateDelta::LinkUpdateDelta(PushBlock* object, PosIdMap links): object_ {object}, links_ {links} {}
+
+void LinkUpdateDelta::revert(WorldMap* world_map) {
+    object_->set_links(links_);
 }

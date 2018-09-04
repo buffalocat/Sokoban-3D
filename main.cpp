@@ -190,7 +190,7 @@ int main(void) {
                 // In particular, the precedence of keys is arbitrary
                 // and there is no buffering.
                 if (glfwGetKey(window, p.first) == GLFW_PRESS) {
-                    world_map.try_move(player_ptr->pos(), p.second, delta_frame.get());
+                    world_map.move_solid(player_ptr->pos(), p.second, delta_frame.get());
                     cooldown = MAX_COOLDOWN;
                     break;
                 }

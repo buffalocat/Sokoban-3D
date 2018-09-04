@@ -7,6 +7,8 @@
 #include <unordered_set>
 #include <vector>
 
+class GameObject;
+
 const float BOARD_SIZE = 16.0f;
 
 struct Point {
@@ -20,9 +22,9 @@ struct PosHash {
     std::size_t operator()(const Point& p) const;
 };
 
-typedef std::pair<Point, unsigned int> PosId;
+typedef std::pair<Point, GameObject*> PosId;
 typedef std::vector<PosId> PosIdVec;
-typedef std::unordered_map<Point, unsigned int, PosHash> PosIdMap;
+typedef std::unordered_map<Point, GameObject*, PosHash> PosIdMap;
 
 enum class Layer {
     Floor,

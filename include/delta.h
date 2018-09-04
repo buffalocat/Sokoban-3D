@@ -6,6 +6,7 @@
 class WorldMap;
 class GameObject;
 class Block;
+class PushBlock;
 struct Point;
 enum class Layer;
 
@@ -40,13 +41,11 @@ private:
 
 class CreationDelta: public Delta {
 public:
-    CreationDelta(GameObject const& object);
+    CreationDelta(GameObject* object);
     void revert(WorldMap*);
 
 private:
-    Point pos_;
-    Layer layer_;
-    unsigned int id_;
+    GameObject* object_;
 };
 
 class DeletionDelta: public Delta {
@@ -68,4 +67,13 @@ private:
     Point d_; // The amount we moved (as a 2-vector)
 };
 
+class LinkUpdateDelta: public Delta {
+public:
+    LinkUpdateDelta(PushBlock*, PosIdMap);
+    void revert(WorldMap*);
+
+private:
+    PushBlock* object_;
+    PosIdMap links_;
+};
 #endif // DELTA_H

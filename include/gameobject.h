@@ -22,6 +22,7 @@
 
 class Shader;
 class DeltaFrame;
+class WorldMap;
 
 // The GameObject class will really act like the base class
 // for Solid objects, until some non-solid objects exist too.
@@ -29,12 +30,10 @@ class DeltaFrame;
  */
 class GameObject {
 public:
-    static unsigned int GLOBAL_ID_COUNT;
     static PosIdMap EMPTY_POS_ID_MAP;
 
     GameObject(int x, int y);
     virtual ~GameObject() = 0;
-    unsigned int id() const;
     Layer layer() const;
     Point pos() const;
     virtual void draw(Shader*) = 0;
@@ -42,8 +41,6 @@ public:
     bool wall() const;
 
 protected:
-    unsigned int gen_id();
-    unsigned int id_;
     Point pos_;
     bool wall_;
 };
@@ -57,13 +54,6 @@ public:
     void draw(Shader*);
 };
 
-// This is just for downcasting purposes
-// At the moment I only have these two in mind, but there could easily be more
-enum class BlockType {
-    Push,
-    Snake,
-};
-
 /** Abstract class for Solid objects which can move around and do things
  * Everything that's not a Wall is a Block
  */
@@ -74,13 +64,11 @@ public:
     void set_car(bool car);
     // This draws an indication of the "car"-ness!  Call it in all subclasses
     void draw(Shader*);
-    BlockType type();
     virtual PosIdMap& get_strong_links() = 0;
     virtual PosIdMap& get_weak_links() = 0;
     void shift_pos(Point d, DeltaFrame*);
 
 protected:
-    BlockType type_;
     bool car_;
 };
 
@@ -94,15 +82,18 @@ enum class StickyLevel {
  */
 class PushBlock: public Block {
 public:
+    static bool is_push_block(GameObject*);
+
     PushBlock(int x, int y);
     PushBlock(int x, int y, StickyLevel sticky);
     ~PushBlock();
     void set_sticky(StickyLevel sticky);
+    void set_links(PosIdMap links);
+    void update_links(WorldMap*, bool, DeltaFrame*);
     void draw(Shader*);
     StickyLevel sticky();
     PosIdMap& get_strong_links();
     PosIdMap& get_weak_links();
-    void insert_link(PosId);
 
 private:
     StickyLevel sticky_;

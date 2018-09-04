@@ -15,6 +15,11 @@
 					<Add option="-g" />
 					<Add directory="include" />
 				</Compiler>
+				<Linker>
+					<Add library="opengl32" />
+					<Add library="gdi32" />
+					<Add library="glfw3" />
+				</Linker>
 			</Target>
 			<Target title="Release">
 				<Option output="bin/Release/Sokoban-3D" prefix_auto="1" extension_auto="1" />
@@ -22,7 +27,6 @@
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-Wall" />
 					<Add option="-g" />
 					<Add option="-isystem" />
 					<Add directory="include" />
@@ -31,7 +35,6 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wnon-virtual-dtor" />
-			<Add option="-Wshadow" />
 			<Add option="-Winit-self" />
 			<Add option="-Wredundant-decls" />
 			<Add option="-Wcast-align" />
@@ -66,6 +69,7 @@
 		<Unit filename="main.cpp" />
 		<Unit filename="shaders/shader.fs" />
 		<Unit filename="shaders/shader.vs" />
+		<Unit filename="src/common.cpp" />
 		<Unit filename="src/delta.cpp" />
 		<Unit filename="src/gameobject.cpp" />
 		<Unit filename="src/shader.cpp" />

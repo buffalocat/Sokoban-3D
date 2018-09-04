@@ -12,9 +12,10 @@ class MapCell {
 public:
     MapCell();
     GameObject* view(Layer);
-    GameObject* view_id(Layer, unsigned int id);
-    void take(Layer, unsigned int id, DeltaFrame*);
-    std::unique_ptr<GameObject> take_quiet(Layer, unsigned int id);
+    void take(Layer, DeltaFrame*);
+    void take_id(Layer, GameObject*, DeltaFrame*);
+    std::unique_ptr<GameObject> take_quiet(Layer);
+    std::unique_ptr<GameObject> take_quiet_id(Layer, GameObject*);
     void put(std::unique_ptr<GameObject>, DeltaFrame*);
     void put_quiet(std::unique_ptr<GameObject>);
     void draw(Shader*);
@@ -28,12 +29,13 @@ public:
     WorldMap(int width, int height);
     bool valid(Point pos);
     GameObject* view(Point, Layer);
-    GameObject* view_id(Point, Layer, unsigned int id);
-    void take(Point, Layer, unsigned int id, DeltaFrame*);
-    std::unique_ptr<GameObject> take_quiet(Point, Layer, unsigned int id);
+    void take(Point, Layer, DeltaFrame*);
+    void take_id(Point, Layer, GameObject*, DeltaFrame*);
+    std::unique_ptr<GameObject> take_quiet(Point, Layer);
+    std::unique_ptr<GameObject> take_quiet_id(Point, Layer, GameObject*);
     void put(std::unique_ptr<GameObject>, DeltaFrame*);
     void put_quiet(std::unique_ptr<GameObject>);
-    void try_move(Point player_pos, Point dir, DeltaFrame* delta_frame);
+    void move_solid(Point player_pos, Point dir, DeltaFrame* delta_frame);
     bool move_strong_component(PosIdMap& seen, PosIdMap& not_move, PosIdMap& result, Point start_point, Point dir);
     void draw(Shader*);
     void init_sticky();

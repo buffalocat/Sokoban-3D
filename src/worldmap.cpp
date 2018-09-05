@@ -5,77 +5,6 @@
 #include "gameobject.h"
 #include "delta.h"
 
-MapCell::MapCell(): layers_ {std::array<std::vector<std::unique_ptr<GameObject>>, static_cast<unsigned int>(Layer::COUNT)> {}} {}
-
-// nullptr means this Layer of this Cell was empty (this may happen often)
-// Note: this method only really "makes sense" (has non-arbitrary behavior) on Single Object Layers
-GameObject* MapCell::view(Layer layer) {
-    if (layers_[static_cast<unsigned int>(layer)].empty()) {
-        return nullptr;
-    } else {
-        return layers_[static_cast<unsigned int>(layer)].back().get();
-    }
-}
-
-void MapCell::take(Layer layer, DeltaFrame* delta_frame) {
-    auto &vec = layers_[static_cast<unsigned int>(layer)];
-    if (!vec.empty()) {
-        delta_frame->push(static_cast<std::unique_ptr<Delta>>(std::make_unique<DeletionDelta>(std::move(vec.back()))));
-        vec.pop_back();
-    }
-}
-
-void MapCell::take_id(Layer layer, GameObject* id, DeltaFrame* delta_frame) {
-    auto &vec = layers_[static_cast<unsigned int>(layer)];
-    for (auto it = vec.begin(); it != vec.end(); ++it) {
-        if ((*it).get() == id) {
-            delta_frame->push(static_cast<std::unique_ptr<Delta>>(std::make_unique<DeletionDelta>(std::move(*it))));
-            vec.erase(it);
-            return;
-        }
-    }
-    throw "Object not found in call to take_id!";
-}
-
-std::unique_ptr<GameObject> MapCell::take_quiet(Layer layer) {
-    auto &vec = layers_[static_cast<unsigned int>(layer)];
-    if (vec.empty()) {
-        return nullptr;
-    } else {
-        auto obj = std::move(vec.back());
-        vec.pop_back();
-        return obj;
-    }
-}
-
-std::unique_ptr<GameObject> MapCell::take_quiet_id(Layer layer, GameObject* id) {
-    auto &vec = layers_[static_cast<unsigned int>(layer)];
-    for (auto it = vec.begin(); it != vec.end(); ++it) {
-        if ((*it).get() == id) {
-            auto obj = std::move(*it);
-            vec.erase(it);
-            return obj;
-        }
-    }
-    throw "Object not found in call to take_quiet_id!";
-}
-
-void MapCell::put(std::unique_ptr<GameObject> object, DeltaFrame* delta_frame) {
-    delta_frame->push(std::make_unique<CreationDelta>(object.get()));
-    layers_[static_cast<unsigned int>(object->layer())].push_back(std::move(object));
-}
-
-void MapCell::put_quiet(std::unique_ptr<GameObject> object) {
-    layers_[static_cast<unsigned int>(object->layer())].push_back(std::move(object));
-}
-
-void MapCell::draw(Shader* shader) {
-    for (auto& layer : layers_) {
-        for (auto& object : layer) {
-            object->draw(shader);
-        }
-    }
-}
 
 WorldMap::WorldMap(int width, int height): width_ {width}, height_ {height}, map_ {} {
     for (int i = 0; i != width; ++i) {
@@ -92,57 +21,94 @@ bool WorldMap::valid(Point pos) {
 
 GameObject* WorldMap::view(Point pos, Layer layer) {
     if (valid(pos)) {
-        return map_[pos.x][pos.y].view(layer);
-    } else {
-        // This is acceptable: we should already be considering the case
-        // that there wasn't an object at the location we checked.
-        return nullptr;
+        auto &vec = map_[pos.x][pos.y][static_cast<unsigned int>(layer)];
+        if (!vec.empty()) {
+            return vec.back().get();
+        }
     }
+    return nullptr;
 }
 
 void WorldMap::take(Point pos, Layer layer, DeltaFrame* delta_frame) {
     if (valid(pos)) {
-        map_[pos.x][pos.y].take(layer, delta_frame);
+        auto &vec = map_[pos.x][pos.y][static_cast<unsigned int>(layer)];
+        if (!vec.empty()) {
+            delta_frame->push(static_cast<std::unique_ptr<Delta>>(std::make_unique<DeletionDelta>(std::move(vec.back()))));
+            vec.pop_back();
+        }
     }
 }
 
 void WorldMap::take_id(Point pos, Layer layer, GameObject* id, DeltaFrame* delta_frame) {
     if (valid(pos)) {
-        map_[pos.x][pos.y].take_id(layer, id, delta_frame);
-    } else {
-        throw "Tried to take an object from an invalid location!";
+        auto &vec = map_[pos.x][pos.y][static_cast<unsigned int>(layer)];
+        for (auto it = vec.begin(); it != vec.end(); ++it) {
+            if ((*it).get() == id) {
+                delta_frame->push(static_cast<std::unique_ptr<Delta>>(std::make_unique<DeletionDelta>(std::move(*it))));
+                vec.erase(it);
+                return;
+            }
+        }
+        throw "Tried to take an object that wasn't there!";
     }
+    throw "Tried to take an object from an invalid location!";
 }
 
 std::unique_ptr<GameObject> WorldMap::take_quiet(Point pos, Layer layer) {
     if (valid(pos)) {
-        return map_[pos.x][pos.y].take_quiet(layer);
+        auto &vec = map_[pos.x][pos.y][static_cast<unsigned int>(layer)];
+        if (!vec.empty()) {
+            auto obj = std::move(vec.back());
+            vec.pop_back();
+            return obj;
+        }
     }
+    return nullptr;
 }
 
 std::unique_ptr<GameObject> WorldMap::take_quiet_id(Point pos, Layer layer, GameObject* id) {
     if (valid(pos)) {
-        return map_[pos.x][pos.y].take_quiet_id(layer, id);
-    } else {
-        throw "Tried to (quietly) take an object from an invalid location!";
+        auto &vec = map_[pos.x][pos.y][static_cast<unsigned int>(layer)];
+        for (auto it = vec.begin(); it != vec.end(); ++it) {
+            if ((*it).get() == id) {
+                auto obj = std::move(*it);
+                vec.erase(it);
+                return obj;
+            }
+        }
+        throw "Tried to (quietly) take an object that wasn't there!";
     }
+    throw "Tried to (quietly) take an object from an invalid location!";
 }
 
 void WorldMap::put(std::unique_ptr<GameObject> object, DeltaFrame* delta_frame) {
-    auto pos = object->pos();
+    Point pos = object->pos();
     if (valid(pos)) {
-        map_[pos.x][pos.y].put(std::move(object), delta_frame);
+        delta_frame->push(std::make_unique<CreationDelta>(object.get()));
+        map_[pos.x][pos.y][static_cast<unsigned int>(object->layer())].push_back(std::move(object));
     } else {
         throw "Tried to put an object in an invalid location!";
     }
 }
 
 void WorldMap::put_quiet(std::unique_ptr<GameObject> object) {
-    auto pos = object->pos();
+    Point pos = object->pos();
     if (valid(pos)) {
-        map_[pos.x][pos.y].put_quiet(std::move(object));
+        map_[pos.x][pos.y][static_cast<unsigned int>(object->layer())].push_back(std::move(object));
     } else {
         throw "Tried to (quietly) put an object in an invalid location!";
+    }
+}
+
+void WorldMap::draw(Shader* shader) {
+    for (auto& column : map_) {
+        for (auto& cell : column) {
+            for (auto& layer : cell) {
+                for (auto& object : layer) {
+                    object->draw(shader);
+                }
+            }
+        }
     }
 }
 
@@ -274,15 +240,15 @@ bool WorldMap::move_strong_component(PosIdMap& seen, PosIdMap& not_move, PosIdMa
     }
 }
 
-void WorldMap::draw(Shader* shader) {
-    for (int i = 0; i < width_; ++i) {
-        for (int j = 0; j < height_; ++j) {
-            map_[i][j].draw(shader);
-        }
+
+
+
+void WorldMap::initialize_links(bool check_all) {
+    if (check_all) {
+
     }
 }
 
-// Note: this should maybe use a dynamic_cast, but let's wait until there are more objects.
 void WorldMap::init_sticky() {
     for (int i = 0; i < width_; ++i) {
         for (int j = 0; j < height_; ++j) {

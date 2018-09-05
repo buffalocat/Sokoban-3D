@@ -18,14 +18,15 @@ struct Point {
 
 bool operator==(const Point& a, const Point& b);
 
-struct PosHash {
+struct PointHash {
     std::size_t operator()(const Point& p) const;
 };
 
+typedef std::unordered_set<Point, PointHash> PointSet;
+typedef std::unordered_set<GameObject*> ObjSet;
 typedef std::pair<Point, GameObject*> PosId;
 typedef std::vector<PosId> PosIdVec;
-typedef std::unordered_map<Point, GameObject*, PosHash> PosIdMap;
-typedef std::unordered_set<GameObject*> ObjSet;
+typedef std::unordered_map<Point, GameObject*, PointHash> PosIdMap;
 
 enum class Layer {
     Floor,

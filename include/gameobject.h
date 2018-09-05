@@ -64,8 +64,8 @@ public:
     void set_car(bool car);
     // This draws an indication of the "car"-ness!  Call it in all subclasses
     void draw(Shader*);
-    virtual PosIdMap& get_strong_links() = 0;
-    virtual PosIdMap& get_weak_links() = 0;
+    virtual const PosIdMap& get_strong_links() = 0;
+    virtual const PosIdMap& get_weak_links() = 0;
     void shift_pos(Point d, DeltaFrame*);
 
 protected:
@@ -92,8 +92,8 @@ public:
     void update_links(WorldMap*, bool, DeltaFrame*);
     void draw(Shader*);
     StickyLevel sticky();
-    PosIdMap& get_strong_links();
-    PosIdMap& get_weak_links();
+    const PosIdMap& get_strong_links();
+    const PosIdMap& get_weak_links();
 
 private:
     StickyLevel sticky_;
@@ -103,8 +103,17 @@ private:
 /** A different type of block which forms "chains", represented by a diamond
  */
 class SnakeBlock: public Block {
+public:
     SnakeBlock(int x, int y);
+    SnakeBlock(int x, int y, unsigned int ends);
+    ~SnakeBlock();
+    const PosIdMap& get_strong_links();
+    const PosIdMap& get_weak_links();
     void draw(Shader*);
+
+private:
+    unsigned int ends_;
+    PosIdMap links_;
 };
 
 #endif // GAMEOBJECT_H

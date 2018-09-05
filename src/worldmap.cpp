@@ -154,7 +154,8 @@ void WorldMap::move_solid(Point player_pos, Point dir, DeltaFrame* delta_frame) 
     PosIdMap seen {};
     PosIdMap not_move {};
     PosIdMap result {};
-    if (!move_strong_component(seen, not_move, result, player_pos, dir)) return;
+    ObjSet broken {};
+    if (!move_strong_component(seen, not_move, result, broken, player_pos, dir)) return;
     Point pos;
     GameObject* obj;
     for (auto pos_id : result) {
@@ -165,9 +166,14 @@ void WorldMap::move_solid(Point player_pos, Point dir, DeltaFrame* delta_frame) 
         put_quiet(std::move(obj_unique));
     }
     for (auto pos_id : seen) {
-        PushBlock* obj = dynamic_cast<PushBlock*>(pos_id.second);
-        if (obj)
-            obj->update_links(this, true, delta_frame);
+        PushBlock* pb = dynamic_cast<PushBlock*>(pos_id.second);
+        if (pb)
+            pb->update_links(this, true, delta_frame);
+    }
+    for (auto obj : broken) {
+        PushBlock* pb = dynamic_cast<PushBlock*>(obj);
+        if (pb)
+            pb->update_links(this, false, delta_frame);
     }
 }
 
@@ -177,7 +183,7 @@ void WorldMap::move_solid(Point player_pos, Point dir, DeltaFrame* delta_frame) 
  * and the objects in not_move cannot move (even if they are not walls).
  * Returns whether the object in cur_move was able to move.
  */
-bool WorldMap::move_strong_component(PosIdMap& seen, PosIdMap& not_move, PosIdMap& result, Point start_point, Point dir) {
+bool WorldMap::move_strong_component(PosIdMap& seen, PosIdMap& not_move, PosIdMap& result, ObjSet& broken, Point start_point, Point dir) {
     if (not_move.count(start_point) > 0) {
         return false;
     } else if (seen.count(start_point) > 0) {
@@ -186,12 +192,10 @@ bool WorldMap::move_strong_component(PosIdMap& seen, PosIdMap& not_move, PosIdMa
     std::cout << "Starting a Component!" << std::endl;
     std::vector<Point> to_check {start_point};
     PosIdMap cur_group {};
-    GameObject *cur_obj, *new_obj;
-    Point cur_pos, new_pos, rel_pos;
     // First find all strongly linked objects, because they share the same fate.
     // Either they'll all move or none of them will.
     while (!to_check.empty()) {
-        cur_pos = to_check.back();
+        Point cur_pos = to_check.back();
         to_check.pop_back();
         // It's possible (likely even, with complex groups) that we've seen this before
         if (cur_group.count(cur_pos) > 0) {
@@ -199,29 +203,37 @@ bool WorldMap::move_strong_component(PosIdMap& seen, PosIdMap& not_move, PosIdMa
         }
         Block* cur_obj = static_cast<Block*>(view(cur_pos, Layer::Solid));
         auto cur_pos_id = std::make_pair(cur_pos, cur_obj);
-        std::cout << cur_pos.x << " " << cur_pos.y << " " << cur_obj << std::endl;
         seen.insert(cur_pos_id);
         cur_group.insert(cur_pos_id);
         for (auto link : cur_obj->get_strong_links()) {
-            std::cout << "Trying to print a strong link's pos!" << std::endl;
             to_check.push_back(link.second->pos());
         }
     }
     // Now we determine whether they can all move.
     // If any can't, then we immediately return
-    std::cout << "Finished finding Component." << std::endl;
     bool move_cancelled = false;
     PosIdVec weak_connections;
     for (auto cur_pos_id : cur_group) {
+        Point cur_pos;
+        GameObject* cur_obj;
         std::tie(cur_pos, cur_obj) = cur_pos_id;
         // First make sure the object can actually move in direction dir
-        new_pos = Point {cur_pos.x + dir.x, cur_pos.y + dir.y};
+        Point new_pos {cur_pos.x + dir.x, cur_pos.y + dir.y};
         if (!valid(new_pos) || not_move.count(new_pos) > 0) {
             // We can't move forward; this whole branch is bad
             move_cancelled = true;
             result = {};
             break;
-        } else if (seen.count(new_pos) > 0) {
+        }
+        // This branch is potentially good; look at weak links
+        for (auto link : static_cast<Block*>(view(cur_pos, Layer::Solid))->get_weak_links()) {
+            Point rel_pos, link_pos;
+            GameObject* link_obj;
+            std::tie(rel_pos, link_obj) = link;
+            link_pos = {cur_pos.x + rel_pos.x, cur_pos.y + rel_pos.y};
+            weak_connections.push_back(std::make_pair(link_pos, link_obj));
+        }
+        if (seen.count(new_pos) > 0) {
             // If it was in seen but not in not_move, then it has already been verified ok
             continue;
         }
@@ -235,19 +247,13 @@ bool WorldMap::move_strong_component(PosIdMap& seen, PosIdMap& not_move, PosIdMa
             // If this branch is good, insert it into the current result
             // If it's bad, we ONLY return the bad branch
             PosIdMap branch {};
-            if (move_strong_component(seen, not_move, branch, new_pos, dir)) {
+            if (move_strong_component(seen, not_move, branch, broken, new_pos, dir)) {
                 result.insert(branch.begin(), branch.end());
             } else {
                 move_cancelled = true;
                 result = branch;
                 break;
             }
-        }
-        // Also, take note of all weak connections
-        for (auto link : static_cast<Block*>(view(cur_pos, Layer::Solid))->get_weak_links()) {
-            std::tie(rel_pos, new_obj) = link;
-            new_pos = {cur_pos.x + rel_pos.x, cur_pos.y + rel_pos.y};
-            weak_connections.push_back(std::make_pair(new_pos, new_obj));
         }
     }
     if (move_cancelled) {
@@ -258,8 +264,10 @@ bool WorldMap::move_strong_component(PosIdMap& seen, PosIdMap& not_move, PosIdMa
         result.insert(cur_group.begin(), cur_group.end());
         for (auto cur_pos_id : weak_connections) {
             PosIdMap branch {};
-            if (move_strong_component(seen, not_move, branch, cur_pos_id.first, dir)) {
+            if (move_strong_component(seen, not_move, branch, broken, cur_pos_id.first, dir)) {
                 result.insert(branch.begin(), branch.end());
+            } else {
+                broken.insert(cur_pos_id.second);
             }
         }
         return true;

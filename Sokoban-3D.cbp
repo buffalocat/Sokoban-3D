@@ -74,9 +74,6 @@
 		<Unit filename="src/gameobject.cpp" />
 		<Unit filename="src/shader.cpp" />
 		<Unit filename="src/worldmap.cpp" />
-		<Unit filename="testMain.cpp">
-			<Option target="Debug" />
-		</Unit>
 		<Extensions>
 			<code_completion />
 			<envvars />

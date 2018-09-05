@@ -36,7 +36,7 @@ public:
     void put(std::unique_ptr<GameObject>, DeltaFrame*);
     void put_quiet(std::unique_ptr<GameObject>);
     void move_solid(Point player_pos, Point dir, DeltaFrame* delta_frame);
-    bool move_strong_component(PosIdMap& seen, PosIdMap& not_move, PosIdMap& result, Point start_point, Point dir);
+    bool move_strong_component(PosIdMap& seen, PosIdMap& not_move, PosIdMap& result, ObjSet& broken, Point start_point, Point dir);
     void draw(Shader*);
     void init_sticky();
 

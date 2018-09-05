@@ -102,7 +102,7 @@ void PushBlock::draw(Shader* shader) {
         Point d = link.first;
         model = glm::translate(glm::mat4(), glm::vec3(0.2f*d.x, 0.5f, 0.2f*d.y));
         model = glm::translate(model, glm::vec3(p.x - BOARD_SIZE/2, 0.5f, p.y - BOARD_SIZE/2));
-        model = glm::scale(model, glm::vec3(0.1f + 0.3f*abs(d.x), 0.1f, 0.1f + 0.3f*abs(d.y)));
+        model = glm::scale(model, glm::vec3(0.1f + 0.2f*abs(d.x), 0.1f, 0.1f + 0.2f*abs(d.y)));
         shader->setMat4("model", model);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
     }

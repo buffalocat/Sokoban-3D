@@ -130,11 +130,19 @@ int main(void) {
         world_map.put_quiet(std::make_unique<Wall>(j,3));
     }
 
+    world_map.put_quiet(std::make_unique<Wall>(8, 10));
+
     world_map.put_quiet(std::make_unique<PushBlock>(12,5,StickyLevel::Strong));
     world_map.put_quiet(std::make_unique<PushBlock>(12,6,StickyLevel::Strong));
 
     world_map.put_quiet(std::make_unique<PushBlock>(12,7,StickyLevel::Weak));
     world_map.put_quiet(std::make_unique<PushBlock>(12,8,StickyLevel::Weak));
+    world_map.put_quiet(std::make_unique<PushBlock>(12,9,StickyLevel::Weak));
+    world_map.put_quiet(std::make_unique<PushBlock>(12,10,StickyLevel::Weak));
+    world_map.put_quiet(std::make_unique<PushBlock>(12,11,StickyLevel::Weak));
+    world_map.put_quiet(std::make_unique<PushBlock>(12,12,StickyLevel::Weak));
+    world_map.put_quiet(std::make_unique<PushBlock>(12,13,StickyLevel::Weak));
+
 
     world_map.init_sticky();
 

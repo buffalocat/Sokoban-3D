@@ -25,6 +25,7 @@ struct PosHash {
 typedef std::pair<Point, GameObject*> PosId;
 typedef std::vector<PosId> PosIdVec;
 typedef std::unordered_map<Point, GameObject*, PosHash> PosIdMap;
+typedef std::unordered_set<GameObject*> ObjSet;
 
 enum class Layer {
     Floor,

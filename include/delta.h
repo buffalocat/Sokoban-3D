@@ -69,11 +69,11 @@ private:
 
 class LinkUpdateDelta: public Delta {
 public:
-    LinkUpdateDelta(PushBlock*, PosIdMap);
+    LinkUpdateDelta(PushBlock*, ObjSet);
     void revert(WorldMap*);
 
 private:
     PushBlock* object_;
-    PosIdMap links_;
+    ObjSet links_;
 };
 #endif // DELTA_H

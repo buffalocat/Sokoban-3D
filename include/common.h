@@ -23,10 +23,12 @@ struct PointHash {
 };
 
 typedef std::unordered_set<Point, PointHash> PointSet;
+typedef std::vector<Point> PointVec;
+typedef std::vector<GameObject*> ObjVec;
 typedef std::unordered_set<GameObject*> ObjSet;
-typedef std::pair<Point, GameObject*> PosId;
-typedef std::vector<PosId> PosIdVec;
 typedef std::unordered_map<Point, GameObject*, PointHash> PosIdMap;
+//typedef std::pair<Point, GameObject*> PosId;
+//typedef std::vector<PosId> PosIdVec;
 
 enum class Layer {
     Floor,

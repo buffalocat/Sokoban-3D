@@ -30,7 +30,7 @@ class WorldMap;
  */
 class GameObject {
 public:
-    static PosIdMap EMPTY_POS_ID_MAP;
+    static ObjSet EMPTY_OBJ_SET;
 
     GameObject(int x, int y);
     virtual ~GameObject() = 0;
@@ -64,12 +64,14 @@ public:
     void set_car(bool car);
     // This draws an indication of the "car"-ness!  Call it in all subclasses
     void draw(Shader*);
-    virtual const PosIdMap& get_strong_links() = 0;
-    virtual const PosIdMap& get_weak_links() = 0;
+    virtual const ObjSet& get_strong_links() = 0;
+    virtual const ObjSet& get_weak_links() = 0;
     void shift_pos(Point d, DeltaFrame*);
+    ObjSet links();
 
 protected:
     bool car_;
+    ObjSet links_;
 };
 
 enum class StickyLevel {
@@ -88,16 +90,14 @@ public:
     PushBlock(int x, int y, StickyLevel sticky);
     ~PushBlock();
     void set_sticky(StickyLevel sticky);
-    void set_links(PosIdMap links);
-    void update_links(WorldMap*, bool, DeltaFrame*);
+    void set_links(ObjSet links);
     void draw(Shader*);
     StickyLevel sticky();
-    const PosIdMap& get_strong_links();
-    const PosIdMap& get_weak_links();
+    const ObjSet& get_strong_links();
+    const ObjSet& get_weak_links();
 
 private:
     StickyLevel sticky_;
-    PosIdMap links_;
 };
 
 /** A different type of block which forms "chains", represented by a diamond
@@ -107,13 +107,13 @@ public:
     SnakeBlock(int x, int y);
     SnakeBlock(int x, int y, unsigned int ends);
     ~SnakeBlock();
-    const PosIdMap& get_strong_links();
-    const PosIdMap& get_weak_links();
+    const ObjSet& get_strong_links();
+    const ObjSet& get_weak_links();
     void draw(Shader*);
 
 private:
     unsigned int ends_;
-    PosIdMap links_;
+    ObjSet links_;
 };
 
 #endif // GAMEOBJECT_H

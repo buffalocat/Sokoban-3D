@@ -23,11 +23,13 @@ public:
     void put(std::unique_ptr<GameObject>, DeltaFrame*);
     void put_quiet(std::unique_ptr<GameObject>);
 
+    void reset_state();
     void move_solid(Point player_pos, Point dir, DeltaFrame* delta_frame);
-    bool move_strong_component(PosIdMap& seen, PosIdMap& not_move, PosIdMap& result, ObjSet& broken, Point start_point, Point dir);
+    bool move_strong_component(PosIdMap& result, Point start_point, Point dir);
 
-    void initialize_links(bool check_all);
-    void init_sticky(); // Will be deprecated soon!!!
+    void update_links(DeltaFrame*);
+    void update_links_auxiliary(GameObject*, bool save_adj, DeltaFrame*);
+    void set_initial_state();
 
     void draw(Shader*);
 
@@ -35,8 +37,13 @@ private:
     int width_;
     int height_;
     std::vector<std::vector<MapCell>> map_;
+
     // State variables
-    PointSet seen_;
+    PointSet seen_; // Points which have been inspected in a move
+    PointSet not_move_; // Points guaranteed not to move during a move
+    ObjSet moved_; // Objects which moved
+    ObjSet link_update_; // Objects which didn't move but (may have) lost/formed links
+    PointSet floor_update_; // Positions where an object (may have) left or entered the cell
 };
 
 #endif // WORLDMAP_H

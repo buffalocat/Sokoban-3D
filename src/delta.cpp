@@ -59,7 +59,7 @@ void MotionDelta::revert(WorldMap* world_map) {
     world_map->put_quiet(std::move(object_unique));
 }
 
-LinkUpdateDelta::LinkUpdateDelta(PushBlock* object, PosIdMap links): object_ {object}, links_ {links} {}
+LinkUpdateDelta::LinkUpdateDelta(PushBlock* object, ObjSet links): object_ {object}, links_ {links} {}
 
 void LinkUpdateDelta::revert(WorldMap* world_map) {
     object_->set_links(links_);

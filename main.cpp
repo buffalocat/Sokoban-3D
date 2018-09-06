@@ -148,7 +148,7 @@ int main(void) {
     world_map.put_quiet(std::make_unique<SnakeBlock>(4,11,1));
     world_map.put_quiet(std::make_unique<SnakeBlock>(5,11,2));
 
-    world_map.init_sticky();
+    world_map.set_initial_state();
 
     int cooldown = 0;
 

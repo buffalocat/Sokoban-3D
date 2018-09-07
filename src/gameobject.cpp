@@ -11,7 +11,7 @@ const glm::vec4 RED = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
 const glm::vec4 BLACK = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 const glm::vec4 ORANGE = glm::vec4(1.0f, 0.7f, 0.3f, 1.0f);
 
-ObjSet GameObject::EMPTY_OBJ_SET {};
+BlockSet Block::EMPTY_BLOCK_SET {};
 
 GameObject::GameObject(int x, int y): pos_ {x, y}, wall_ {true} {}
 
@@ -41,7 +41,9 @@ void Wall::draw(Shader* shader) {
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 }
 
-void Wall::cleanup() {}
+void Wall::cleanup(DeltaFrame* delta_frame) {}
+
+void Wall::reinit() {}
 
 // Push is the "default" BlockType
 Block::Block(int x, int y): GameObject(x, y), car_ {false}, links_ {} {
@@ -93,30 +95,42 @@ void Block::set_pos(Point p, DeltaFrame* delta_frame) {
     pos_.y = p.y;
 }
 
-ObjSet Block::links() {
+BlockSet Block::links() {
     return links_;
 }
 
-void Block::set_links(ObjSet links, DeltaFrame* delta_frame) {
-    if (delta_frame) {
-        delta_frame->push(std::make_unique<LinkUpdateDelta>(this, links_));
-    }
-    links_ = links;
-}
-
-void Block::insert_link(Block* link) {
+void Block::add_link(Block* link, DeltaFrame* delta_frame) {
+    if (links_.count(link))
+        return;
     links_.insert(link);
     link->links_.insert(this);
+    if (delta_frame)
+        delta_frame->push(std::make_unique<AddLinkDelta>(this, link));
+
 }
 
-void Block::remove_link(Block* link) {
+void Block::remove_link(Block* link, DeltaFrame* delta_frame) {
+    if (!links_.count(link))
+        return;
     links_.erase(link);
     link->links_.erase(this);
+    if (delta_frame)
+        delta_frame->push(std::make_unique<RemoveLinkDelta>(this, link));
 }
 
-void Block::cleanup() {
+void Block::cleanup(DeltaFrame* delta_frame) {
+    // When a Block is destroyed, any links to it should be forgotten
     for (auto link : links_) {
-        links_.erase(link);
+        std::cout << "erased link from " << link->pos().x << "," << link->pos().y << " to " << pos().x << "," << pos().y << std::endl;
+        link->links_.erase(this);
+    }
+}
+
+void Block::reinit() {
+    // When a Block is un-destroyed, any links it had should be reconnected
+    for (auto link : links_) {
+        std::cout << "restored link from " << link->pos().x << "," << link->pos().y << " to " << pos().x << "," << pos().y << std::endl;
+        link->links_.insert(this);
     }
 }
 
@@ -148,19 +162,19 @@ StickyLevel PushBlock::sticky() {
     return sticky_;
 }
 
-const ObjSet& PushBlock::get_strong_links() {
+const BlockSet& PushBlock::get_strong_links() {
     if (sticky_ == StickyLevel::Strong) {
         return links_;
     } else {
-        return EMPTY_OBJ_SET;
+        return EMPTY_BLOCK_SET;
     }
 }
 
-const ObjSet& PushBlock::get_weak_links() {
+const BlockSet& PushBlock::get_weak_links() {
     if (sticky_ == StickyLevel::Weak) {
         return links_;
     } else {
-        return EMPTY_OBJ_SET;
+        return EMPTY_BLOCK_SET;
     }
 }
 
@@ -169,11 +183,11 @@ SnakeBlock::SnakeBlock(int x, int y, unsigned int ends): Block(x, y), ends_ {(en
 
 SnakeBlock::~SnakeBlock() {}
 
-const ObjSet& SnakeBlock::get_strong_links() {
-    return EMPTY_OBJ_SET;
+const BlockSet& SnakeBlock::get_strong_links() {
+    return EMPTY_BLOCK_SET;
 }
 
-const ObjSet& SnakeBlock::get_weak_links() {
+const BlockSet& SnakeBlock::get_weak_links() {
     return links_;
 }
 

@@ -8,6 +8,7 @@
 #include <vector>
 
 class GameObject;
+class Block;
 
 const float BOARD_SIZE = 16.0f;
 
@@ -26,6 +27,7 @@ typedef std::unordered_set<Point, PointHash> PointSet;
 typedef std::vector<Point> PointVec;
 typedef std::vector<GameObject*> ObjVec;
 typedef std::unordered_set<GameObject*> ObjSet;
+typedef std::unordered_set<Block*> BlockSet;
 typedef std::unordered_map<Point, GameObject*, PointHash> PosIdMap;
 //typedef std::pair<Point, GameObject*> PosId;
 //typedef std::vector<PosId> PosIdVec;

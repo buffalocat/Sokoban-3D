@@ -7,6 +7,7 @@ class WorldMap;
 class GameObject;
 class Block;
 class PushBlock;
+class SnakeBlock;
 struct Point;
 enum class Layer;
 
@@ -24,7 +25,7 @@ public:
     bool trivial();
 
 private:
-    std::deque<std::unique_ptr<Delta>> deltas_;
+    std::vector<std::unique_ptr<Delta>> deltas_;
 };
 
 class UndoStack {
@@ -67,13 +68,35 @@ private:
     Point p_; // The previous position
 };
 
-class LinkUpdateDelta: public Delta {
+class AddLinkDelta: public Delta {
 public:
-    LinkUpdateDelta(Block*, ObjSet);
+    AddLinkDelta(Block* a, Block* b);
     void revert(WorldMap*);
 
 private:
-    Block* object_;
-    ObjSet links_;
+    Block* a_;
+    Block* b_;
 };
+
+class RemoveLinkDelta: public Delta {
+public:
+    RemoveLinkDelta(Block* a, Block* b);
+    void revert(WorldMap*);
+
+private:
+    Block* a_;
+    Block* b_;
+};
+
+class SnakeSplitDelta: public Delta {
+public:
+    SnakeSplitDelta(SnakeBlock* whole, SnakeBlock* half_a, SnakeBlock* half_b);
+    void revert(WorldMap*);
+
+private:
+    SnakeBlock* whole_;
+    SnakeBlock* half_a_;
+    SnakeBlock* half_b_;
+};
+
 #endif // DELTA_H

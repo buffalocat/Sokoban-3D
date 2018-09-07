@@ -150,6 +150,7 @@ int main(void) {
     world_map.put_quiet(std::make_unique<PushBlock>(6,9,StickyLevel::Strong));
     world_map.put_quiet(std::make_unique<PushBlock>(7,9,StickyLevel::Strong));
     world_map.put_quiet(std::make_unique<PushBlock>(8,9,StickyLevel::Strong));
+    world_map.put_quiet(std::make_unique<PushBlock>(9,9,StickyLevel::Strong));
     world_map.put_quiet(std::make_unique<PushBlock>(8,10,StickyLevel::Strong));
 
     world_map.put_quiet(std::make_unique<SnakeBlock>(4,11,2));
@@ -159,6 +160,7 @@ int main(void) {
     world_map.put_quiet(std::make_unique<SnakeBlock>(8,11,2));
     world_map.put_quiet(std::make_unique<SnakeBlock>(9,11,2));
     world_map.put_quiet(std::make_unique<SnakeBlock>(10,11,2)); //*/
+
 
     world_map.set_initial_state();
 

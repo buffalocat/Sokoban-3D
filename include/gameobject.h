@@ -30,14 +30,13 @@ class WorldMap;
  */
 class GameObject {
 public:
-    static ObjSet EMPTY_OBJ_SET;
-
     GameObject(int x, int y);
     virtual ~GameObject() = 0;
     Layer layer() const;
     Point pos() const;
     virtual void draw(Shader*) = 0;
-    virtual void cleanup() = 0;
+    virtual void cleanup(DeltaFrame*) = 0;
+    virtual void reinit() = 0;
     // If not wall(), then downcast to Block is safe
     bool wall() const;
 
@@ -53,7 +52,8 @@ public:
     Wall(int x, int y);
     ~Wall();
     void draw(Shader*);
-    void cleanup();
+    void cleanup(DeltaFrame*);
+    void reinit();
 };
 
 /** Abstract class for Solid objects which can move around and do things
@@ -61,24 +61,27 @@ public:
  */
 class Block: public GameObject {
 public:
+    static BlockSet EMPTY_BLOCK_SET;
+
     Block(int x, int y);
     virtual ~Block() = 0;
     void set_car(bool car);
     // This draws an indication of the "car"-ness!  Call it in all subclasses
     void draw(Shader*);
-    virtual const ObjSet& get_strong_links() = 0;
-    virtual const ObjSet& get_weak_links() = 0;
+    virtual const BlockSet& get_strong_links() = 0;
+    virtual const BlockSet& get_weak_links() = 0;
     void set_pos(Point p, DeltaFrame*);
     void shift_pos(Point d, DeltaFrame*);
-    ObjSet links();
-    void set_links(ObjSet links, DeltaFrame*);
-    void cleanup();
-    void insert_link(Block*);
-    void remove_link(Block*);
+    BlockSet links();
+    void add_link(Block*, DeltaFrame*);
+    void remove_link(Block*, DeltaFrame*);
+    void cleanup(DeltaFrame*);
+    void reinit();
+
 
 protected:
     bool car_;
-    ObjSet links_;
+    BlockSet links_;
 };
 
 enum class StickyLevel {
@@ -99,8 +102,8 @@ public:
     void set_sticky(StickyLevel sticky);
     void draw(Shader*);
     StickyLevel sticky();
-    const ObjSet& get_strong_links();
-    const ObjSet& get_weak_links();
+    const BlockSet& get_strong_links();
+    const BlockSet& get_weak_links();
 
 private:
     StickyLevel sticky_;
@@ -118,8 +121,8 @@ public:
     SnakeBlock* target();
     void set_distance(int);
     void set_target(SnakeBlock*);
-    const ObjSet& get_strong_links();
-    const ObjSet& get_weak_links();
+    const BlockSet& get_strong_links();
+    const BlockSet& get_weak_links();
     void draw(Shader*);
 
 private:

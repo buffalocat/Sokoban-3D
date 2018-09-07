@@ -30,11 +30,13 @@ public:
     bool move_strong_component(PosIdMap& result, Point start_point, Point dir);
 
     void update_links(DeltaFrame*);
-    void update_links_auxiliary(GameObject*, bool save_adj, DeltaFrame*);
+    void update_links_auxiliary(GameObject*, DeltaFrame*);
     void pull_snakes(DeltaFrame*);
     void pull_snakes_auxiliary(SnakeBlock*, DeltaFrame*);
     void set_initial_state();
     void update_snakes(DeltaFrame*);
+    void snake_split(SnakeBlock*, SnakeBlock*, SnakeBlock*);
+    void snake_split_reverse(SnakeBlock*, SnakeBlock*, SnakeBlock*);
 
     void draw(Shader*);
 

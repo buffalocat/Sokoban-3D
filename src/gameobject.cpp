@@ -29,7 +29,6 @@ bool GameObject::wall() const {
     return wall_;
 }
 
-
 Wall::Wall(int x, int y): GameObject(x, y) {}
 
 Wall::~Wall() {}
@@ -41,6 +40,8 @@ void Wall::draw(Shader* shader) {
     shader->setVec4("color", BLACK);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 }
+
+void Wall::cleanup() {}
 
 // Push is the "default" BlockType
 Block::Block(int x, int y): GameObject(x, y), car_ {false}, links_ {} {
@@ -103,6 +104,22 @@ void Block::set_links(ObjSet links, DeltaFrame* delta_frame) {
     links_ = links;
 }
 
+void Block::insert_link(Block* link) {
+    links_.insert(link);
+    link->links_.insert(this);
+}
+
+void Block::remove_link(Block* link) {
+    links_.erase(link);
+    link->links_.erase(this);
+}
+
+void Block::cleanup() {
+    for (auto link : links_) {
+        links_.erase(link);
+    }
+}
+
 PushBlock::PushBlock(int x, int y): Block(x, y), sticky_ {StickyLevel::None} {}
 PushBlock::PushBlock(int x, int y, StickyLevel sticky): Block(x, y), sticky_ {sticky} {}
 
@@ -158,11 +175,6 @@ const ObjSet& SnakeBlock::get_strong_links() {
 
 const ObjSet& SnakeBlock::get_weak_links() {
     return links_;
-}
-
-void SnakeBlock::remove_link(SnakeBlock* link) {
-    links_.erase(link);
-    link->links_.erase(this);
 }
 
 unsigned int SnakeBlock::ends() {

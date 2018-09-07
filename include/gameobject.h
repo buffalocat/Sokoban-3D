@@ -37,6 +37,7 @@ public:
     Layer layer() const;
     Point pos() const;
     virtual void draw(Shader*) = 0;
+    virtual void cleanup() = 0;
     // If not wall(), then downcast to Block is safe
     bool wall() const;
 
@@ -52,6 +53,7 @@ public:
     Wall(int x, int y);
     ~Wall();
     void draw(Shader*);
+    void cleanup();
 };
 
 /** Abstract class for Solid objects which can move around and do things
@@ -70,6 +72,9 @@ public:
     void shift_pos(Point d, DeltaFrame*);
     ObjSet links();
     void set_links(ObjSet links, DeltaFrame*);
+    void cleanup();
+    void insert_link(Block*);
+    void remove_link(Block*);
 
 protected:
     bool car_;
@@ -111,7 +116,6 @@ public:
     unsigned int ends();
     int distance();
     SnakeBlock* target();
-    void remove_link(SnakeBlock*);
     void set_distance(int);
     void set_target(SnakeBlock*);
     const ObjSet& get_strong_links();

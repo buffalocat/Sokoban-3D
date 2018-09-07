@@ -59,21 +59,21 @@ private:
 
 class MotionDelta: public Delta {
 public:
-    MotionDelta(Block* object, Point d);
+    MotionDelta(Block* object, Point p);
     void revert(WorldMap*);
 
 private:
     Block* object_;
-    Point d_; // The amount we moved (as a 2-vector)
+    Point p_; // The previous position
 };
 
 class LinkUpdateDelta: public Delta {
 public:
-    LinkUpdateDelta(PushBlock*, ObjSet);
+    LinkUpdateDelta(Block*, ObjSet);
     void revert(WorldMap*);
 
 private:
-    PushBlock* object_;
+    Block* object_;
     ObjSet links_;
 };
 #endif // DELTA_H

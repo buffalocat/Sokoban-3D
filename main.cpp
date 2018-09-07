@@ -130,7 +130,6 @@ int main(void) {
         world_map.put_quiet(std::make_unique<Wall>(j,3));
     }
 
-    world_map.put_quiet(std::make_unique<Wall>(8, 10));
 
     world_map.put_quiet(std::make_unique<PushBlock>(12,5,StickyLevel::Strong));
     world_map.put_quiet(std::make_unique<PushBlock>(12,6,StickyLevel::Strong));
@@ -145,8 +144,21 @@ int main(void) {
     world_map.put_quiet(std::make_unique<PushBlock>(12,12,StickyLevel::Weak));
     world_map.put_quiet(std::make_unique<PushBlock>(12,13,StickyLevel::Weak));
 
-    world_map.put_quiet(std::make_unique<SnakeBlock>(4,11,1));
+    world_map.put_quiet(std::make_unique<PushBlock>(4,10,StickyLevel::Strong));
+    world_map.put_quiet(std::make_unique<PushBlock>(4,9,StickyLevel::Strong));
+    world_map.put_quiet(std::make_unique<PushBlock>(5,9,StickyLevel::Strong));
+    world_map.put_quiet(std::make_unique<PushBlock>(6,9,StickyLevel::Strong));
+    world_map.put_quiet(std::make_unique<PushBlock>(7,9,StickyLevel::Strong));
+    world_map.put_quiet(std::make_unique<PushBlock>(8,9,StickyLevel::Strong));
+    world_map.put_quiet(std::make_unique<PushBlock>(8,10,StickyLevel::Strong));
+
+    world_map.put_quiet(std::make_unique<SnakeBlock>(4,11,2));
     world_map.put_quiet(std::make_unique<SnakeBlock>(5,11,2));
+    world_map.put_quiet(std::make_unique<SnakeBlock>(6,11,2));
+    world_map.put_quiet(std::make_unique<SnakeBlock>(7,11,2));
+    world_map.put_quiet(std::make_unique<SnakeBlock>(8,11,2));
+    world_map.put_quiet(std::make_unique<SnakeBlock>(9,11,2));
+    world_map.put_quiet(std::make_unique<SnakeBlock>(10,11,2)); //*/
 
     world_map.set_initial_state();
 

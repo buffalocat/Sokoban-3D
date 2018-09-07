@@ -77,15 +77,30 @@ void Block::draw(Shader* shader) {
 }
 
 void Block::shift_pos(Point d, DeltaFrame* delta_frame) {
+    if (delta_frame) {
+        delta_frame->push(std::make_unique<MotionDelta>(this, pos_));
+    }
     pos_.x += d.x;
     pos_.y += d.y;
+}
+
+void Block::set_pos(Point p, DeltaFrame* delta_frame) {
     if (delta_frame) {
-        delta_frame->push(std::make_unique<MotionDelta>(this, d));
+        delta_frame->push(std::make_unique<MotionDelta>(this, pos_));
     }
+    pos_.x = p.x;
+    pos_.y = p.y;
 }
 
 ObjSet Block::links() {
     return links_;
+}
+
+void Block::set_links(ObjSet links, DeltaFrame* delta_frame) {
+    if (delta_frame) {
+        delta_frame->push(std::make_unique<LinkUpdateDelta>(this, links_));
+    }
+    links_ = links;
 }
 
 PushBlock::PushBlock(int x, int y): Block(x, y), sticky_ {StickyLevel::None} {}
@@ -95,10 +110,6 @@ PushBlock::~PushBlock() {}
 
 void PushBlock::set_sticky(StickyLevel sticky) {
     sticky_ = sticky;
-}
-
-void PushBlock::set_links(ObjSet links) {
-    links_ = links;
 }
 
 void PushBlock::draw(Shader* shader) {
@@ -136,8 +147,8 @@ const ObjSet& PushBlock::get_weak_links() {
     }
 }
 
-SnakeBlock::SnakeBlock(int x, int y): Block(x, y), ends_ {2} {}
-SnakeBlock::SnakeBlock(int x, int y, unsigned int ends): Block(x, y), ends_ {(ends == 1 || ends == 2) ? ends : 2} {}
+SnakeBlock::SnakeBlock(int x, int y): Block(x, y), ends_ {2}, distance_ {0}, target_ {nullptr} {}
+SnakeBlock::SnakeBlock(int x, int y, unsigned int ends): Block(x, y), ends_ {(ends == 1 || ends == 2) ? ends : 2}, distance_ {0}, target_ {nullptr} {}
 
 SnakeBlock::~SnakeBlock() {}
 
@@ -147,6 +158,31 @@ const ObjSet& SnakeBlock::get_strong_links() {
 
 const ObjSet& SnakeBlock::get_weak_links() {
     return links_;
+}
+
+void SnakeBlock::remove_link(SnakeBlock* link) {
+    links_.erase(link);
+    link->links_.erase(this);
+}
+
+unsigned int SnakeBlock::ends() {
+    return ends_;
+}
+
+void SnakeBlock::set_distance(int distance) {
+    distance_ = distance;
+}
+
+int SnakeBlock::distance() {
+    return distance_;
+}
+
+void SnakeBlock::set_target(SnakeBlock* target) {
+    target_ = target;
+}
+
+SnakeBlock* SnakeBlock::target() {
+    return target_;
 }
 
 void SnakeBlock::draw(Shader* shader) {
@@ -163,29 +199,3 @@ void SnakeBlock::draw(Shader* shader) {
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
     Block::draw(shader);
 }
-
-/*
-void SnakeBlock::set_potential_links(WorldMap* world_map) {
-    Point p = pos();
-    PosIdMap p_links {};
-    int count = 0
-    for (int dx : {1,-1}) {
-        SnakeBlock* adj = dynamic_cast<SnakeBlock*>(world_map->view(Point{p.x+dx, p.y}, Layer::Solid));
-        if (adj) {
-            ++count;
-            p_links.insert(std::make_pair(Point {dx,0}, adj));
-        }
-    }
-    for (int dy : {1,-1}) {
-        SnakeBlock* adj = dynamic_cast<SnakeBlock*>(world_map->view(Point{p.x, p.y+dy}, Layer::Solid));
-        if (adj) {
-            ++count;
-            p_links.insert(std::make_pair(Point {0,dy}, adj));
-        }
-    }
-    if (new_links != links_) {
-        if (delta_frame)
-            delta_frame->push(std::make_unique<LinkUpdateDelta>(this, links_));
-        links_ = new_links;
-    }
-}*/

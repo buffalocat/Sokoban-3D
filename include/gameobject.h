@@ -66,8 +66,10 @@ public:
     void draw(Shader*);
     virtual const ObjSet& get_strong_links() = 0;
     virtual const ObjSet& get_weak_links() = 0;
+    void set_pos(Point p, DeltaFrame*);
     void shift_pos(Point d, DeltaFrame*);
     ObjSet links();
+    void set_links(ObjSet links, DeltaFrame*);
 
 protected:
     bool car_;
@@ -90,7 +92,6 @@ public:
     PushBlock(int x, int y, StickyLevel sticky);
     ~PushBlock();
     void set_sticky(StickyLevel sticky);
-    void set_links(ObjSet links);
     void draw(Shader*);
     StickyLevel sticky();
     const ObjSet& get_strong_links();
@@ -107,13 +108,20 @@ public:
     SnakeBlock(int x, int y);
     SnakeBlock(int x, int y, unsigned int ends);
     ~SnakeBlock();
+    unsigned int ends();
+    int distance();
+    SnakeBlock* target();
+    void remove_link(SnakeBlock*);
+    void set_distance(int);
+    void set_target(SnakeBlock*);
     const ObjSet& get_strong_links();
     const ObjSet& get_weak_links();
     void draw(Shader*);
 
 private:
-    unsigned int ends_;
-    ObjSet links_;
+    int ends_;
+    int distance_;
+    SnakeBlock* target_;
 };
 
 #endif // GAMEOBJECT_H

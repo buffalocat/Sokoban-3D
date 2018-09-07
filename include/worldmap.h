@@ -6,6 +6,8 @@
 class Shader;
 class DeltaFrame;
 class GameObject;
+class SnakeBlock;
+
 enum class Layer;
 
 typedef std::array<std::vector<std::unique_ptr<GameObject>>, static_cast<unsigned int>(Layer::COUNT)> MapCell;
@@ -29,7 +31,10 @@ public:
 
     void update_links(DeltaFrame*);
     void update_links_auxiliary(GameObject*, bool save_adj, DeltaFrame*);
+    void pull_snakes(DeltaFrame*);
+    void pull_snakes_auxiliary(SnakeBlock*, DeltaFrame*);
     void set_initial_state();
+    void update_snakes(DeltaFrame*);
 
     void draw(Shader*);
 
@@ -44,6 +49,8 @@ private:
     ObjSet moved_; // Objects which moved
     ObjSet link_update_; // Objects which didn't move but (may have) lost/formed links
     PointSet floor_update_; // Positions where an object (may have) left or entered the cell
+    std::unordered_set<SnakeBlock*> snakes_; // All snakes
+    std::unordered_set<SnakeBlock*> pushed_snakes_; // Snakes that were directly pushed
 };
 
 #endif // WORLDMAP_H

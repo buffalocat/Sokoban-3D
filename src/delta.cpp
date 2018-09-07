@@ -51,16 +51,23 @@ void CreationDelta::revert(WorldMap* world_map) {
     world_map->take_quiet_id(object_->pos(), object_->layer(), object_);
 }
 
-MotionDelta::MotionDelta(Block* object, Point d): object_ {object}, d_ {d} {}
+MotionDelta::MotionDelta(Block* object, Point p): object_ {object}, p_ {p} {}
 
 void MotionDelta::revert(WorldMap* world_map) {
     auto object_unique = world_map->take_quiet_id(object_->pos(), object_->layer(), object_);
-    object_->shift_pos(Point{-d_.x, -d_.y}, nullptr);
+    object_->set_pos(p_, nullptr);
     world_map->put_quiet(std::move(object_unique));
 }
 
-LinkUpdateDelta::LinkUpdateDelta(PushBlock* object, ObjSet links): object_ {object}, links_ {links} {}
+LinkUpdateDelta::LinkUpdateDelta(Block* object, ObjSet links): object_ {object}, links_ {links} {}
 
 void LinkUpdateDelta::revert(WorldMap* world_map) {
-    object_->set_links(links_);
+    object_->set_links(links_, nullptr);
 }
+
+/*
+SnakeSplitDelta::SnakeSplitDelta(SnakeBlock* parent, SnakeBlock* child_a, SnakeBlock* child_b)
+
+void SnakeSplitDelta::revert(WorldMap* world_map) {
+
+}*/

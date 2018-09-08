@@ -107,8 +107,9 @@ void WorldMap::draw(Shader* shader) {
     for (auto& column : map_) {
         for (auto& cell : column) {
             for (auto& layer : cell) {
+                int i = 0;
                 for (auto& object : layer) {
-                    object->draw(shader);
+                    object->draw(shader, ++i);
                 }
             }
         }
@@ -191,34 +192,31 @@ bool WorldMap::move_strong_component(PosIdMap& result, Point start_point, Point 
         for (auto& link : static_cast<Block*>(view(cur_pos, Layer::Solid))->get_weak_links()) {
             weak_connections.push_back(link);
         }
-        if (seen_.count(new_pos)) {
-            // If it was in seen but not in not_move, then it has already been verified ok
+        GameObject* new_obj = view(new_pos, Layer::Solid);
+        auto sb = dynamic_cast<SnakeBlock*>(new_obj);
+        if (sb) {
+            // If a snake block is pushed, we need to look at it again!
+            seen_.erase(new_pos);
+            sb->set_distance(0);
+            sb->set_target(sb);
+            pushed_snakes_.insert(sb);
+            for (auto link : sb->links()) {
+                auto link_sb = static_cast<SnakeBlock*>(link);
+                if (!link_sb->target()) {
+                    link_sb->set_distance(1);
+                    link_sb->set_target(sb);
+                }
+            }
+        // There's no need to see any *other* kind of block twice
+        } else if (seen_.count(new_pos)) {
             continue;
         }
-        GameObject* new_obj = view(new_pos, Layer::Solid);
         if (new_obj) {
             if (new_obj->wall()) {
                 move_cancelled = true;
                 result = {};
                 break;
             }
-            // If the thing we pushed was a snake block, we need to pull its neighbors
-            auto sb = dynamic_cast<SnakeBlock*>(new_obj);
-            if (sb) {
-                sb->set_distance(0);
-                sb->set_target(sb);
-                pushed_snakes_.insert(sb);
-                //std::cout << "setting distance to 0 at " << sb->pos().x << "," << sb->pos().y << std::endl;
-                for (auto link : sb->links()) {
-                    auto link_sb = static_cast<SnakeBlock*>(link);
-                    if (!link_sb->target()) {
-                        link_sb->set_distance(1);
-                        link_sb->set_target(sb);
-                        //std::cout << "setting distance to 1 at " << link_sb->pos().x << "," << link_sb->pos().y << std::endl;
-                    }
-                }
-            }
-            //std::cout << "Starting a push branch" << std::endl;
             // If this branch is good, insert it into the current result
             // If it's bad, we ONLY return the bad branch
             PosIdMap branch {};
@@ -341,6 +339,8 @@ void WorldMap::update_links_auxiliary(GameObject* obj, DeltaFrame* delta_frame) 
 
 void WorldMap::pull_snakes(DeltaFrame* delta_frame) {
     for (auto pushed : pushed_snakes_) {
+        if (not_move_.count(pushed->pos()))
+            continue;
         for (auto obj : pushed->links()) {
             SnakeBlock* cur = static_cast<SnakeBlock*>(obj);
             if (not_move_.count(cur->pos())) {
@@ -421,12 +421,10 @@ void WorldMap::snake_split_reverse(SnakeBlock* whole, SnakeBlock* half_a, SnakeB
 void WorldMap::pull_snakes_auxiliary(SnakeBlock* cur, DeltaFrame* delta_frame) {
     SnakeBlock* next = cur->target();
     while (next->distance()) {
-        std::cout << "About to move a snake at " << cur->pos().x << "," << cur->pos().y << std::endl;
         auto obj_unique = take_quiet_id(cur->pos(), Layer::Solid, cur);
         cur->set_pos(next->pos(), delta_frame);
         put_quiet(std::move(obj_unique));
         cur = next;
         next = cur->target();
-        std::cout << "Successfully moved snake at " << cur->pos().x << "," << cur->pos().y << std::endl;
     }
 }

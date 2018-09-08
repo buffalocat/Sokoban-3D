@@ -34,7 +34,7 @@ public:
     virtual ~GameObject() = 0;
     Layer layer() const;
     Point pos() const;
-    virtual void draw(Shader*) = 0;
+    virtual void draw(Shader*, int) = 0;
     virtual void cleanup(DeltaFrame*) = 0;
     virtual void reinit() = 0;
     // If not wall(), then downcast to Block is safe
@@ -51,7 +51,7 @@ class Wall: public GameObject {
 public:
     Wall(int x, int y);
     ~Wall();
-    void draw(Shader*);
+    void draw(Shader*, int);
     void cleanup(DeltaFrame*);
     void reinit();
 };
@@ -67,7 +67,7 @@ public:
     virtual ~Block() = 0;
     void set_car(bool car);
     // This draws an indication of the "car"-ness!  Call it in all subclasses
-    void draw(Shader*);
+    void draw(Shader*, int);
     virtual const BlockSet& get_strong_links() = 0;
     virtual const BlockSet& get_weak_links() = 0;
     void set_pos(Point p, DeltaFrame*);
@@ -100,7 +100,7 @@ public:
     PushBlock(int x, int y, StickyLevel sticky);
     ~PushBlock();
     void set_sticky(StickyLevel sticky);
-    void draw(Shader*);
+    void draw(Shader*, int);
     StickyLevel sticky();
     const BlockSet& get_strong_links();
     const BlockSet& get_weak_links();
@@ -123,7 +123,7 @@ public:
     void set_target(SnakeBlock*);
     const BlockSet& get_strong_links();
     const BlockSet& get_weak_links();
-    void draw(Shader*);
+    void draw(Shader*, int);
 
 private:
     int ends_;

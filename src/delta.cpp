@@ -49,26 +49,18 @@ void DeletionDelta::revert(WorldMap* world_map) {
     obj->reinit();
 }
 
-CreationDelta::CreationDelta(GameObject* object): object_ {object} {
-    //std::cout << "Making a CREATION delta of thing at " << object_->pos().x << "," << object_->pos().y << std::endl;
-}
+CreationDelta::CreationDelta(GameObject* object): object_ {object} {}
 
 void CreationDelta::revert(WorldMap* world_map) {
-    std::cout << "CREATION" << std::endl;
     world_map->take_quiet_id(object_->pos(), object_->layer(), object_);
 }
 
-MotionDelta::MotionDelta(Block* object, Point p): object_ {object}, p_ {p} {
-    //std::cout << "Making a motion delta of thing at " << p.x << "," << p.y << std::endl;
-}
+MotionDelta::MotionDelta(Block* object, Point p): object_ {object}, p_ {p} {}
 
 void MotionDelta::revert(WorldMap* world_map) {
-    std::cout << "Reverting motion delta! of thing at " << object_->pos().x << "," << object_->pos().y << std::endl;
-    std::cout << "The thing is " << world_map->view(object_->pos(), object_->layer()) << std::endl;
     auto object_unique = world_map->take_quiet_id(object_->pos(), object_->layer(), object_);
     object_->set_pos(p_, nullptr);
     world_map->put_quiet(std::move(object_unique));
-    std::cout << "It worked" << std::endl;
 }
 
 AddLinkDelta::AddLinkDelta(Block* a, Block* b): a_ {a}, b_ {b} {}

@@ -122,14 +122,17 @@ int main(void) {
     player->set_car(true);
     Block* player_ptr = player.get();
     world_map.put_quiet(std::move(player));
-    world_map.put_quiet(std::make_unique<PushBlock>(8,8));
-    world_map.put_quiet(std::make_unique<PushBlock>(7,8));
-    world_map.put_quiet(std::make_unique<PushBlock>(5,8));
     for (int j = 3; j != 8; ++j) {
         world_map.put_quiet(std::make_unique<Wall>(2,j));
         world_map.put_quiet(std::make_unique<Wall>(j,3));
     }
 
+    world_map.put_quiet(std::make_unique<SnakeBlock>(2,8,1));
+    world_map.put_quiet(std::make_unique<SnakeBlock>(3,8,2));
+    world_map.put_quiet(std::make_unique<SnakeBlock>(3,7,2));
+    world_map.put_quiet(std::make_unique<SnakeBlock>(4,7,2));
+    world_map.put_quiet(std::make_unique<SnakeBlock>(5,7,2));
+    world_map.put_quiet(std::make_unique<SnakeBlock>(5,8,1));
 
     world_map.put_quiet(std::make_unique<PushBlock>(12,5,StickyLevel::Strong));
     world_map.put_quiet(std::make_unique<PushBlock>(12,6,StickyLevel::Strong));

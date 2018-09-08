@@ -33,9 +33,9 @@ Wall::Wall(int x, int y): GameObject(x, y) {}
 
 Wall::~Wall() {}
 
-void Wall::draw(Shader* shader) {
+void Wall::draw(Shader* shader, int height) {
     Point p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 0.5f, p.y - BOARD_SIZE/2));
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 0.5f + height, p.y - BOARD_SIZE/2));
     shader->setMat4("model", model);
     shader->setVec4("color", BLACK);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
@@ -56,11 +56,11 @@ void Block::set_car(bool car) {
     car_ = car;
 }
 
-void Block::draw(Shader* shader) {
+void Block::draw(Shader* shader, int height) {
     Point p = pos();
     glm::mat4 model;
     if (car_) {
-        model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 1.0f, p.y - BOARD_SIZE/2));
+        model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 1.0f + height, p.y - BOARD_SIZE/2));
         model = glm::scale(model, glm::vec3(0.5f, 0.2f, 0.5f));
         shader->setMat4("model", model);
         shader->setVec4("color", PINK);
@@ -71,7 +71,7 @@ void Block::draw(Shader* shader) {
     for (auto link : links_) {
         Point q = link->pos();
         Point d {q.x - p.x, q.y - p.y};
-        model = glm::translate(glm::mat4(), glm::vec3(0.2f*d.x, 0.5f, 0.2f*d.y));
+        model = glm::translate(glm::mat4(), glm::vec3(0.2f*d.x, 0.5f + height, 0.2f*d.y));
         model = glm::translate(model, glm::vec3(p.x - BOARD_SIZE/2, 0.5f, p.y - BOARD_SIZE/2));
         model = glm::scale(model, glm::vec3(0.1f + 0.2f*abs(d.x), 0.1f, 0.1f + 0.2f*abs(d.y)));
         shader->setMat4("model", model);
@@ -121,7 +121,6 @@ void Block::remove_link(Block* link, DeltaFrame* delta_frame) {
 void Block::cleanup(DeltaFrame* delta_frame) {
     // When a Block is destroyed, any links to it should be forgotten
     for (auto link : links_) {
-        std::cout << "erased link from " << link->pos().x << "," << link->pos().y << " to " << pos().x << "," << pos().y << std::endl;
         link->links_.erase(this);
     }
 }
@@ -129,7 +128,6 @@ void Block::cleanup(DeltaFrame* delta_frame) {
 void Block::reinit() {
     // When a Block is un-destroyed, any links it had should be reconnected
     for (auto link : links_) {
-        std::cout << "restored link from " << link->pos().x << "," << link->pos().y << " to " << pos().x << "," << pos().y << std::endl;
         link->links_.insert(this);
     }
 }
@@ -143,9 +141,9 @@ void PushBlock::set_sticky(StickyLevel sticky) {
     sticky_ = sticky;
 }
 
-void PushBlock::draw(Shader* shader) {
+void PushBlock::draw(Shader* shader, int height) {
     Point p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 0.5f, p.y - BOARD_SIZE/2));
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 0.5f + height, p.y - BOARD_SIZE/2));
     shader->setMat4("model", model);
     if (sticky_ == StickyLevel::None) {
         shader->setVec4("color", GREEN);
@@ -155,7 +153,7 @@ void PushBlock::draw(Shader* shader) {
         shader->setVec4("color", RED);
     }
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-    Block::draw(shader);
+    Block::draw(shader, height);
 }
 
 StickyLevel PushBlock::sticky() {
@@ -211,9 +209,9 @@ SnakeBlock* SnakeBlock::target() {
     return target_;
 }
 
-void SnakeBlock::draw(Shader* shader) {
+void SnakeBlock::draw(Shader* shader, int height) {
     Point p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 0.5f, p.y - BOARD_SIZE/2));
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 0.5f + height, p.y - BOARD_SIZE/2));
     model = glm::scale(model, glm::vec3(0.7071f, 1, 0.7071f));
     model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0, 1, 0));
     shader->setMat4("model", model);
@@ -223,5 +221,5 @@ void SnakeBlock::draw(Shader* shader) {
         shader->setVec4("color", DARK_PURPLE);
     }
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-    Block::draw(shader);
+    Block::draw(shader, height);
 }

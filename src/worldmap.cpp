@@ -28,6 +28,14 @@ int WorldMap::height() const {
     return height_;
 }
 
+Block* WorldMap::prime_mover() {
+    if (!movers_.empty()) {
+        return movers_.back();
+    } else {
+        return nullptr;
+    }
+}
+
 // Assuming not big_map
 void WorldMap::serialize(std::ofstream& file) const {
     for (int x = 0; x != width_; ++x) {
@@ -124,7 +132,7 @@ void WorldMap::put_quiet(std::unique_ptr<GameObject> object) {
     if (valid(pos)) {
         Block* block = dynamic_cast<Block*>(object.get());
         if (block && block->car()) {
-            movers_.insert(block);
+            movers_.push_back(block);
         }
         map_[pos.x][pos.y][static_cast<unsigned int>(object->layer())].push_back(std::move(object));
     } else {
@@ -138,7 +146,7 @@ void WorldMap::draw(Shader* shader) {
             for (auto& layer : cell) {
                 int i = 0;
                 for (auto& object : layer) {
-                    object->draw(shader, ++i);
+                    object->draw(shader, i++);
                 }
             }
         }

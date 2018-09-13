@@ -39,9 +39,22 @@
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
+const int MESH_SIZE = 50;
+
+const float ORTHO_WIDTH = (float)SCREEN_WIDTH/(float)MESH_SIZE;
+const float ORTHO_HEIGHT = (float)SCREEN_HEIGHT/(float)MESH_SIZE;
+
+const int DEFAULT_BOARD_WIDTH = 17;
+const int DEFAULT_BOARD_HEIGHT = 13;
+
 const int MAX_COOLDOWN = 5;
 
 bool windowInit(GLFWwindow*&);
+
+enum class ViewMode {
+    Perspective,
+    Ortho,
+};
 
 int main(void) {
     GLFWwindow* window;
@@ -101,14 +114,14 @@ int main(void) {
 
     // Init game logic stuff
 
-    auto world_map = std::make_unique<WorldMap>(BOARD_SIZE, BOARD_SIZE);
-    //world_map->put_quiet(std::move(std::make_unique<PushBlock>(5,5,true,StickyLevel::None)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(10,12,true,StickyLevel::Strong)));
+    auto world_map = std::make_unique<WorldMap>(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
+    auto player_unique = std::move(std::make_unique<PushBlock>(0,0,true,StickyLevel::Strong));
+    Block* player = player_unique.get();
+    world_map->put_quiet(std::move(player_unique));
     /*for (int j = 3; j != 8; ++j) {
         world_map->put_quiet(std::make_unique<Wall>(2,j));
         world_map->put_quiet(std::make_unique<Wall>(j,3));
     }
-
     */
     world_map->put_quiet(std::make_unique<SnakeBlock>(2,8,false,1));
     world_map->put_quiet(std::make_unique<SnakeBlock>(3,8,false,2));
@@ -176,6 +189,8 @@ int main(void) {
 
     glfwSwapInterval(0);
 
+    ViewMode view_mode = ViewMode::Perspective;
+
     while(!glfwWindowShouldClose(window)) {
         // Handle input
         auto delta_frame = std::make_unique<DeltaFrame>();
@@ -183,21 +198,23 @@ int main(void) {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, true);
         }
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-            cam_rotation -= .01f;
-        }
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-            cam_rotation += .01f;
-        }
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-            cam_incline += .01f;
+        if (view_mode == ViewMode::Perspective) {
+            if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+                cam_rotation -= .01f;
+            }
+            if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+                cam_rotation += .01f;
+            }
+            if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+                cam_incline += .01f;
+            }
+            if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+                cam_incline -= .01f;
+            }
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
             if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
                 Loader::save(world_map.get());
-            }
-            else {
-                cam_incline -= .01f;
             }
         }
         if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
@@ -206,7 +223,21 @@ int main(void) {
                 if (new_world_map) {
                     world_map.reset(new_world_map);
                     world_map->set_initial_state();
+                    player = world_map->prime_mover();
                     undo_stack = UndoStack(1000);
+                }
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
+            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+                if (cooldown == 0) {
+                    if (view_mode == ViewMode::Perspective) {
+                        view_mode = ViewMode::Ortho;
+                    } else {
+                        view_mode = ViewMode::Perspective;
+                    }
+                    // It's a little too easy to do this more times than you mean to...
+                    cooldown = 3*MAX_COOLDOWN;
                 }
             }
         }
@@ -238,11 +269,23 @@ int main(void) {
         cam_y = sin(cam_incline) * cam_radius;
         cam_z = cos(cam_incline) * cos(cam_rotation) * cam_radius;
 
-        view = glm::lookAt(glm::vec3(cam_x, cam_y, cam_z),
-                           glm::vec3(0.0f, 0.0f, 0.0f),
-                           glm::vec3(0.0f, 1.0f, 0.0f));
-        view = glm::translate(view, glm::vec3(0.5, 0.0, 0.5));
-        projection = glm::perspective(glm::radians(60.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT, 0.1f, 100.0f);
+        Point player_pos = Point {0, 0};
+        if (player) {
+            player_pos = player->pos();
+        }
+
+        if (view_mode == ViewMode::Perspective) {
+            view = glm::lookAt(glm::vec3(cam_x + player_pos.x, cam_y, cam_z + player_pos.y),
+                               glm::vec3(player_pos.x, 0.0f, player_pos.y),
+                               glm::vec3(0.0f, 1.0f, 0.0f));
+            view = glm::translate(view, glm::vec3(0.5, 0.0, 0.5));
+            projection = glm::perspective(glm::radians(60.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT, 0.1f, 100.0f);
+        } else { // view_mode == ViewMode::Ortho
+            view = glm::lookAt(glm::vec3(player_pos.x, 2.0f, player_pos.y),
+                               glm::vec3(player_pos.x, 0.0f, player_pos.y),
+                               glm::vec3(0.0f, 0.0f, -1.0f));
+            projection = glm::ortho(-ORTHO_WIDTH/2.0f, ORTHO_WIDTH/2.0f, -ORTHO_HEIGHT/2.0f, ORTHO_HEIGHT/2.0f, 0.0f, 3.0f);
+        }
 
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
@@ -251,7 +294,8 @@ int main(void) {
 
         // Draw the floor
         model = glm::translate(glm::mat4(), glm::vec3(-0.5, -0.1, -0.5));
-        model = glm::scale(model, glm::vec3(BOARD_SIZE, 0.1, BOARD_SIZE));
+        model = glm::scale(model, glm::vec3(world_map->width(), 0.1, world_map->height()));
+        model = glm::translate(model, glm::vec3(0.5, -0.1, 0.5));
         shader.setMat4("model", model);
 
         shader.setVec4("color", YELLOW);

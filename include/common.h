@@ -10,8 +10,6 @@
 class GameObject;
 class Block;
 
-const float BOARD_SIZE = 16.0f;
-
 struct Point {
     int x;
     int y;

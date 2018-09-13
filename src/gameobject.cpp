@@ -35,7 +35,7 @@ Wall::~Wall() {}
 
 void Wall::draw(Shader* shader, int height) {
     Point p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 0.5f + height, p.y - BOARD_SIZE/2));
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f + height, p.y));
     shader->setMat4("model", model);
     shader->setVec4("color", BLACK);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
@@ -74,7 +74,7 @@ void Block::draw(Shader* shader, int height) {
     Point p = pos();
     glm::mat4 model;
     if (car_) {
-        model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 1.0f + height, p.y - BOARD_SIZE/2));
+        model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.0f + height, p.y));
         model = glm::scale(model, glm::vec3(0.5f, 0.2f, 0.5f));
         shader->setMat4("model", model);
         shader->setVec4("color", PINK);
@@ -86,7 +86,7 @@ void Block::draw(Shader* shader, int height) {
         Point q = link->pos();
         Point d {q.x - p.x, q.y - p.y};
         model = glm::translate(glm::mat4(), glm::vec3(0.2f*d.x, 0.5f + height, 0.2f*d.y));
-        model = glm::translate(model, glm::vec3(p.x - BOARD_SIZE/2, 0.5f, p.y - BOARD_SIZE/2));
+        model = glm::translate(model, glm::vec3(p.x, 0.5f, p.y));
         model = glm::scale(model, glm::vec3(0.1f + 0.2f*abs(d.x), 0.1f, 0.1f + 0.2f*abs(d.y)));
         shader->setMat4("model", model);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
@@ -157,7 +157,7 @@ void PushBlock::set_sticky(StickyLevel sticky) {
 
 void PushBlock::draw(Shader* shader, int height) {
     Point p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 0.5f + height, p.y - BOARD_SIZE/2));
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f + height, p.y));
     shader->setMat4("model", model);
     if (sticky_ == StickyLevel::None) {
         shader->setVec4("color", GREEN);
@@ -242,7 +242,7 @@ void SnakeBlock::reset_target() {
 
 void SnakeBlock::draw(Shader* shader, int height) {
     Point p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 0.5f + height, p.y - BOARD_SIZE/2));
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f + height, p.y));
     model = glm::scale(model, glm::vec3(0.7071f, 1, 0.7071f));
     model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0, 1, 0));
     shader->setMat4("model", model);

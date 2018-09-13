@@ -20,6 +20,7 @@ public:
     bool valid(Point pos);
     int width() const;
     int height() const;
+    Block* prime_mover();
 
     void serialize(std::ofstream& file) const;
 
@@ -52,7 +53,7 @@ private:
     std::vector<std::vector<MapCell>> map_;
 
     // State variables
-    BlockSet movers_;
+    std::vector<Block*> movers_;
     PointSet seen_; // Points which have been inspected in a move
     PointSet not_move_; // Points guaranteed not to move during a move
     ObjSet moved_; // Objects which moved

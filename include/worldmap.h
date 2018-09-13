@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+#include <fstream>
+
 class Shader;
 class DeltaFrame;
 class GameObject;
@@ -16,6 +18,10 @@ class WorldMap {
 public:
     WorldMap(int width, int height);
     bool valid(Point pos);
+    int width() const;
+    int height() const;
+
+    void serialize(std::ofstream& file) const;
 
     GameObject* view(Point, Layer);
     void take(Point, Layer, DeltaFrame*);
@@ -26,7 +32,7 @@ public:
     void put_quiet(std::unique_ptr<GameObject>);
 
     void reset_state();
-    void move_solid(Point player_pos, Point dir, DeltaFrame* delta_frame);
+    void move_solid(Point dir, DeltaFrame* delta_frame);
     bool move_strong_component(PosIdMap& result, Point start_point, Point dir);
 
     void update_links(DeltaFrame*);
@@ -46,6 +52,7 @@ private:
     std::vector<std::vector<MapCell>> map_;
 
     // State variables
+    BlockSet movers_;
     PointSet seen_; // Points which have been inspected in a move
     PointSet not_move_; // Points guaranteed not to move during a move
     ObjSet moved_; // Objects which moved

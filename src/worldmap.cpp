@@ -7,7 +7,7 @@
 
 
 WorldMap::WorldMap(int width, int height): width_ {width}, height_ {height}, map_ {},
-seen_ {}, not_move_ {}, moved_ {}, link_update_ {}, floor_update_ {}, snakes_ {}, pushed_snakes_ {} {
+movers_ {}, seen_ {}, not_move_ {}, moved_ {}, link_update_ {}, floor_update_ {}, snakes_ {}, pushed_snakes_ {} {
     for (int i = 0; i != width; ++i) {
         map_.push_back({});
         for (int j = 0; j != height; ++j) {
@@ -18,6 +18,31 @@ seen_ {}, not_move_ {}, moved_ {}, link_update_ {}, floor_update_ {}, snakes_ {}
 
 bool WorldMap::valid(Point pos) {
     return (0 <= pos.x) && (pos.x < width_) && (0 <= pos.y) && (pos.y < height_);
+}
+
+int WorldMap::width() const {
+    return width_;
+}
+
+int WorldMap::height() const {
+    return height_;
+}
+
+// Assuming not big_map
+void WorldMap::serialize(std::ofstream& file) const {
+    for (int x = 0; x != width_; ++x) {
+        for (int y = 0; y != height_; ++y) {
+            for (auto& layer : map_[x][y]) {
+                for (auto& object : layer) {
+                    file << static_cast<unsigned char>(object->obj_code());
+                    file << static_cast<unsigned char>(x);
+                    file << static_cast<unsigned char>(y);
+                    object->serialize(file);
+                }
+            }
+        }
+    }
+    file << static_cast<unsigned char>(ObjCode::NONE);
 }
 
 GameObject* WorldMap::view(Point pos, Layer layer) {
@@ -97,6 +122,10 @@ void WorldMap::put(std::unique_ptr<GameObject> object, DeltaFrame* delta_frame) 
 void WorldMap::put_quiet(std::unique_ptr<GameObject> object) {
     Point pos = object->pos();
     if (valid(pos)) {
+        Block* block = dynamic_cast<Block*>(object.get());
+        if (block && block->car()) {
+            movers_.insert(block);
+        }
         map_[pos.x][pos.y][static_cast<unsigned int>(object->layer())].push_back(std::move(object));
     } else {
         throw std::runtime_error("Tried to (quietly) put an object in an invalid location!");
@@ -119,11 +148,22 @@ void WorldMap::draw(Shader* shader) {
 
 // Note: many things are predicated on the assumption that, in any consistent game state,
 // certain layers allow at most one object per MapCell.  These include Solid and Player.
-void WorldMap::move_solid(Point player_pos, Point dir, DeltaFrame* delta_frame) {
+void WorldMap::move_solid(Point dir, DeltaFrame* delta_frame) {
     reset_state();
     PosIdMap result {};
-    if (!move_strong_component(result, player_pos, dir))
+    bool move_successful = false;
+    // NOTE: This only moves the first thing that can move, for now... i.e., it's "non critically broken"
+    for (auto& block : movers_) {
+        PosIdMap branch {};
+        if (move_strong_component(branch, block->pos(), dir)) {
+            move_successful = true;
+            result = branch;
+            break;
+        }
+    }
+    if (!move_successful) {
         return;
+    }
     pull_snakes(delta_frame);
     for (auto& pos_id : result) {
         Point pos;
@@ -244,7 +284,6 @@ bool WorldMap::move_strong_component(PosIdMap& result, Point start_point, Point 
             // If the block is a snake block with no pull target, we ignore it for now
             auto sb = dynamic_cast<SnakeBlock*>(link);
             if (sb && !(sb->target())) {
-                //std::cout << "Ignoring a snake at " << sb->pos().x << "," << sb->pos().y << std::endl;
                 continue;
             }
             if (move_strong_component(branch, link_pos, dir)) {
@@ -327,7 +366,6 @@ void WorldMap::update_links_auxiliary(GameObject* obj, DeltaFrame* delta_frame) 
     if (pb && pb->sticky() != StickyLevel::None) {
         Point p = obj->pos();
         BlockSet new_links {};
-        //std::cout << "Updating links at " << p.x << "," << p.y << std::endl;
         for (Point d : {Point{1,0}, Point{-1,0}, Point{0,1}, Point{0,-1}}) {
             PushBlock* adj = dynamic_cast<PushBlock*>(view(Point {p.x + d.x, p.y + d.y}, Layer::Solid));
             if (adj && pb->sticky() == adj->sticky()) {
@@ -378,13 +416,13 @@ void WorldMap::pull_snakes(DeltaFrame* delta_frame) {
                     else if (d == cur->distance()) {
                         Point pos = cur->pos();
                         take_id(pos, Layer::Solid, cur, delta_frame);
-                        auto a_unique = std::make_unique<SnakeBlock>(pos.x, pos.y, 1);
+                        auto a_unique = std::make_unique<SnakeBlock>(pos.x, pos.y, false, 1);
                         auto a = a_unique.get();
                         put(std::move(a_unique), delta_frame);
                         a->set_target(prev);
                         a->add_link(prev, delta_frame);
                         pull_snakes_auxiliary(a, delta_frame);
-                        auto b_unique = std::make_unique<SnakeBlock>(pos.x, pos.y, 1);
+                        auto b_unique = std::make_unique<SnakeBlock>(pos.x, pos.y, false, 1);
                         auto b = b_unique.get();
                         put(std::move(b_unique), delta_frame);
                         b->set_target(cur->target());
@@ -423,6 +461,7 @@ void WorldMap::pull_snakes_auxiliary(SnakeBlock* cur, DeltaFrame* delta_frame) {
     while (next->distance()) {
         auto obj_unique = take_quiet_id(cur->pos(), Layer::Solid, cur);
         cur->set_pos(next->pos(), delta_frame);
+        cur->reset_target();
         put_quiet(std::move(obj_unique));
         cur = next;
         next = cur->target();

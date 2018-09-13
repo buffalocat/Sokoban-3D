@@ -6,6 +6,8 @@
 #pragma GCC diagnostic ignored "-Wswitch-default"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wmissing-declarations"
+#pragma GCC diagnostic ignored "-Winline"
+#pragma GCC diagnostic ignored "-Wpedantic"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -28,42 +30,24 @@
 #include <thread>
 #include <chrono>
 
+#include "gameobject.h"
 #include "delta.h"
 #include "worldmap.h"
 #include "shader.h"
-#include "gameobject.h"
+#include "loader.h"
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
 const int MAX_COOLDOWN = 5;
 
-/*
-void processInput(GLFWwindow *window, Point& pos) {
-}*/
+bool windowInit(GLFWwindow*&);
 
 int main(void) {
-    // Standard Init things
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_RESIZABLE, false);
-
-    GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Sokoban 3D", nullptr, nullptr);
-    if (!window) {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
+    GLFWwindow* window;
+    if (!windowInit(window)) {
         return -1;
     }
-    glfwMakeContextCurrent(window);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
-    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
     float cubeVertices[24];
     for (int i = 0; i < 8; ++i) {
@@ -117,55 +101,54 @@ int main(void) {
 
     // Init game logic stuff
 
-    WorldMap world_map(BOARD_SIZE, BOARD_SIZE);
-    auto player = std::make_unique<PushBlock>(5,5);
-    player->set_car(true);
-    Block* player_ptr = player.get();
-    world_map.put_quiet(std::move(player));
-    for (int j = 3; j != 8; ++j) {
-        world_map.put_quiet(std::make_unique<Wall>(2,j));
-        world_map.put_quiet(std::make_unique<Wall>(j,3));
+    auto world_map = std::make_unique<WorldMap>(BOARD_SIZE, BOARD_SIZE);
+    //world_map->put_quiet(std::move(std::make_unique<PushBlock>(5,5,true,StickyLevel::None)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(10,12,true,StickyLevel::Strong)));
+    /*for (int j = 3; j != 8; ++j) {
+        world_map->put_quiet(std::make_unique<Wall>(2,j));
+        world_map->put_quiet(std::make_unique<Wall>(j,3));
     }
 
-    world_map.put_quiet(std::make_unique<SnakeBlock>(2,8,1));
-    world_map.put_quiet(std::make_unique<SnakeBlock>(3,8,2));
-    world_map.put_quiet(std::make_unique<SnakeBlock>(3,7,2));
-    world_map.put_quiet(std::make_unique<SnakeBlock>(4,7,2));
-    world_map.put_quiet(std::make_unique<SnakeBlock>(5,7,2));
-    world_map.put_quiet(std::make_unique<SnakeBlock>(5,8,1));
+    */
+    world_map->put_quiet(std::make_unique<SnakeBlock>(2,8,false,1));
+    world_map->put_quiet(std::make_unique<SnakeBlock>(3,8,false,2));
+    world_map->put_quiet(std::make_unique<SnakeBlock>(3,7,false,2));
+    world_map->put_quiet(std::make_unique<SnakeBlock>(4,7,false,2));
+    world_map->put_quiet(std::make_unique<SnakeBlock>(5,7,false,2));
+    world_map->put_quiet(std::make_unique<SnakeBlock>(5,8,false,1));
 
-    world_map.put_quiet(std::make_unique<PushBlock>(12,5,StickyLevel::Strong));
-    world_map.put_quiet(std::make_unique<PushBlock>(12,6,StickyLevel::Strong));
-    world_map.put_quiet(std::make_unique<PushBlock>(14,5,StickyLevel::Strong));
-    world_map.put_quiet(std::make_unique<PushBlock>(14,6,StickyLevel::Strong));
+    world_map->put_quiet(std::make_unique<PushBlock>(12,5,false,StickyLevel::Strong));
+    world_map->put_quiet(std::make_unique<PushBlock>(12,6,false,StickyLevel::Strong));
+    world_map->put_quiet(std::make_unique<PushBlock>(14,5,false,StickyLevel::Strong));
+    world_map->put_quiet(std::make_unique<PushBlock>(14,6,false,StickyLevel::Strong));
+    /*
+    world_map->put_quiet(std::make_unique<PushBlock>(12,7,false,StickyLevel::Weak));
+    world_map->put_quiet(std::make_unique<PushBlock>(12,8,false,StickyLevel::Weak));
+    world_map->put_quiet(std::make_unique<PushBlock>(12,9,false,StickyLevel::Weak));
+    world_map->put_quiet(std::make_unique<PushBlock>(12,10,false,StickyLevel::Weak));
+    world_map->put_quiet(std::make_unique<PushBlock>(12,11,false,StickyLevel::Weak));
+    world_map->put_quiet(std::make_unique<PushBlock>(12,12,false,StickyLevel::Weak));
+    world_map->put_quiet(std::make_unique<PushBlock>(12,13,false,StickyLevel::Weak));
 
-    world_map.put_quiet(std::make_unique<PushBlock>(12,7,StickyLevel::Weak));
-    world_map.put_quiet(std::make_unique<PushBlock>(12,8,StickyLevel::Weak));
-    world_map.put_quiet(std::make_unique<PushBlock>(12,9,StickyLevel::Weak));
-    world_map.put_quiet(std::make_unique<PushBlock>(12,10,StickyLevel::Weak));
-    world_map.put_quiet(std::make_unique<PushBlock>(12,11,StickyLevel::Weak));
-    world_map.put_quiet(std::make_unique<PushBlock>(12,12,StickyLevel::Weak));
-    world_map.put_quiet(std::make_unique<PushBlock>(12,13,StickyLevel::Weak));
+    world_map->put_quiet(std::make_unique<PushBlock>(4,10,false,StickyLevel::Strong));
+    world_map->put_quiet(std::make_unique<PushBlock>(4,9,false,StickyLevel::Strong));
+    world_map->put_quiet(std::make_unique<PushBlock>(5,9,false,StickyLevel::Strong));
+    world_map->put_quiet(std::make_unique<PushBlock>(6,9,false,StickyLevel::Strong));
+    world_map->put_quiet(std::make_unique<PushBlock>(7,9,false,StickyLevel::Strong));
+    world_map->put_quiet(std::make_unique<PushBlock>(8,9,false,StickyLevel::Strong));
+    world_map->put_quiet(std::make_unique<PushBlock>(9,9,false,StickyLevel::Strong));
+    world_map->put_quiet(std::make_unique<PushBlock>(8,10,false,StickyLevel::Strong));
 
-    world_map.put_quiet(std::make_unique<PushBlock>(4,10,StickyLevel::Strong));
-    world_map.put_quiet(std::make_unique<PushBlock>(4,9,StickyLevel::Strong));
-    world_map.put_quiet(std::make_unique<PushBlock>(5,9,StickyLevel::Strong));
-    world_map.put_quiet(std::make_unique<PushBlock>(6,9,StickyLevel::Strong));
-    world_map.put_quiet(std::make_unique<PushBlock>(7,9,StickyLevel::Strong));
-    world_map.put_quiet(std::make_unique<PushBlock>(8,9,StickyLevel::Strong));
-    world_map.put_quiet(std::make_unique<PushBlock>(9,9,StickyLevel::Strong));
-    world_map.put_quiet(std::make_unique<PushBlock>(8,10,StickyLevel::Strong));
-
-    world_map.put_quiet(std::make_unique<SnakeBlock>(4,11,2));
-    world_map.put_quiet(std::make_unique<SnakeBlock>(5,11,2));
-    world_map.put_quiet(std::make_unique<SnakeBlock>(6,11,2));
-    world_map.put_quiet(std::make_unique<SnakeBlock>(7,11,2));
-    world_map.put_quiet(std::make_unique<SnakeBlock>(8,11,2));
-    world_map.put_quiet(std::make_unique<SnakeBlock>(9,11,2));
-    world_map.put_quiet(std::make_unique<SnakeBlock>(10,11,2)); //*/
+    world_map->put_quiet(std::make_unique<SnakeBlock>(4,11,false,2));
+    world_map->put_quiet(std::make_unique<SnakeBlock>(5,11,false,2));
+    world_map->put_quiet(std::make_unique<SnakeBlock>(6,11,false,2));
+    world_map->put_quiet(std::make_unique<SnakeBlock>(7,11,false,2));
+    world_map->put_quiet(std::make_unique<SnakeBlock>(8,11,false,2));
+    world_map->put_quiet(std::make_unique<SnakeBlock>(9,11,false,2));
+    world_map->put_quiet(std::make_unique<SnakeBlock>(10,11,false,2)); //*/
 
 
-    world_map.set_initial_state();
+    world_map->set_initial_state();
 
     int cooldown = 0;
 
@@ -195,23 +178,37 @@ int main(void) {
 
     while(!glfwWindowShouldClose(window)) {
         // Handle input
-
         auto delta_frame = std::make_unique<DeltaFrame>();
 
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, true);
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-                cam_rotation -= .01f;
+            cam_rotation -= .01f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            cam_rotation += .01f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            cam_incline += .01f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+                Loader::save(world_map.get());
             }
-            if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-                cam_rotation += .01f;
-            }
-            if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-                cam_incline += .01f;
-            }
-            if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            else {
                 cam_incline -= .01f;
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+                WorldMap* new_world_map = Loader::load();
+                if (new_world_map) {
+                    world_map.reset(new_world_map);
+                    world_map->set_initial_state();
+                    undo_stack = UndoStack(1000);
+                }
+            }
         }
         if (cooldown == 0) {
             for (auto p : movement_keys) {
@@ -219,7 +216,7 @@ int main(void) {
                 // In particular, the precedence of keys is arbitrary
                 // and there is no buffering.
                 if (glfwGetKey(window, p.first) == GLFW_PRESS) {
-                    world_map.move_solid(player_ptr->pos(), p.second, delta_frame.get());
+                    world_map->move_solid(p.second, delta_frame.get());
                     cooldown = MAX_COOLDOWN;
                     break;
                 }
@@ -228,7 +225,7 @@ int main(void) {
         // Only allow undo if we didn't just move
         if (cooldown == 0) {
             if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
-                undo_stack.pop(&world_map);
+                undo_stack.pop(world_map.get());
                 cooldown = MAX_COOLDOWN;
             }
         } else {
@@ -250,7 +247,7 @@ int main(void) {
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
 
-        world_map.draw(&shader);
+        world_map->draw(&shader);
 
         // Draw the floor
         model = glm::translate(glm::mat4(), glm::vec3(-0.5, -0.1, -0.5));
@@ -270,4 +267,28 @@ int main(void) {
 
     glfwTerminate();
     return 0;
+}
+
+bool windowInit(GLFWwindow*& window) {
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_RESIZABLE, false);
+
+    window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Sokoban 3D", nullptr, nullptr);
+    if (!window) {
+        std::cout << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return false;
+    }
+    glfwMakeContextCurrent(window);
+
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+        return false;
+    }
+
+    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    return true;
 }

@@ -1,5 +1,5 @@
-#include "worldmap.h"
 #include "gameobject.h"
+#include "worldmap.h"
 #include "shader.h"
 #include "delta.h"
 
@@ -45,12 +45,26 @@ void Wall::cleanup(DeltaFrame* delta_frame) {}
 
 void Wall::reinit() {}
 
+ObjCode Wall::obj_code() {
+    return ObjCode::Wall;
+}
+
+void Wall::serialize(std::ofstream& file) {}
+
 // Push is the "default" BlockType
 Block::Block(int x, int y): GameObject(x, y), car_ {false}, links_ {} {
     wall_ = false;
 }
 
+Block::Block(int x, int y, bool car): GameObject(x, y), car_ {car}, links_ {} {
+    wall_ = false;
+}
+
 Block::~Block() {}
+
+bool Block::car() {
+    return car_;
+}
 
 void Block::set_car(bool car) {
     car_ = car;
@@ -132,8 +146,8 @@ void Block::reinit() {
     }
 }
 
-PushBlock::PushBlock(int x, int y): Block(x, y), sticky_ {StickyLevel::None} {}
-PushBlock::PushBlock(int x, int y, StickyLevel sticky): Block(x, y), sticky_ {sticky} {}
+PushBlock::PushBlock(int x, int y): Block(x, y, false), sticky_ {StickyLevel::None} {}
+PushBlock::PushBlock(int x, int y, bool car, StickyLevel sticky): Block(x, y, car), sticky_ {sticky} {}
 
 PushBlock::~PushBlock() {}
 
@@ -160,6 +174,10 @@ StickyLevel PushBlock::sticky() {
     return sticky_;
 }
 
+ObjCode PushBlock::obj_code() {
+    return ObjCode::PushBlock;
+}
+
 const BlockSet& PushBlock::get_strong_links() {
     if (sticky_ == StickyLevel::Strong) {
         return links_;
@@ -176,8 +194,16 @@ const BlockSet& PushBlock::get_weak_links() {
     }
 }
 
+void PushBlock::serialize(std::ofstream& file) {
+    unsigned char ser = static_cast<unsigned char>(sticky_); // StickyLevel stored in first two bits
+    if (car_) {
+        ser |= 1 << 7; // car stored in 8th bit
+    }
+    file << ser;
+}
+
 SnakeBlock::SnakeBlock(int x, int y): Block(x, y), ends_ {2}, distance_ {0}, target_ {nullptr} {}
-SnakeBlock::SnakeBlock(int x, int y, unsigned int ends): Block(x, y), ends_ {(ends == 1 || ends == 2) ? ends : 2}, distance_ {0}, target_ {nullptr} {}
+SnakeBlock::SnakeBlock(int x, int y, bool car, unsigned int ends): Block(x, y, car), ends_ {(ends == 1 || ends == 2) ? ends : 2}, distance_ {0}, target_ {nullptr} {}
 
 SnakeBlock::~SnakeBlock() {}
 
@@ -209,6 +235,11 @@ SnakeBlock* SnakeBlock::target() {
     return target_;
 }
 
+void SnakeBlock::reset_target() {
+    target_ = nullptr;
+    distance_ = 0;
+}
+
 void SnakeBlock::draw(Shader* shader, int height) {
     Point p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x - BOARD_SIZE/2, 0.5f + height, p.y - BOARD_SIZE/2));
@@ -222,4 +253,26 @@ void SnakeBlock::draw(Shader* shader, int height) {
     }
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
     Block::draw(shader, height);
+}
+
+ObjCode SnakeBlock::obj_code() {
+    return ObjCode::SnakeBlock;
+}
+
+void SnakeBlock::serialize(std::ofstream& file) {
+    unsigned char ser = ends_ - 1; // ends - 1 in 1st bit
+    Point p, q;
+    p = pos_;
+    for (auto& link : links_) {
+        q = link->pos();
+        if (p.x != q.x) {
+            ser |= 1 << (q.x - p.x + 2); // dx stored in 2nd and 4th bits
+        } else {
+            ser |= 1 << (q.y - p.y + 3); // dy stored in 3rd and 5th bits
+        }
+    }
+    if (car_) {
+        ser |= 1 << 7; // car stored in 8th bit
+    }
+    file << ser;
 }

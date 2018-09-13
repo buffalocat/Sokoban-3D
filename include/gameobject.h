@@ -32,6 +32,8 @@ class GameObject {
 public:
     GameObject(int x, int y);
     virtual ~GameObject() = 0;
+    virtual ObjCode obj_code() = 0;
+    virtual void serialize(std::ofstream& file) = 0;
     Layer layer() const;
     Point pos() const;
     virtual void draw(Shader*, int) = 0;
@@ -51,6 +53,8 @@ class Wall: public GameObject {
 public:
     Wall(int x, int y);
     ~Wall();
+    ObjCode obj_code();
+    void serialize(std::ofstream& file);
     void draw(Shader*, int);
     void cleanup(DeltaFrame*);
     void reinit();
@@ -64,8 +68,11 @@ public:
     static BlockSet EMPTY_BLOCK_SET;
 
     Block(int x, int y);
+    Block(int x, int y, bool car);
     virtual ~Block() = 0;
+    bool car();
     void set_car(bool car);
+    //virtual ObjCode obj_code() = 0;
     // This draws an indication of the "car"-ness!  Call it in all subclasses
     void draw(Shader*, int);
     virtual const BlockSet& get_strong_links() = 0;
@@ -94,11 +101,11 @@ enum class StickyLevel {
  */
 class PushBlock: public Block {
 public:
-    static bool is_push_block(GameObject*);
-
     PushBlock(int x, int y);
-    PushBlock(int x, int y, StickyLevel sticky);
+    PushBlock(int x, int y, bool car, StickyLevel sticky);
     ~PushBlock();
+    ObjCode obj_code();
+    void serialize(std::ofstream& file);
     void set_sticky(StickyLevel sticky);
     void draw(Shader*, int);
     StickyLevel sticky();
@@ -114,13 +121,16 @@ private:
 class SnakeBlock: public Block {
 public:
     SnakeBlock(int x, int y);
-    SnakeBlock(int x, int y, unsigned int ends);
+    SnakeBlock(int x, int y, bool car, unsigned int ends);
     ~SnakeBlock();
+    ObjCode obj_code();
+    void serialize(std::ofstream& file);
     unsigned int ends();
     int distance();
     SnakeBlock* target();
     void set_distance(int);
     void set_target(SnakeBlock*);
+    void reset_target();
     const BlockSet& get_strong_links();
     const BlockSet& get_weak_links();
     void draw(Shader*, int);

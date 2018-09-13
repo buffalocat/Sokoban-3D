@@ -31,6 +31,11 @@
 					<Add option="-isystem" />
 					<Add directory="include" />
 				</Compiler>
+				<Linker>
+					<Add library="opengl32" />
+					<Add library="gdi32" />
+					<Add library="glfw3" />
+				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
@@ -64,6 +69,7 @@
 		<Unit filename="include/common.h" />
 		<Unit filename="include/delta.h" />
 		<Unit filename="include/gameobject.h" />
+		<Unit filename="include/loader.h" />
 		<Unit filename="include/shader.h" />
 		<Unit filename="include/worldmap.h" />
 		<Unit filename="main.cpp" />
@@ -72,6 +78,7 @@
 		<Unit filename="src/common.cpp" />
 		<Unit filename="src/delta.cpp" />
 		<Unit filename="src/gameobject.cpp" />
+		<Unit filename="src/loader.cpp" />
 		<Unit filename="src/shader.cpp" />
 		<Unit filename="src/worldmap.cpp" />
 		<Extensions>

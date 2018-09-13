@@ -39,4 +39,15 @@ enum class Layer {
     COUNT,
 };
 
+enum class ObjCode {
+    NONE,
+    Wall,
+    PushBlock,
+    SnakeBlock,
+};
+
+struct ObjCodeHash {
+    std::size_t operator()(const ObjCode& c) const;
+};
+
 #endif // COMMON_H

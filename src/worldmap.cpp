@@ -341,8 +341,9 @@ void WorldMap::update_snakes(DeltaFrame* delta_frame) {
         BlockSet potential_links {};
         for (Point d : {Point{1,0}, Point{-1,0}, Point{0,1}, Point{0,-1}}) {
             auto adj = dynamic_cast<SnakeBlock*>(view(Point{pos.x + d.x, pos.y + d.y}, Layer::Solid));
-            if (adj)
+            if (adj && adj->links().size() < adj->ends()) {
                 potential_links.insert(adj);
+            }
         }
         if (potential_links.size() <= sb->ends()) {
             available_snakes.insert(sb);

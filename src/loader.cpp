@@ -29,7 +29,7 @@ static std::unordered_map<ObjCode, unsigned int, ObjCodeHash> BYTES_PER_OBJECT =
 void Loader::save(const WorldMap* world_map) {
     std::cout << "Enter name to save file as: (enter blank line to quit saving)" << std::endl;
     std::string file_name;
-    std::cin >> file_name;
+    std::getline(std::cin, file_name);
     if (file_name.empty()) {
         std::cout << "File name was empty; returning to game." << std::endl;
         return;
@@ -62,7 +62,7 @@ void Loader::save(const WorldMap* world_map) {
 WorldMap* Loader::load() {
     std::cout << "Enter name of file to load from: (enter blank line to quit loading)" << std::endl;
     std::string file_name;
-    std::cin >> file_name;
+    std::getline(std::cin, file_name);
     if (file_name.empty()) {
         std::cout << "File name was empty; returning to game." << std::endl;
         return nullptr;

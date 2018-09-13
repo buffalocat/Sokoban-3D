@@ -4,37 +4,36 @@
 	<ActiveTarget name="Debug" />
 	<File name="src\worldmap.cpp" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="14990" topLine="376" />
+			<Cursor1 position="4797" topLine="107" />
+		</Cursor>
+		<Folding>
+			<Collapse line="9" />
+			<Collapse line="18" />
+			<Collapse line="22" />
+			<Collapse line="26" />
+			<Collapse line="142" />
+			<Collapse line="158" />
+			<Collapse line="191" />
+			<Collapse line="197" />
+			<Collapse line="307" />
+			<Collapse line="320" />
+			<Collapse line="333" />
+			<Collapse line="362" />
+			<Collapse line="371" />
+			<Collapse line="385" />
+			<Collapse line="454" />
+			<Collapse line="460" />
+			<Collapse line="466" />
+		</Folding>
+	</File>
+	<File name="include\gameobject.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1921" topLine="59" />
 		</Cursor>
 	</File>
-	<File name="main.cpp" open="1" top="1" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="include\common.h" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="3619" topLine="99" />
-		</Cursor>
-	</File>
-	<File name="include\worldmap.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="296" topLine="29" />
-		</Cursor>
-	</File>
-	<File name="include\common.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1020" topLine="19" />
-		</Cursor>
-	</File>
-	<File name="include\delta.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="59" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\delta.cpp" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="93" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="include\gameobject.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="3231" topLine="115" />
+			<Cursor1 position="181" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="include\shader.h" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -42,7 +41,37 @@
 			<Cursor1 position="965" topLine="3" />
 		</Cursor>
 	</File>
-	<File name="include\loader.h" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="include\delta.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="59" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="include\worldmap.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="463" topLine="11" />
+		</Cursor>
+	</File>
+	<File name="main.cpp" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="9745" topLine="149" />
+		</Cursor>
+	</File>
+	<File name="src\delta.cpp" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="93" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\loader.cpp" open="1" top="1" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="779" topLine="15" />
+		</Cursor>
+	</File>
+	<File name="src\gameobject.cpp" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6760" topLine="222" />
+		</Cursor>
+	</File>
+	<File name="include\loader.h" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="140" topLine="0" />
 		</Cursor>
@@ -50,16 +79,6 @@
 	<File name="src\common.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="323" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\loader.cpp" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="4785" topLine="111" />
-		</Cursor>
-	</File>
-	<File name="src\gameobject.cpp" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="5992" topLine="194" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

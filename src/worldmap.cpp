@@ -4,10 +4,10 @@
 
 #include "gameobject.h"
 #include "delta.h"
+#include "block.h"
 
 
-WorldMap::WorldMap(int width, int height): width_ {width}, height_ {height}, map_ {},
-movers_ {}, seen_ {}, not_move_ {}, moved_ {}, link_update_ {}, floor_update_ {}, snakes_ {}, pushed_snakes_ {} {
+WorldMap::WorldMap(int width, int height): width_ {width}, height_ {height}, map_ {}, movers_ {} {
     for (int i = 0; i != width; ++i) {
         map_.push_back({});
         for (int j = 0; j != height; ++j) {
@@ -26,6 +26,10 @@ int WorldMap::width() const {
 
 int WorldMap::height() const {
     return height_;
+}
+
+const std::vector<Block*>& WorldMap::movers() {
+    return movers_;
 }
 
 Block* WorldMap::prime_mover() {
@@ -131,12 +135,15 @@ void WorldMap::put_quiet(std::unique_ptr<GameObject> object) {
     Point pos = object->pos();
     if (valid(pos)) {
         Block* block = dynamic_cast<Block*>(object.get());
-        if (block && block->car()) {
-            movers_.push_back(block);
-        }
         map_[pos.x][pos.y][static_cast<unsigned int>(object->layer())].push_back(std::move(object));
     } else {
         throw std::runtime_error("Tried to (quietly) put an object in an invalid location!");
+    }
+}
+
+void WorldMap::add_mover(Block* block) {
+    if (block->car()) {
+        movers_.push_back(block);
     }
 }
 
@@ -153,7 +160,7 @@ void WorldMap::draw(Shader* shader) {
     }
 }
 
-
+/*
 // Note: many things are predicated on the assumption that, in any consistent game state,
 // certain layers allow at most one object per MapCell.  These include Solid and Player.
 void WorldMap::move_solid(Point dir, DeltaFrame* delta_frame) {
@@ -189,134 +196,7 @@ void WorldMap::move_solid(Point dir, DeltaFrame* delta_frame) {
     update_links(delta_frame);
 }
 
-/** Part of the movement algorithm
- * Attempts to move the object in cur_move in direction dir
- * with the knowledge that the objects in seen have been seen
- * and the objects in not_move cannot move (even if they are not walls).
- * Returns whether the object in cur_move was able to move.
- */
-bool WorldMap::move_strong_component(PosIdMap& result, Point start_point, Point dir) {
-    if (not_move_.count(start_point)) {
-        return false;
-    } else if (seen_.count(start_point) > 0) {
-        return true;
-    }
-    PointVec to_check {start_point};
-    PosIdMap cur_group {};
-    // First find all strongly linked objects, because they share the same fate.
-    // Either they'll all move or none of them will.
-    while (!to_check.empty()) {
-        Point cur_pos = to_check.back();
-        to_check.pop_back();
-        // It's possible (likely even, with complex groups) that we've seen this before
-        if (cur_group.count(cur_pos)) {
-            continue;
-        }
-        GameObject* cur_obj = view(cur_pos, Layer::Solid);
-        auto sb = dynamic_cast<SnakeBlock*>(cur_obj);
-        //if (sb)
-            //std::cout << "Moving a snake at " << sb->pos().x << "," << sb->pos().y << std::endl;
-        cur_group.insert(std::make_pair(cur_pos, cur_obj));
-        seen_.insert(cur_pos);
-        for (auto& link : static_cast<Block*>(cur_obj)->get_strong_links()) {
-            to_check.push_back(link->pos());
-        }
-    }
-    // Now we determine whether they can all move.
-    // If any can't, then we immediately return
-    bool move_cancelled = false;
-    ObjVec weak_connections;
-    for (auto& cur : cur_group) {
-        Point cur_pos = cur.first;
-        // First make sure the object can actually move in direction dir
-        Point new_pos {cur_pos.x + dir.x, cur_pos.y + dir.y};
-        if (!valid(new_pos) || not_move_.count(new_pos)) {
-            // We can't move forward; this whole branch is bad
-            move_cancelled = true;
-            result = {};
-            break;
-        }
-        // This branch is potentially good; look at weak links
-        for (auto& link : static_cast<Block*>(view(cur_pos, Layer::Solid))->get_weak_links()) {
-            weak_connections.push_back(link);
-        }
-        GameObject* new_obj = view(new_pos, Layer::Solid);
-        auto sb = dynamic_cast<SnakeBlock*>(new_obj);
-        if (sb) {
-            // If a snake block is pushed, we need to look at it again!
-            seen_.erase(new_pos);
-            sb->set_distance(0);
-            sb->set_target(sb);
-            pushed_snakes_.insert(sb);
-            for (auto link : sb->links()) {
-                auto link_sb = static_cast<SnakeBlock*>(link);
-                if (!link_sb->target()) {
-                    link_sb->set_distance(1);
-                    link_sb->set_target(sb);
-                }
-            }
-        // There's no need to see any *other* kind of block twice
-        } else if (seen_.count(new_pos)) {
-            continue;
-        }
-        if (new_obj) {
-            if (new_obj->wall()) {
-                move_cancelled = true;
-                result = {};
-                break;
-            }
-            // If this branch is good, insert it into the current result
-            // If it's bad, we ONLY return the bad branch
-            PosIdMap branch {};
-            if (move_strong_component(branch, new_pos, dir)) {
-                result.insert(branch.begin(), branch.end());
-            } else {
-                move_cancelled = true;
-                result = branch;
-                break;
-            }
-        }
-    }
-    if (move_cancelled) {
-        for (auto& pos_id : cur_group) {
-            result.insert(pos_id);
-            not_move_.insert(pos_id.first);
-        }
-        return false;
-    } else {
-        result.insert(cur_group.begin(), cur_group.end());
-        for (auto& link : weak_connections) {
-            PosIdMap branch {};
-            //std::cout << "Starting a weak branch" << std::endl;
-            Point link_pos = link->pos();
-            // If the block is a snake block with no pull target, we ignore it for now
-            auto sb = dynamic_cast<SnakeBlock*>(link);
-            if (sb && !(sb->target())) {
-                continue;
-            }
-            if (move_strong_component(branch, link_pos, dir)) {
-                result.insert(branch.begin(), branch.end());
-            } else {
-                // Failed weak links will need to be checked for updates post-move
-                link_update_.insert(link);
-            }
-        }
-        return true;
-    }
-}
 
-void WorldMap::reset_state() {
-    seen_ = {};
-    not_move_ = {};
-    moved_ = {};
-    link_update_ = {};
-    floor_update_ = {};
-    pushed_snakes_ = {};
-    for (auto sb : snakes_) {
-        sb->set_distance(0);
-        sb->set_target(nullptr);
-    }
-}
 
 void WorldMap::set_initial_state() {
     for (int x = 0; x != width_; ++x) {
@@ -383,6 +263,7 @@ void WorldMap::update_links_auxiliary(GameObject* obj, DeltaFrame* delta_frame) 
         }
     }
 }
+
 
 void WorldMap::pull_snakes(DeltaFrame* delta_frame) {
     for (auto pushed : pushed_snakes_) {
@@ -476,3 +357,4 @@ void WorldMap::pull_snakes_auxiliary(SnakeBlock* cur, DeltaFrame* delta_frame) {
         next = cur->target();
     }
 }
+*/

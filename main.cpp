@@ -31,10 +31,12 @@
 #include <chrono>
 
 #include "gameobject.h"
+#include "block.h"
 #include "delta.h"
 #include "worldmap.h"
 #include "shader.h"
 #include "loader.h"
+#include "moveprocessor.h"
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
@@ -117,6 +119,7 @@ int main(void) {
     auto world_map = std::make_unique<WorldMap>(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
     auto player_unique = std::move(std::make_unique<PushBlock>(0,0,true,StickyLevel::Strong));
     Block* player = player_unique.get();
+    world_map->add_mover(player);
     world_map->put_quiet(std::move(player_unique));
     /*for (int j = 3; j != 8; ++j) {
         world_map->put_quiet(std::make_unique<Wall>(2,j));
@@ -159,9 +162,6 @@ int main(void) {
     world_map->put_quiet(std::make_unique<SnakeBlock>(8,11,false,2));
     world_map->put_quiet(std::make_unique<SnakeBlock>(9,11,false,2));
     world_map->put_quiet(std::make_unique<SnakeBlock>(10,11,false,2)); //*/
-
-
-    world_map->set_initial_state();
 
     int cooldown = 0;
 
@@ -222,7 +222,7 @@ int main(void) {
                 WorldMap* new_world_map = Loader::load();
                 if (new_world_map) {
                     world_map.reset(new_world_map);
-                    world_map->set_initial_state();
+                    //world_map->set_initial_state();
                     player = world_map->prime_mover();
                     undo_stack = UndoStack(1000);
                 }
@@ -247,7 +247,7 @@ int main(void) {
                 // In particular, the precedence of keys is arbitrary
                 // and there is no buffering.
                 if (glfwGetKey(window, p.first) == GLFW_PRESS) {
-                    world_map->move_solid(p.second, delta_frame.get());
+                    MoveProcessor(world_map.get(), p.second).try_move(delta_frame.get());
                     cooldown = MAX_COOLDOWN;
                     break;
                 }

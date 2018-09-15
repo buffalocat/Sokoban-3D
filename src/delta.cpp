@@ -1,6 +1,7 @@
 #include "delta.h"
 #include "gameobject.h"
 #include "worldmap.h"
+#include "block.h"
 
 #include <iostream>
 
@@ -73,10 +74,4 @@ RemoveLinkDelta::RemoveLinkDelta(Block* a, Block* b): a_ {a}, b_ {b} {}
 
 void RemoveLinkDelta::revert(WorldMap* world_map) {
     a_->add_link(b_, nullptr);
-}
-
-SnakeSplitDelta::SnakeSplitDelta(SnakeBlock* whole, SnakeBlock* half_a, SnakeBlock* half_b): whole_ {whole}, half_a_ {half_a}, half_b_ {half_b} {}
-
-void SnakeSplitDelta::revert(WorldMap* world_map) {
-    world_map->snake_split_reverse(whole_, half_a_, half_b_);
 }

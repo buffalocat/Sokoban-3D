@@ -6,6 +6,7 @@
 
 #include "worldmap.h"
 #include "gameobject.h"
+#include "block.h"
 
 const char* MAP_DIRECTORY = "maps\\";
 
@@ -98,32 +99,35 @@ WorldMap* Loader::load() {
             while (reading_objects) {
                 file.read(reinterpret_cast<char *>(buffer), 1);
                 ObjCode code = static_cast<ObjCode>(buffer[0]);
-                unsigned int bytes = BYTES_PER_OBJECT[code];
-                file.read((char *)buffer, bytes);
-                switch(code) {
-                case ObjCode::NONE : {
+                if (code == ObjCode::NONE) {
                     reading_objects = false;
                     break;
                 }
+                unsigned int bytes = BYTES_PER_OBJECT[code];
+                file.read((char *)buffer, bytes);
+                int px = buffer[0];
+                int py = buffer[1];
+                switch(code) {
+                case ObjCode::NONE : break;
                 case ObjCode::Wall : {
-                    world_map->put_quiet(std::make_unique<Wall>(buffer[0], buffer[1]));
+                    world_map->put_quiet(std::make_unique<Wall>(px, py));
                     break;
                 }
                 case ObjCode::PushBlock : {
                     bool car = (buffer[2] >> 7) == 1;
                     StickyLevel sticky = static_cast<StickyLevel>(buffer[2] & 3);
-                    world_map->put_quiet(std::make_unique<PushBlock>(buffer[0], buffer[1], car, sticky));
+                    world_map->put_quiet(std::make_unique<PushBlock>(px, py, car, sticky));
                     break;
                 }
                 case ObjCode::SnakeBlock : {
                     bool car = (buffer[2] >> 7) == 1;
                     int ends = (buffer[2] & 1) + 1;
-                    world_map->put_quiet(std::make_unique<SnakeBlock>(buffer[0], buffer[1], car, ends));
+                    world_map->put_quiet(std::make_unique<SnakeBlock>(px, py, car, ends));
                     for (int i = 0; i < 4; ++i) {
                         if ((buffer[2] >> i) & 2) { // Effectively, shift right by i+1
-                            Point q = snake_dirs[i];
+                            Point d = snake_dirs[i];
                             // Check whether there's an object adjacent to this one AND whether it's a SnakeBlock
-                            SnakeBlock* adj = dynamic_cast<SnakeBlock*>(world_map->view(Point{buffer[0]+q.x, buffer[1]+q.y}, Layer::Solid));
+                            SnakeBlock* adj = dynamic_cast<SnakeBlock*>(world_map->view(Point{px + d.x, py + d.y}, Layer::Solid));
                             if (adj) {
                                 adj->add_link(static_cast<Block*>(world_map->view(Point{buffer[0], buffer[1]}, Layer::Solid)), nullptr);
                             }

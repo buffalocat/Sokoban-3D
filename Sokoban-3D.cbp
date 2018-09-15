@@ -70,6 +70,7 @@
 		<Unit filename="include/delta.h" />
 		<Unit filename="include/gameobject.h" />
 		<Unit filename="include/loader.h" />
+		<Unit filename="include/moveprocessor.h" />
 		<Unit filename="include/shader.h" />
 		<Unit filename="include/worldmap.h" />
 		<Unit filename="main.cpp" />
@@ -79,6 +80,7 @@
 		<Unit filename="src/delta.cpp" />
 		<Unit filename="src/gameobject.cpp" />
 		<Unit filename="src/loader.cpp" />
+		<Unit filename="src/moveprocessor.cpp" />
 		<Unit filename="src/shader.cpp" />
 		<Unit filename="src/worldmap.cpp" />
 		<Extensions>

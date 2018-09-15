@@ -66,6 +66,7 @@
 		<Unit filename="glad.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="include/block.h" />
 		<Unit filename="include/common.h" />
 		<Unit filename="include/delta.h" />
 		<Unit filename="include/gameobject.h" />
@@ -76,6 +77,7 @@
 		<Unit filename="main.cpp" />
 		<Unit filename="shaders/shader.fs" />
 		<Unit filename="shaders/shader.vs" />
+		<Unit filename="src/block.cpp" />
 		<Unit filename="src/common.cpp" />
 		<Unit filename="src/delta.cpp" />
 		<Unit filename="src/gameobject.cpp" />

@@ -72,7 +72,7 @@ void WorldMap::take(Point pos, Layer layer, DeltaFrame* delta_frame) {
         auto &vec = map_[pos.x][pos.y][static_cast<unsigned int>(layer)];
         if (!vec.empty()) {
             vec.back()->cleanup(delta_frame);
-            delta_frame->push(static_cast<std::unique_ptr<Delta>>(std::make_unique<DeletionDelta>(std::move(vec.back()))));
+            delta_frame->push(std::make_unique<DeletionDelta>(std::move(vec.back())));
             vec.pop_back();
         }
     }
@@ -84,7 +84,7 @@ void WorldMap::take_id(Point pos, Layer layer, GameObject* id, DeltaFrame* delta
         for (auto&& it = vec.begin(); it != vec.end(); ++it) {
             if ((*it).get() == id) {
                 (*it)->cleanup(delta_frame);
-                delta_frame->push(static_cast<std::unique_ptr<Delta>>(std::make_unique<DeletionDelta>(std::move(*it))));
+                delta_frame->push(std::make_unique<DeletionDelta>(std::move(*it)));
                 vec.erase(it);
                 return;
             }

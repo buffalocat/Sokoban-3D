@@ -1,6 +1,7 @@
 #include "block.h"
 #include "shader.h"
 #include "delta.h"
+#include "worldmap.h"
 
 BlockSet Block::EMPTY_BLOCK_SET {};
 
@@ -73,7 +74,6 @@ void Block::add_link(Block* link, DeltaFrame* delta_frame) {
     link->links_.insert(this);
     if (delta_frame)
         delta_frame->push(std::make_unique<AddLinkDelta>(this, link));
-
 }
 
 void Block::remove_link(Block* link, DeltaFrame* delta_frame) {
@@ -96,6 +96,17 @@ void Block::reinit() {
     // When a Block is un-destroyed, any links it had should be reconnected
     for (auto link : links_) {
         link->links_.insert(this);
+    }
+}
+
+void Block::check_remove_local_links(WorldMap* world_map, DeltaFrame* delta_frame) {
+    Point p, q;
+    p = pos();
+    for (auto& link : links_) {
+        q = link->pos();
+        if (abs(p.x - q.x) + abs(p.y - q.y) >= 2) {
+            remove_link(link, delta_frame);
+        }
     }
 }
 
@@ -157,6 +168,17 @@ void PushBlock::serialize(std::ofstream& file) {
 
 bool PushBlock::push_recheck() {
     return false;
+}
+
+void PushBlock::check_add_local_links(WorldMap* world_map, DeltaFrame* delta_frame) {
+    if (sticky_ == StickyLevel::None)
+        return;
+    for (auto& d : DIRECTIONS) {
+        auto block = dynamic_cast<PushBlock*>(world_map->view(shifted_pos(d), Layer::Solid));
+        if (block && sticky_ == block->sticky_) {
+            add_link(block, delta_frame);
+        }
+    }
 }
 
 SnakeBlock::SnakeBlock(int x, int y): Block(x, y), ends_ {2}, distance_ {-1}, target_ {nullptr} {}
@@ -247,4 +269,32 @@ bool SnakeBlock::push_recheck() {
         }
     }
     return recheck;
+}
+
+void SnakeBlock::check_add_local_links(WorldMap* world_map, DeltaFrame* delta_frame) {
+    if (!available() || confused(world_map)) {
+        return;
+    }
+    for (auto& d : DIRECTIONS) {
+        auto snake = dynamic_cast<SnakeBlock*>(world_map->view(shifted_pos(d), Layer::Solid));
+        if (snake)
+        if (snake && snake->available() && !snake->confused(world_map)) {
+            add_link(snake, delta_frame);
+        }
+    }
+}
+
+bool SnakeBlock::available() {
+    return links_.size() < ends_;
+}
+
+bool SnakeBlock::confused(WorldMap* world_map) {
+    int available_count = 0;
+    for (auto& d : DIRECTIONS) {
+        auto snake = dynamic_cast<SnakeBlock*>(world_map->view(shifted_pos(d), Layer::Solid));
+        if (snake && snake->available()) {
+            ++available_count;
+        }
+    }
+    return available_count > ends_;
 }

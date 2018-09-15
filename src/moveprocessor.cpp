@@ -5,10 +5,10 @@
 MoveProcessor::MoveProcessor(WorldMap* world_map, Point dir): map_ {world_map}, dir_ {dir}, comps_ {} {}
 
 void MoveProcessor::try_move(DeltaFrame* delta_frame) {
+    std::cout << "New Move" << std::endl;
     std::vector<Component*> roots {};
     //NOTE: More checks will happen when Player is a separate layer in practice.
     for (Block* block : map_->movers()) {
-        std::cout << "Starting to move block at " << block->pos() << std::endl;
         // NOTE: Later there should be special code for when block is a SnakeBlock*!
         roots.push_back(move_component(block, false));
     }
@@ -25,7 +25,14 @@ void MoveProcessor::try_move(DeltaFrame* delta_frame) {
             map_->put_quiet(std::move(obj_unique));
         }
     }
-
+    for (auto& p : comps_) {
+        if (p.second->good()) {
+            p.first->check_add_local_links(map_, delta_frame);
+        }
+    }
+    for (auto& block : maybe_broken_weak_) {
+        block->check_remove_local_links(map_, delta_frame);
+    }
 }
 
 /** Attempt to move the strong component containing a block
@@ -35,18 +42,15 @@ void MoveProcessor::try_move(DeltaFrame* delta_frame) {
  */
 Component* MoveProcessor::move_component(Block* block, bool recheck) {
     if (!comps_.count(block)) {
-        std::cout << "Finding component at " << block->pos() << std::endl;
+        std::cout << "Finding a new component!" << std::endl;
         find_strong_component(block);
-        std::cout << "Found component at " << block->pos() << std::endl;
     }
     Component* comp = comps_[block].get();
     if (comp->check() || recheck) {
-        std::cout << "Checking component" << std::endl;
         comp->set_check(false);
         for (Block* cur : comp->blocks()) {
             try_push(comp, cur->shifted_pos(dir_));
             if (comp->bad()) {
-                std::cout << "The push was bad at " << cur->pos() << std::endl;
                 break;
             }
             for(auto& link : cur->get_weak_links()) {

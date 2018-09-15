@@ -58,6 +58,32 @@ enum class ViewMode {
     Ortho,
 };
 
+// Code copied from https://stackoverflow.com/questions/1739259/how-to-use-queryperformancecounter for profiling!
+
+#include <windows.h>
+
+double PCFreq = 0.0;
+__int64 CounterStart = 0;
+
+void StartCounter()
+{
+    LARGE_INTEGER li;
+    if(!QueryPerformanceFrequency(&li))
+    std::cout << "QueryPerformanceFrequency failed!\n";
+
+    PCFreq = double(li.QuadPart)/1000000.0;
+
+    QueryPerformanceCounter(&li);
+    CounterStart = li.QuadPart;
+}
+double GetCounter()
+{
+    LARGE_INTEGER li;
+    QueryPerformanceCounter(&li);
+    return double(li.QuadPart-CounterStart)/PCFreq;
+}
+// End copied code
+
 int main(void) {
     GLFWwindow* window;
     if (!windowInit(window)) {
@@ -117,51 +143,16 @@ int main(void) {
     // Init game logic stuff
 
     auto world_map = std::make_unique<WorldMap>(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
-    auto player_unique = std::move(std::make_unique<PushBlock>(0,0,true,StickyLevel::Strong));
+    auto player_unique = std::move(std::make_unique<PushBlock>(0,0,true,StickyLevel::Weak));
     Block* player = player_unique.get();
     world_map->add_mover(player);
     world_map->put_quiet(std::move(player_unique));
-    /*for (int j = 3; j != 8; ++j) {
-        world_map->put_quiet(std::make_unique<Wall>(2,j));
-        world_map->put_quiet(std::make_unique<Wall>(j,3));
+    for (int px = 2; px < 15; ++px) {
+        for (int py = 2; py < 12; ++py) {
+            world_map->put_quiet(std::make_unique<PushBlock>(px,py,false,StickyLevel::Weak));
+        }
     }
-    */
-    world_map->put_quiet(std::make_unique<SnakeBlock>(2,8,false,1));
-    world_map->put_quiet(std::make_unique<SnakeBlock>(3,8,false,2));
-    world_map->put_quiet(std::make_unique<SnakeBlock>(3,7,false,2));
-    world_map->put_quiet(std::make_unique<SnakeBlock>(4,7,false,2));
-    world_map->put_quiet(std::make_unique<SnakeBlock>(5,7,false,2));
-    world_map->put_quiet(std::make_unique<SnakeBlock>(5,8,false,1));
 
-    world_map->put_quiet(std::make_unique<PushBlock>(12,5,false,StickyLevel::Strong));
-    world_map->put_quiet(std::make_unique<PushBlock>(12,6,false,StickyLevel::Strong));
-    world_map->put_quiet(std::make_unique<PushBlock>(14,5,false,StickyLevel::Strong));
-    world_map->put_quiet(std::make_unique<PushBlock>(14,6,false,StickyLevel::Strong));
-    /*
-    world_map->put_quiet(std::make_unique<PushBlock>(12,7,false,StickyLevel::Weak));
-    world_map->put_quiet(std::make_unique<PushBlock>(12,8,false,StickyLevel::Weak));
-    world_map->put_quiet(std::make_unique<PushBlock>(12,9,false,StickyLevel::Weak));
-    world_map->put_quiet(std::make_unique<PushBlock>(12,10,false,StickyLevel::Weak));
-    world_map->put_quiet(std::make_unique<PushBlock>(12,11,false,StickyLevel::Weak));
-    world_map->put_quiet(std::make_unique<PushBlock>(12,12,false,StickyLevel::Weak));
-    world_map->put_quiet(std::make_unique<PushBlock>(12,13,false,StickyLevel::Weak));
-
-    world_map->put_quiet(std::make_unique<PushBlock>(4,10,false,StickyLevel::Strong));
-    world_map->put_quiet(std::make_unique<PushBlock>(4,9,false,StickyLevel::Strong));
-    world_map->put_quiet(std::make_unique<PushBlock>(5,9,false,StickyLevel::Strong));
-    world_map->put_quiet(std::make_unique<PushBlock>(6,9,false,StickyLevel::Strong));
-    world_map->put_quiet(std::make_unique<PushBlock>(7,9,false,StickyLevel::Strong));
-    world_map->put_quiet(std::make_unique<PushBlock>(8,9,false,StickyLevel::Strong));
-    world_map->put_quiet(std::make_unique<PushBlock>(9,9,false,StickyLevel::Strong));
-    world_map->put_quiet(std::make_unique<PushBlock>(8,10,false,StickyLevel::Strong));
-
-    world_map->put_quiet(std::make_unique<SnakeBlock>(4,11,false,2));
-    world_map->put_quiet(std::make_unique<SnakeBlock>(5,11,false,2));
-    world_map->put_quiet(std::make_unique<SnakeBlock>(6,11,false,2));
-    world_map->put_quiet(std::make_unique<SnakeBlock>(7,11,false,2));
-    world_map->put_quiet(std::make_unique<SnakeBlock>(8,11,false,2));
-    world_map->put_quiet(std::make_unique<SnakeBlock>(9,11,false,2));
-    world_map->put_quiet(std::make_unique<SnakeBlock>(10,11,false,2)); //*/
 
     int cooldown = 0;
 
@@ -247,7 +238,9 @@ int main(void) {
                 // In particular, the precedence of keys is arbitrary
                 // and there is no buffering.
                 if (glfwGetKey(window, p.first) == GLFW_PRESS) {
+                    //StartCounter();
                     MoveProcessor(world_map.get(), p.second).try_move(delta_frame.get());
+                    //std::cout << "Move took " << GetCounter() << std::endl;
                     cooldown = MAX_COOLDOWN;
                     break;
                 }

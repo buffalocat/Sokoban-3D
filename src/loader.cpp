@@ -17,9 +17,6 @@ enum State {
     End = 255,
 };
 
-// A particular ordering of the directions for linking snakes
-static Point snake_dirs[4] = {Point{-1,0}, Point{0,-1}, Point{1,0}, Point{0,1}};
-
 static std::unordered_map<ObjCode, unsigned int, ObjCodeHash> BYTES_PER_OBJECT = {
     {ObjCode::NONE, 0},
     {ObjCode::Wall, 2},
@@ -125,7 +122,7 @@ WorldMap* Loader::load() {
                     world_map->put_quiet(std::make_unique<SnakeBlock>(px, py, car, ends));
                     for (int i = 0; i < 4; ++i) {
                         if ((buffer[2] >> i) & 2) { // Effectively, shift right by i+1
-                            Point d = snake_dirs[i];
+                            Point d = DIRECTIONS[i];
                             // Check whether there's an object adjacent to this one AND whether it's a SnakeBlock
                             SnakeBlock* adj = dynamic_cast<SnakeBlock*>(world_map->view(Point{px + d.x, py + d.y}, Layer::Solid));
                             if (adj) {

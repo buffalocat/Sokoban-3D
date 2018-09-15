@@ -19,9 +19,9 @@ public:
     bool car();
     void set_car(bool car);
     void draw(Shader*, int);
+    virtual bool push_recheck() = 0;
     virtual const BlockSet& get_strong_links() = 0;
     virtual const BlockSet& get_weak_links() = 0;
-    virtual bool push_recheck() = 0;
     void set_pos(Point p, DeltaFrame*);
     void shift_pos(Point d, DeltaFrame*);
     BlockSet links();
@@ -29,6 +29,8 @@ public:
     void remove_link(Block*, DeltaFrame*);
     void cleanup(DeltaFrame*);
     void reinit();
+    void check_remove_local_links(WorldMap*, DeltaFrame*);
+    virtual void check_add_local_links(WorldMap*, DeltaFrame*) = 0;
 
 protected:
     bool car_;
@@ -56,6 +58,7 @@ public:
     StickyLevel sticky();
     const BlockSet& get_strong_links();
     const BlockSet& get_weak_links();
+    void check_add_local_links(WorldMap*, DeltaFrame*);
 
 private:
     StickyLevel sticky_;
@@ -79,6 +82,9 @@ public:
     const BlockSet& get_strong_links();
     const BlockSet& get_weak_links();
     void draw(Shader*, int);
+    bool available();
+    bool confused(WorldMap*);
+    void check_add_local_links(WorldMap*, DeltaFrame*);
 
 private:
     int ends_;

@@ -88,15 +88,4 @@ private:
     Block* b_;
 };
 
-class SnakeSplitDelta: public Delta {
-public:
-    SnakeSplitDelta(SnakeBlock* whole, SnakeBlock* half_a, SnakeBlock* half_b);
-    void revert(WorldMap*);
-
-private:
-    SnakeBlock* whole_;
-    SnakeBlock* half_a_;
-    SnakeBlock* half_b_;
-};
-
 #endif // DELTA_H

@@ -20,7 +20,9 @@ public:
     bool valid(Point pos);
     int width() const;
     int height() const;
+    const std::vector<Block*>& movers();
     Block* prime_mover();
+    void add_mover(Block*);
 
     void serialize(std::ofstream& file) const;
 
@@ -32,20 +34,9 @@ public:
     void put(std::unique_ptr<GameObject>, DeltaFrame*);
     void put_quiet(std::unique_ptr<GameObject>);
 
-    void reset_state();
-    void move_solid(Point dir, DeltaFrame* delta_frame);
-    bool move_strong_component(PosIdMap& result, Point start_point, Point dir);
-
-    void update_links(DeltaFrame*);
-    void update_links_auxiliary(GameObject*, DeltaFrame*);
-    void pull_snakes(DeltaFrame*);
-    void pull_snakes_auxiliary(SnakeBlock*, DeltaFrame*);
-    void set_initial_state();
-    void update_snakes(DeltaFrame*);
-    void snake_split(SnakeBlock*, SnakeBlock*, SnakeBlock*);
-    void snake_split_reverse(SnakeBlock*, SnakeBlock*, SnakeBlock*);
-
     void draw(Shader*);
+
+    void set_initial_state();
 
 private:
     int width_;
@@ -54,13 +45,6 @@ private:
 
     // State variables
     std::vector<Block*> movers_;
-    PointSet seen_; // Points which have been inspected in a move
-    PointSet not_move_; // Points guaranteed not to move during a move
-    ObjSet moved_; // Objects which moved
-    ObjSet link_update_; // Objects which didn't move but (may have) lost/formed links
-    PointSet floor_update_; // Positions where an object (may have) left or entered the cell
-    std::unordered_set<SnakeBlock*> snakes_; // All snakes
-    std::unordered_set<SnakeBlock*> pushed_snakes_; // Snakes that were directly pushed
 };
 
 #endif // WORLDMAP_H

@@ -17,8 +17,9 @@ void MoveProcessor::try_move(DeltaFrame* delta_frame) {
     }
     // These are snakes whom we'll check for added links (due to un-confusion)
     std::unordered_set<SnakeBlock*> check_snakes = {};
+    // Some things must be done BEFORE main movement
     for (auto& sb : touched_snakes_) {
-        if (comps_[sb]->good()) {
+        if (comps_.count(sb) && comps_[sb]->good()) {
             if (sb->available()) {
                 sb->collect_unlinked_neighbors(map_, check_snakes);
             }
@@ -56,6 +57,7 @@ void MoveProcessor::try_move(DeltaFrame* delta_frame) {
         sb->check_add_local_links(map_, delta_frame);
     }
     for (auto& sb : touched_snakes_) {
+        sb->check_add_local_links(map_, delta_frame);
         sb->reset_target();
     }
 }

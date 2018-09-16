@@ -151,8 +151,14 @@ int main(void) {
     world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(5,10,false,2)));
     world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(5,11,false,2)));
     world_map->put_quiet(std::move(std::make_unique<Wall>(6,10)));
-    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(6,11,false,2)));
-    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(7,11,false,2)));
+    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(6,9,false,2)));
+    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(7,9,false,2)));
+    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(10,9,false,2)));
+    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(11,9,false,2)));
+    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(12,9,false,2)));
+    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(11,10,false,2)));
+    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(10,10,false,2)));
+    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(9,10,false,2)));
 
     world_map->put_quiet(std::move(std::make_unique<PushBlock>(3,1,false,StickyLevel::Weak)));
     world_map->put_quiet(std::move(std::make_unique<PushBlock>(4,1,false,StickyLevel::Weak)));
@@ -271,7 +277,6 @@ int main(void) {
                 if (glfwGetKey(window, p.first) == GLFW_PRESS) {
                     //StartCounter();
                     MoveProcessor(world_map.get(), p.second).try_move(delta_frame.get());
-                    world_map->print_snake_info();
                     //std::cout << "Move took " << GetCounter() << std::endl;
                     cooldown = MAX_COOLDOWN;
                     break;

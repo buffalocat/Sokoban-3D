@@ -204,24 +204,10 @@ const BlockSet& SnakeBlock::get_weak_links() {
 unsigned int SnakeBlock::ends() {
     return ends_;
 }
-/*
-void SnakeBlock::set_distance(int distance) {
-    distance_ = distance;
-}
-*/
 
 int SnakeBlock::distance() {
     return distance_;
 }
-/*
-void SnakeBlock::set_target(SnakeBlock* target) {
-    target_ = target;
-}
-*/
-SnakeBlock* SnakeBlock::target() {
-    return target_;
-}
-
 
 void SnakeBlock::reset_target() {
     target_ = nullptr;
@@ -266,26 +252,20 @@ void SnakeBlock::serialize(std::ofstream& file) {
 }
 
 bool SnakeBlock::push_recheck(MoveProcessor* mp) {
-    bool recheck = (distance_ == 0);
+    bool recheck = (distance_ == 1);
     target_ = nullptr;
     distance_ = 0;
     mp->insert_touched_snake(this);
-    //std::cout << "Setting dist = 0 at " << pos() << std::endl;
     for (auto& link : links_) {
         auto snake = static_cast<SnakeBlock*>(link);
         // A snake has distance 0 if and only if it has been pushed
         // An unpushed snake next to a pushed snake will be taken over
-        //std::cout << "Setting dist = 1 at " << snake->pos() << " and dist is currently " << snake->distance_ << std::endl;
         if (snake->distance_) {
-            //std::cout << "and it worked!" << std::endl;
             snake->target_ = nullptr;
             snake->distance_ = 1;
             mp->insert_touched_snake(snake);
-        } else {
-            //std::cout << "but it didn't happen....???" << std::endl;
         }
     }
-    std::cout << "push_recheck at " << pos() << " returned " << recheck << std::endl;
     return recheck;
 }
 
@@ -306,10 +286,10 @@ bool SnakeBlock::available() {
 }
 
 bool SnakeBlock::confused(WorldMap* world_map) {
-    int available_count = 0;
+    unsigned int available_count = 0;
     for (auto& d : DIRECTIONS) {
         auto snake = dynamic_cast<SnakeBlock*>(world_map->view(shifted_pos(d), Layer::Solid));
-        if (snake && snake->available()) {
+        if (snake && (snake->available() || links_.count(snake))) {
             ++available_count;
         }
     }
@@ -330,7 +310,6 @@ void SnakeBlock::pull(WorldMap* world_map, DeltaFrame* delta_frame, std::unorder
     cur = this;
     // The previous snake block is the adjacent one which was pushed.
     // There is at least one such block, and maybe two (but that's fine).
-    std::cout << "Pulling a snake at " << pos() << std::endl;
     for (auto& link : links_) {
         if (static_cast<SnakeBlock*>(link)->distance_ == 0) {
             prev = static_cast<SnakeBlock*>(link);
@@ -338,18 +317,15 @@ void SnakeBlock::pull(WorldMap* world_map, DeltaFrame* delta_frame, std::unorder
     }
     int d = 1;
     while (true) {
-        std::cout << "In the loop, d is " << d << std::endl;
         // If we reach the end of the snake, we can pull it
         if (cur->links().size() == 1) {
-            std::cout << "Reached the end! pulling!" << std::endl;
             check_snakes.insert(cur);
-            cur->pull_aux(world_map, delta_frame);
+            cur->pull_aux(world_map, delta_frame, check_snakes);
             break;
         }
         // Progress down the snake
         for (auto link : cur->links()) {
             if (link != prev) {
-                std::cout << "Moving down the snake! Now at " << link->pos() << std::endl;
                 cur->distance_ = d++;
                 prev = cur;
                 cur = static_cast<SnakeBlock*>(link);
@@ -360,14 +336,10 @@ void SnakeBlock::pull(WorldMap* world_map, DeltaFrame* delta_frame, std::unorder
         if (cur->distance_ >= 0 && d >= cur->distance_) {
             // The chain was so short that it didn't break (it was all pushed)!
             if (cur->distance_ <= 1) {
-                std::cout << "Short Snake (or, a First Pass)" << std::endl;
                 break;
             }
             // The chain was odd length; split the middle block!
             else if (d == cur->distance_) {
-                std::cout << "Splitting at " << cur->pos() << "! Wow!" << std::endl;
-                std::cout << "prev is at " << prev->pos() << std::endl;
-                std::cout << "cur's target is " << cur->target()->pos() << std::endl;
                 Point pos = cur->pos();
                 world_map->take_id(pos, Layer::Solid, cur, delta_frame);
 
@@ -376,14 +348,14 @@ void SnakeBlock::pull(WorldMap* world_map, DeltaFrame* delta_frame, std::unorder
                 world_map->put(std::move(a_unique), delta_frame);
                 a->target_ = prev;
                 a->add_link(prev, delta_frame);
-                a->pull_aux(world_map, delta_frame);
+                a->pull_aux(world_map, delta_frame, check_snakes);
 
                 auto b_unique = std::make_unique<SnakeBlock>(pos.x, pos.y, false, 1);
                 auto b = b_unique.get();
                 world_map->put(std::move(b_unique), delta_frame);
                 b->target_ = cur->target_;
                 b->add_link(cur->target_, delta_frame);
-                b->pull_aux(world_map, delta_frame);
+                b->pull_aux(world_map, delta_frame, check_snakes);
 
                 // This snake won't get its target reset otherwise
                 // This causes problems post "resurrection" from undo!
@@ -391,10 +363,9 @@ void SnakeBlock::pull(WorldMap* world_map, DeltaFrame* delta_frame, std::unorder
             }
             // The chain was even length; cut!
             else {
-                std::cout << "Cutting at " << cur->pos() << std::endl;
                 cur->remove_link(prev, delta_frame);
-                cur->pull_aux(world_map, delta_frame);
-                prev->pull_aux(world_map, delta_frame);
+                cur->pull_aux(world_map, delta_frame, check_snakes);
+                prev->pull_aux(world_map, delta_frame, check_snakes);
             }
             break;
         }
@@ -402,12 +373,14 @@ void SnakeBlock::pull(WorldMap* world_map, DeltaFrame* delta_frame, std::unorder
     }
 }
 
-void SnakeBlock::pull_aux(WorldMap* world_map, DeltaFrame* delta_frame) {
+void SnakeBlock::pull_aux(WorldMap* world_map, DeltaFrame* delta_frame, std::unordered_set<SnakeBlock*>& check_snakes) {
+    if (ends_ == 2) {
+        collect_unlinked_neighbors(world_map, check_snakes);
+    }
     SnakeBlock* cur = this;
     SnakeBlock* next = cur->target_;
     while (next) {
         auto obj_unique = world_map->take_quiet_id(cur->pos(), Layer::Solid, cur);
-        std::cout << "Moving " << cur->ends() << " ended snake at " << cur->pos() << " to " << next->pos() << std::endl;
         cur->set_pos(next->pos(), delta_frame);
         cur->reset_target();
         world_map->put_quiet(std::move(obj_unique));

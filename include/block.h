@@ -78,9 +78,6 @@ public:
     bool push_recheck(MoveProcessor*);
     unsigned int ends();
     int distance();
-    //void set_distance(int);
-    SnakeBlock* target();
-    //void set_target(SnakeBlock*);
     void reset_target();
     const BlockSet& get_strong_links();
     const BlockSet& get_weak_links();
@@ -90,11 +87,11 @@ public:
     void check_add_local_links(WorldMap*, DeltaFrame*);
     void collect_unlinked_neighbors(WorldMap*, std::unordered_set<SnakeBlock*>&);
     void pull(WorldMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&);
-    void pull_aux(WorldMap*, DeltaFrame*);
+    void pull_aux(WorldMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&);
     void post_move_reset();
 
 private:
-    int ends_;
+    unsigned int ends_;
     int distance_;
     SnakeBlock* target_;
 };

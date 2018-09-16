@@ -143,9 +143,16 @@ int main(void) {
     // Init game logic stuff
 
     auto world_map = std::make_unique<WorldMap>(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(5,10,true,StickyLevel::Weak)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(0,8,true,StickyLevel::Weak)));
 
     world_map->put_quiet(std::move(std::make_unique<Wall>(1,1)));
+
+    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(5,9,false,2)));
+    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(5,10,false,2)));
+    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(5,11,false,2)));
+    world_map->put_quiet(std::move(std::make_unique<Wall>(6,10)));
+    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(6,11,false,2)));
+    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(7,11,false,2)));
 
     world_map->put_quiet(std::move(std::make_unique<PushBlock>(3,1,false,StickyLevel::Weak)));
     world_map->put_quiet(std::move(std::make_unique<PushBlock>(4,1,false,StickyLevel::Weak)));
@@ -264,6 +271,7 @@ int main(void) {
                 if (glfwGetKey(window, p.first) == GLFW_PRESS) {
                     //StartCounter();
                     MoveProcessor(world_map.get(), p.second).try_move(delta_frame.get());
+                    world_map->print_snake_info();
                     //std::cout << "Move took " << GetCounter() << std::endl;
                     cooldown = MAX_COOLDOWN;
                     break;

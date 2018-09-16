@@ -161,19 +161,43 @@ void WorldMap::draw(Shader* shader) {
 }
 
 void WorldMap::set_initial_state() {
+    std::unordered_set<SnakeBlock*> unconfused_snakes = {};
     for (int x = 0; x != width_; ++x) {
         for (int y = 0; y != height_; ++y) {
             auto block = dynamic_cast<Block*>(view(Point{x,y}, Layer::Solid));
             if (block) {
                 add_mover(block);
                 block->check_add_local_links(this, nullptr);
+
+                auto sb = dynamic_cast<SnakeBlock*>(block);
+                if (sb && !sb->confused(this)) {
+                    unconfused_snakes.insert(sb);
+                }
             }
-/*            auto sb = dynamic_cast<SnakeBlock*>(obj);
-            if (sb)
-                snakes_.insert(sb);*/
         }
     }
-    //update_snakes(nullptr);
+    // Add links for all snakes!
+    for (auto sb : unconfused_snakes) {
+        for (auto& d : DIRECTIONS) {
+            auto adj = dynamic_cast<SnakeBlock*>(view(sb->shifted_pos(d), Layer::Solid));
+            if (adj && unconfused_snakes.count(adj)) {
+                sb->add_link(adj, nullptr);
+            }
+        }
+    }
+}
+
+void WorldMap::print_snake_info() {
+    std::cout << std::endl;
+    for (int x = 0; x != width_; ++x) {
+        for (int y = 0; y != height_; ++y) {
+            auto sb = dynamic_cast<SnakeBlock*>(view(Point{x,y}, Layer::Solid));
+            if (sb) {
+                std::cout << "SnakeBlock at " << sb->pos() << " with dist " << sb->distance() << " and target " << sb->target() << " and it's avaiable? " << sb->available() << " and confused? " << sb->confused(this) << std::endl;
+            }
+        }
+    }
+    std::cout << std::endl;
 }
 
 /*

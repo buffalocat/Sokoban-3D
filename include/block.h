@@ -5,6 +5,7 @@
 #include "gameobject.h"
 
 class GameObject;
+class MoveProcessor;
 
 /** Abstract class for Solid objects which can move around and do things
  * Everything that's not a Wall is a Block
@@ -19,7 +20,7 @@ public:
     bool car();
     void set_car(bool car);
     void draw(Shader*, int);
-    virtual bool push_recheck() = 0;
+    virtual bool push_recheck(MoveProcessor*) = 0;
     virtual const BlockSet& get_strong_links() = 0;
     virtual const BlockSet& get_weak_links() = 0;
     void set_pos(Point p, DeltaFrame*);
@@ -31,6 +32,7 @@ public:
     void reinit();
     void check_remove_local_links(WorldMap*, DeltaFrame*);
     virtual void check_add_local_links(WorldMap*, DeltaFrame*) = 0;
+    virtual void post_move_reset();
 
 protected:
     bool car_;
@@ -52,7 +54,7 @@ public:
     ~PushBlock();
     ObjCode obj_code();
     void serialize(std::ofstream& file);
-    bool push_recheck();
+    bool push_recheck(MoveProcessor*);
     void set_sticky(StickyLevel sticky);
     void draw(Shader*, int);
     StickyLevel sticky();
@@ -73,11 +75,12 @@ public:
     ~SnakeBlock();
     ObjCode obj_code();
     void serialize(std::ofstream& file);
-    bool push_recheck();
+    bool push_recheck(MoveProcessor*);
     unsigned int ends();
     int distance();
+    //void set_distance(int);
     SnakeBlock* target();
-    void set_target(SnakeBlock*, int);
+    //void set_target(SnakeBlock*);
     void reset_target();
     const BlockSet& get_strong_links();
     const BlockSet& get_weak_links();
@@ -85,6 +88,10 @@ public:
     bool available();
     bool confused(WorldMap*);
     void check_add_local_links(WorldMap*, DeltaFrame*);
+    void collect_unlinked_neighbors(WorldMap*, std::unordered_set<SnakeBlock*>&);
+    void pull(WorldMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&);
+    void pull_aux(WorldMap*, DeltaFrame*);
+    void post_move_reset();
 
 private:
     int ends_;

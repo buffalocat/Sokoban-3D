@@ -51,13 +51,15 @@ public:
     void try_push(Component*, Point);
     void find_strong_component(Block*);
 
+    void insert_touched_snake(SnakeBlock*);
+
 private:
     WorldMap* map_;
     Point dir_;
     std::unordered_map<Block*, std::shared_ptr<Component>> comps_;
     // Sets for marking where interesting things happened
     std::unordered_set<Block*> maybe_broken_weak_;
-    std::unordered_set<SnakeBlock*> pushed_snake_;
+    std::unordered_set<SnakeBlock*> touched_snakes_;
 };
 
 #endif // MOVEPROCESSOR_H

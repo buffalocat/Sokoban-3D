@@ -24,6 +24,8 @@ public:
     Block* prime_mover();
     void add_mover(Block*);
 
+    void print_snake_info();
+
     void serialize(std::ofstream& file) const;
 
     GameObject* view(Point, Layer);

@@ -2,7 +2,8 @@
 #include "block.h"
 #include "worldmap.h"
 
-MoveProcessor::MoveProcessor(WorldMap* world_map, Point dir): map_ {world_map}, dir_ {dir}, comps_ {} {}
+MoveProcessor::MoveProcessor(WorldMap* world_map, Point dir): map_ {world_map}, dir_ {dir}, comps_ {},
+maybe_broken_weak_ {}, touched_snakes_ {} {}
 
 void MoveProcessor::try_move(DeltaFrame* delta_frame) {
     std::vector<Component*> roots {};
@@ -14,32 +15,48 @@ void MoveProcessor::try_move(DeltaFrame* delta_frame) {
     for (Component* comp : roots) {
         comp->resolve_contingent();
     }
+    // These are snakes whom we'll check for added links (due to un-confusion)
+    std::unordered_set<SnakeBlock*> check_snakes = {};
+    for (auto& sb : touched_snakes_) {
+        if (comps_[sb]->good()) {
+            if (sb->available()) {
+                sb->collect_unlinked_neighbors(map_, check_snakes);
+            }
+            if (sb->distance() == 1) {
+                sb->pull(map_, delta_frame, check_snakes);
+            }
+        }
+    }
     // This section will contain some Block-type specific code.
     // I don't think this can be helped; for now we'll do it the dumb way.
     for (auto& p : comps_) {
         if (p.second->good()) {
-            // Universal block movement code
             Block* obj = p.first;
+            // Check whether a moving snake may have unconfused any old neighbors!
+            // Also, pull snake chains.
+            // Universal block movement code
             auto obj_unique = map_->take_quiet_id(obj->pos(), Layer::Solid, obj);
             obj->shift_pos(dir_, delta_frame);
             map_->put_quiet(std::move(obj_unique));
-            // Special checks go here
-            SnakeBlock* sb = dynamic_cast<SnakeBlock*>(obj);
-            if (sb && sb->distance() = )
         }
     }
-    // PULL SNAKES HERE!
-
+    // Clear out old links BEFORE checking for new ones
+    for (auto& block : maybe_broken_weak_) {
+        block->check_remove_local_links(map_, delta_frame);
+    }
     // The second iteration is unavoidable; it's not obvious whether it's better to
     // naively iterate through the whole set or to record the moved-set during the above
     for (auto& p : comps_) {
         if (p.second->good()) {
-            // Also, reset any stray pushed snake data
             p.first->check_add_local_links(map_, delta_frame);
         }
     }
-    for (auto& block : maybe_broken_weak_) {
-        block->check_remove_local_links(map_, delta_frame);
+    // It's possible that some snakes we never "directly interacted with" also can add links!
+    for (auto& sb : check_snakes) {
+        sb->check_add_local_links(map_, delta_frame);
+    }
+    for (auto& sb : touched_snakes_) {
+        sb->reset_target();
     }
 }
 
@@ -82,7 +99,7 @@ void MoveProcessor::try_push(Component* comp, Point pos) {
         if (obj) {
             Block* block = dynamic_cast<Block*>(obj);
             if (block) {
-                auto pushed_comp = move_component(block, block->push_recheck());
+                auto pushed_comp = move_component(block, block->push_recheck(this));
                 if (pushed_comp->bad()) {
                     comp->set_bad();
                 } else {
@@ -109,7 +126,11 @@ void MoveProcessor::find_strong_component(Block* block) {
             }
         }
     }
- }
+}
+
+void MoveProcessor::insert_touched_snake(SnakeBlock* sb) {
+    touched_snakes_.insert(sb);
+}
 
 Component::Component(): state_ {ComponentState::Contingent}, check_ {true}, blocks_ {}, push_ {}, weak_ {} {}
 

@@ -36,6 +36,8 @@ public:
 
     void draw(Shader*);
 
+    void set_initial_state();
+
 private:
     int width_;
     int height_;

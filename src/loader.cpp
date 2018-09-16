@@ -96,6 +96,7 @@ WorldMap* Loader::load() {
             while (reading_objects) {
                 file.read(reinterpret_cast<char *>(buffer), 1);
                 ObjCode code = static_cast<ObjCode>(buffer[0]);
+                std::cout << "Read an object of type " << static_cast<int>(buffer[0]) << std::endl;
                 if (code == ObjCode::NONE) {
                     reading_objects = false;
                     break;
@@ -104,6 +105,7 @@ WorldMap* Loader::load() {
                 file.read((char *)buffer, bytes);
                 int px = buffer[0];
                 int py = buffer[1];
+                std::cout << "The position was " << static_cast<int>(buffer[0]) << "," << static_cast<int>(buffer[0]) << std::endl;
                 switch(code) {
                 case ObjCode::NONE : break;
                 case ObjCode::Wall : {

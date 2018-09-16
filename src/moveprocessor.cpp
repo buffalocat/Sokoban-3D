@@ -5,7 +5,6 @@
 MoveProcessor::MoveProcessor(WorldMap* world_map, Point dir): map_ {world_map}, dir_ {dir}, comps_ {} {}
 
 void MoveProcessor::try_move(DeltaFrame* delta_frame) {
-    std::cout << "New Move" << std::endl;
     std::vector<Component*> roots {};
     //NOTE: More checks will happen when Player is a separate layer in practice.
     for (Block* block : map_->movers()) {
@@ -19,14 +18,23 @@ void MoveProcessor::try_move(DeltaFrame* delta_frame) {
     // I don't think this can be helped; for now we'll do it the dumb way.
     for (auto& p : comps_) {
         if (p.second->good()) {
+            // Universal block movement code
             Block* obj = p.first;
             auto obj_unique = map_->take_quiet_id(obj->pos(), Layer::Solid, obj);
             obj->shift_pos(dir_, delta_frame);
             map_->put_quiet(std::move(obj_unique));
+            // Special checks go here
+            SnakeBlock* sb = dynamic_cast<SnakeBlock*>(obj);
+            if (sb && sb->distance() = )
         }
     }
+    // PULL SNAKES HERE!
+
+    // The second iteration is unavoidable; it's not obvious whether it's better to
+    // naively iterate through the whole set or to record the moved-set during the above
     for (auto& p : comps_) {
         if (p.second->good()) {
+            // Also, reset any stray pushed snake data
             p.first->check_add_local_links(map_, delta_frame);
         }
     }
@@ -42,7 +50,6 @@ void MoveProcessor::try_move(DeltaFrame* delta_frame) {
  */
 Component* MoveProcessor::move_component(Block* block, bool recheck) {
     if (!comps_.count(block)) {
-        std::cout << "Finding a new component!" << std::endl;
         find_strong_component(block);
     }
     Component* comp = comps_[block].get();

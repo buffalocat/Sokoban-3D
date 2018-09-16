@@ -160,6 +160,22 @@ void WorldMap::draw(Shader* shader) {
     }
 }
 
+void WorldMap::set_initial_state() {
+    for (int x = 0; x != width_; ++x) {
+        for (int y = 0; y != height_; ++y) {
+            auto block = dynamic_cast<Block*>(view(Point{x,y}, Layer::Solid));
+            if (block) {
+                add_mover(block);
+                block->check_add_local_links(this, nullptr);
+            }
+/*            auto sb = dynamic_cast<SnakeBlock*>(obj);
+            if (sb)
+                snakes_.insert(sb);*/
+        }
+    }
+    //update_snakes(nullptr);
+}
+
 /*
 // Note: many things are predicated on the assumption that, in any consistent game state,
 // certain layers allow at most one object per MapCell.  These include Solid and Player.
@@ -198,18 +214,6 @@ void WorldMap::move_solid(Point dir, DeltaFrame* delta_frame) {
 
 
 
-void WorldMap::set_initial_state() {
-    for (int x = 0; x != width_; ++x) {
-        for (int y = 0; y != height_; ++y) {
-            auto obj = view(Point{x,y}, Layer::Solid);
-            update_links_auxiliary(obj, nullptr);
-            auto sb = dynamic_cast<SnakeBlock*>(obj);
-            if (sb)
-                snakes_.insert(sb);
-        }
-    }
-    update_snakes(nullptr);
-}
 
 void WorldMap::update_snakes(DeltaFrame* delta_frame) {
     std::unordered_set<SnakeBlock*> available_snakes {};
@@ -250,19 +254,7 @@ void WorldMap::update_links(DeltaFrame* delta_frame) {
     }
 }
 
-void WorldMap::update_links_auxiliary(GameObject* obj, DeltaFrame* delta_frame) {
-    auto pb = dynamic_cast<PushBlock*>(obj);
-    if (pb && pb->sticky() != StickyLevel::None) {
-        Point p = obj->pos();
-        BlockSet new_links {};
-        for (Point d : {Point{1,0}, Point{-1,0}, Point{0,1}, Point{0,-1}}) {
-            PushBlock* adj = dynamic_cast<PushBlock*>(view(Point {p.x + d.x, p.y + d.y}, Layer::Solid));
-            if (adj && pb->sticky() == adj->sticky()) {
-                pb->add_link(adj, delta_frame);
-            }
-        }
-    }
-}
+
 
 
 void WorldMap::pull_snakes(DeltaFrame* delta_frame) {
@@ -318,8 +310,6 @@ void WorldMap::pull_snakes(DeltaFrame* delta_frame) {
                         b->set_target(cur->target());
                         b->add_link(cur->target(), delta_frame);
                         pull_snakes_auxiliary(b, delta_frame);
-                        snake_split(cur, a, b);
-                        delta_frame->push(std::make_unique<SnakeSplitDelta>(cur, a, b));
                     }
                     // The chain was even length; cut!
                     else {
@@ -332,18 +322,6 @@ void WorldMap::pull_snakes(DeltaFrame* delta_frame) {
             }
         }
     }
-}
-
-void WorldMap::snake_split(SnakeBlock* whole, SnakeBlock* half_a, SnakeBlock* half_b) {
-    snakes_.erase(whole);
-    snakes_.insert(half_a);
-    snakes_.insert(half_b);
-}
-
-void WorldMap::snake_split_reverse(SnakeBlock* whole, SnakeBlock* half_a, SnakeBlock* half_b) {
-    snakes_.insert(whole);
-    snakes_.erase(half_a);
-    snakes_.erase(half_b);
 }
 
 void WorldMap::pull_snakes_auxiliary(SnakeBlock* cur, DeltaFrame* delta_frame) {

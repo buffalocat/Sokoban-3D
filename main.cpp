@@ -143,16 +143,40 @@ int main(void) {
     // Init game logic stuff
 
     auto world_map = std::make_unique<WorldMap>(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
-    auto player_unique = std::move(std::make_unique<PushBlock>(0,0,true,StickyLevel::Weak));
-    Block* player = player_unique.get();
-    world_map->add_mover(player);
-    world_map->put_quiet(std::move(player_unique));
-    for (int px = 2; px < 15; ++px) {
-        for (int py = 2; py < 12; ++py) {
-            world_map->put_quiet(std::make_unique<PushBlock>(px,py,false,StickyLevel::Weak));
-        }
-    }
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(5,10,true,StickyLevel::Weak)));
 
+    world_map->put_quiet(std::move(std::make_unique<Wall>(1,1)));
+
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(3,1,false,StickyLevel::Weak)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(4,1,false,StickyLevel::Weak)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(4,2,false,StickyLevel::Weak)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(4,3,false,StickyLevel::Weak)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(4,4,false,StickyLevel::Weak)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(3,4,false,StickyLevel::Weak)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(2,4,false,StickyLevel::Weak)));
+
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(1,2,false,StickyLevel::Strong)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(2,2,false,StickyLevel::Strong)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(3,2,false,StickyLevel::Strong)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(2,3,false,StickyLevel::Strong)));
+
+    world_map->put_quiet(std::move(std::make_unique<Wall>(9,1)));
+
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(7,1,false,StickyLevel::Weak)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(6,1,false,StickyLevel::Weak)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(6,2,false,StickyLevel::Weak)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(6,3,false,StickyLevel::Weak)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(6,4,false,StickyLevel::Weak)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(7,4,false,StickyLevel::Weak)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(8,4,false,StickyLevel::Weak)));
+
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(9,2,false,StickyLevel::Strong)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(8,2,false,StickyLevel::Strong)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(7,2,false,StickyLevel::Strong)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(8,3,false,StickyLevel::Strong)));
+
+    world_map->set_initial_state();
+    auto player = world_map->prime_mover();
 
     int cooldown = 0;
 
@@ -213,7 +237,7 @@ int main(void) {
                 WorldMap* new_world_map = Loader::load();
                 if (new_world_map) {
                     world_map.reset(new_world_map);
-                    //world_map->set_initial_state();
+                    world_map->set_initial_state();
                     player = world_map->prime_mover();
                     undo_stack = UndoStack(1000);
                 }

@@ -28,13 +28,17 @@ int WorldMap::height() const {
     return height_;
 }
 
-const std::vector<Block*>& WorldMap::movers() {
+const std::deque<Block*>& WorldMap::movers() {
     return movers_;
 }
 
+// Return a mover, and also cycle camera targets!
 Block* WorldMap::prime_mover() {
     if (!movers_.empty()) {
-        return movers_.back();
+        Block* cur = movers_.back();
+        movers_.pop_back();
+        movers_.push_front(cur);
+        return cur;
     } else {
         return nullptr;
     }
@@ -182,6 +186,21 @@ void WorldMap::set_initial_state() {
             auto adj = dynamic_cast<SnakeBlock*>(view(sb->shifted_pos(d), Layer::Solid));
             if (adj && available_snakes.count(adj)) {
                 sb->add_link(adj, nullptr);
+            }
+        }
+    }
+}
+
+// NOTE: Just for debugging! But snakes still have problems, so we still need it.
+void WorldMap::print_snake_info() {
+    std::cout << std::endl;
+    for (int x = 0; x != width_; ++x) {
+        for (int y = 0; y != height_; ++y) {
+            auto sb = dynamic_cast<SnakeBlock*>(view(Point{x,y}, Layer::Solid));
+            if (sb) {
+                std::cout << "SnakeBlock at " << sb->pos() <<
+                    " with dist " << sb->distance() << //" and target " << sb->target() <<
+                    " and it's avaiable? " << sb->available() << " and confused? " << sb->confused(this) << std::endl;
             }
         }
     }

@@ -17,15 +17,22 @@ void MoveProcessor::try_move(DeltaFrame* delta_frame) {
     }
     // These are snakes whom we'll check for added links (due to un-confusion)
     std::unordered_set<SnakeBlock*> check_snakes = {};
-    // Some things must be done BEFORE main movement
+    std::vector<SnakeBlock*> good_snakes = {};
+    // Snake pulling must occur before main movement
+    // But before that we have to reset snakes that weren't actually pushed!
     for (auto& sb : touched_snakes_) {
         if (comps_.count(sb) && comps_[sb]->good()) {
-            if (sb->available()) {
-                sb->collect_unlinked_neighbors(map_, check_snakes);
-            }
-            if (sb->distance() == 1) {
-                sb->pull(map_, delta_frame, check_snakes);
-            }
+            good_snakes.push_back(sb);
+        } else {
+            sb->reset_target();
+        }
+    }
+    for (auto& sb : good_snakes) {
+        if (sb->available()) {
+            sb->collect_unlinked_neighbors(map_, check_snakes);
+        }
+        if (sb->distance() == 1) {
+            sb->pull(map_, delta_frame, check_snakes);
         }
     }
     // This section will contain some Block-type specific code.

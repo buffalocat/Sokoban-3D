@@ -20,7 +20,7 @@ public:
     bool valid(Point pos);
     int width() const;
     int height() const;
-    const std::vector<Block*>& movers();
+    const std::deque<Block*>& movers();
     Block* prime_mover();
     void add_mover(Block*);
 
@@ -38,13 +38,15 @@ public:
 
     void set_initial_state();
 
+    void print_snake_info();
+
 private:
     int width_;
     int height_;
     std::vector<std::vector<MapCell>> map_;
 
     // State variables
-    std::vector<Block*> movers_;
+    std::deque<Block*> movers_;
 };
 
 #endif // WORLDMAP_H

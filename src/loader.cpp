@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <fstream>
 #include <iostream>
+#include <string>
 
 #include "worldmap.h"
 #include "gameobject.h"
@@ -23,6 +24,59 @@ static std::unordered_map<ObjCode, unsigned int, ObjCodeHash> BYTES_PER_OBJECT =
     {ObjCode::PushBlock, 3},
     {ObjCode::SnakeBlock, 3},
 };
+
+WorldMap* Loader::blank_map() {
+    std::cout << "You've chosen to clear the map! (enter blank line to return to current map)" << std::endl;
+    std::string input;
+    unsigned int width, height;
+    while (true) {
+        try {
+            std::cout << "Enter width of new map (between 1 and 256):" << std::endl;
+            std::getline(std::cin, input);
+            if (input.empty()) {
+                std::cout << "Width was empty; returning to game." << std::endl;
+                return nullptr;
+            }
+            width = std::stoi(input);
+            if (width <= 0) {
+                std::cout << "Width defaulted to 1" << std::endl;
+                width = 1;
+            }
+            if (width > 256) {
+                std::cout << "Width defaulted to 256" << std::endl;
+                width = 256;
+            }
+            break;
+        } catch (const std::invalid_argument& ia) {
+            std::cout << "Failed to parse user input as integer." << std::endl;
+        }
+    }
+    while (true) {
+        try {
+            std::cout << "Enter height of new map (between 1 and 256):" << std::endl;
+            std::getline(std::cin, input);
+            if (input.empty()) {
+                std::cout << "Height was empty; returning to game." << std::endl;
+                return nullptr;
+            }
+            height = std::stoi(input);
+            if (height <= 0) {
+                std::cout << "Height defaulted to 1" << std::endl;
+                height = 1;
+            }
+            if (height > 256) {
+                std::cout << "Height defaulted to 256" << std::endl;
+                height = 256;
+            }
+            break;
+        } catch (const std::invalid_argument& ia) {
+            std::cout << "Failed to parse user input as integer." << std::endl;
+        }
+    }
+    std::cout << "Successfully initialized map dimensions to " << width << " by " << height << std::endl;
+    return new WorldMap(width, height);
+}
+
 
 void Loader::save(const WorldMap* world_map) {
     std::cout << "Enter name to save file as: (enter blank line to quit saving)" << std::endl;

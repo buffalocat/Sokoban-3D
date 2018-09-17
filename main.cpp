@@ -51,7 +51,16 @@ const int DEFAULT_BOARD_HEIGHT = 13;
 
 const int MAX_COOLDOWN = 5;
 
-bool windowInit(GLFWwindow*&);
+bool DEV_MODE = true;
+
+static PushBlock FAKE_PLAYER(0,0,true,StickyLevel::None);
+
+
+bool window_init(GLFWwindow*&);
+
+Block* find_player(WorldMap*);
+
+void print_controls();
 
 enum class ViewMode {
     Perspective,
@@ -86,8 +95,12 @@ double GetCounter()
 
 int main(void) {
     GLFWwindow* window;
-    if (!windowInit(window)) {
+    if (!window_init(window)) {
         return -1;
+    }
+
+    if (DEV_MODE) {
+        print_controls();
     }
 
     float cubeVertices[24];
@@ -143,7 +156,10 @@ int main(void) {
     // Init game logic stuff
 
     auto world_map = std::make_unique<WorldMap>(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(13,2,true,StickyLevel::None)));
     world_map->put_quiet(std::move(std::make_unique<PushBlock>(0,8,true,StickyLevel::Weak)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(12,5,true,StickyLevel::Strong)));
+
 
     world_map->put_quiet(std::move(std::make_unique<Wall>(1,1)));
 
@@ -189,7 +205,7 @@ int main(void) {
     world_map->put_quiet(std::move(std::make_unique<PushBlock>(8,3,false,StickyLevel::Strong)));
 
     world_map->set_initial_state();
-    auto player = world_map->prime_mover();
+    Block* player = find_player(world_map.get());
 
     int cooldown = 0;
 
@@ -240,24 +256,35 @@ int main(void) {
                 cam_incline -= .01f;
             }
         }
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+        if (DEV_MODE && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+            if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
                 Loader::save(world_map.get());
             }
-        }
-        if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
-            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+            if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
                 WorldMap* new_world_map = Loader::load();
                 if (new_world_map) {
                     world_map.reset(new_world_map);
                     world_map->set_initial_state();
-                    player = world_map->prime_mover();
+                    player = find_player(world_map.get());
                     undo_stack = UndoStack(1000);
                 }
             }
-        }
-        if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
-            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+            if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) {
+                WorldMap* new_world_map = Loader::blank_map();
+                if (new_world_map) {
+                    world_map.reset(new_world_map);
+                    world_map->set_initial_state();
+                    player = find_player(world_map.get());
+                    undo_stack = UndoStack(1000);
+                }
+            }
+            if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+                if (cooldown == 0) {
+                    player = find_player(world_map.get());
+                    cooldown = 3*MAX_COOLDOWN;
+                }
+            }
+            if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
                 if (cooldown == 0) {
                     if (view_mode == ViewMode::Perspective) {
                         view_mode = ViewMode::Ortho;
@@ -277,6 +304,7 @@ int main(void) {
                 if (glfwGetKey(window, p.first) == GLFW_PRESS) {
                     //StartCounter();
                     MoveProcessor(world_map.get(), p.second).try_move(delta_frame.get());
+                    world_map->print_snake_info();
                     //std::cout << "Move took " << GetCounter() << std::endl;
                     cooldown = MAX_COOLDOWN;
                     break;
@@ -343,7 +371,7 @@ int main(void) {
     return 0;
 }
 
-bool windowInit(GLFWwindow*& window) {
+bool window_init(GLFWwindow*& window) {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -365,4 +393,28 @@ bool windowInit(GLFWwindow*& window) {
 
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     return true;
+}
+
+Block* find_player(WorldMap* world_map) {
+    Block* player = world_map->prime_mover();
+    // If there was no player, we make a "fake" one and don't put it on the map
+    // It's not a great solution
+    if (!player) {
+        return &FAKE_PLAYER;
+    }
+    return player;
+}
+
+void print_controls() {
+    std::cout << "Arrow keys to move\nZ to undo\nWASD to rotate camera" << std::endl;
+    if (!DEV_MODE) {
+        return;
+    }
+    std::cout << "\nOther commands:\n\n"
+        "ctrl+S to save the current map\n"
+        "ctrl+L to load a map from the \\maps directory\n"
+        "ctrl+N to initialize a blank map (destroys current map!)\n"
+        "ctrl+V to switch between Perspective and Orthographic views\n"
+        "ctrl+P to focus the camera on a player object (chosen arbitrarily)\n"
+        << std::endl;
 }

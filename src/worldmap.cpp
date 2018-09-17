@@ -166,6 +166,7 @@ void WorldMap::draw(Shader* shader) {
 
 void WorldMap::set_initial_state() {
     std::unordered_set<SnakeBlock*> available_snakes = {};
+    movers_ = {};
     for (int x = 0; x != width_; ++x) {
         for (int y = 0; y != height_; ++y) {
             auto block = dynamic_cast<Block*>(view(Point{x,y}, Layer::Solid));

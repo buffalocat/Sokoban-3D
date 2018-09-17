@@ -37,21 +37,7 @@
 #include "shader.h"
 #include "loader.h"
 #include "moveprocessor.h"
-
-const int SCREEN_WIDTH = 800;
-const int SCREEN_HEIGHT = 600;
-
-const int MESH_SIZE = 50;
-
-const float ORTHO_WIDTH = (float)SCREEN_WIDTH/(float)MESH_SIZE;
-const float ORTHO_HEIGHT = (float)SCREEN_HEIGHT/(float)MESH_SIZE;
-
-const int DEFAULT_BOARD_WIDTH = 17;
-const int DEFAULT_BOARD_HEIGHT = 13;
-
-const int MAX_COOLDOWN = 5;
-
-bool DEV_MODE = true;
+#include "editor.h"
 
 static PushBlock FAKE_PLAYER(0,0,true,StickyLevel::None);
 
@@ -99,9 +85,9 @@ int main(void) {
         return -1;
     }
 
-    if (DEV_MODE) {
-        print_controls();
-    }
+    Editor editor(window);
+
+    print_controls();
 
     float cubeVertices[24];
     for (int i = 0; i < 8; ++i) {
@@ -156,53 +142,7 @@ int main(void) {
     // Init game logic stuff
 
     auto world_map = std::make_unique<WorldMap>(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(13,2,true,StickyLevel::None)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(0,8,true,StickyLevel::Weak)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(12,5,true,StickyLevel::Strong)));
-
-
-    world_map->put_quiet(std::move(std::make_unique<Wall>(1,1)));
-
-    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(5,9,false,2)));
-    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(5,10,false,2)));
-    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(5,11,false,2)));
-    world_map->put_quiet(std::move(std::make_unique<Wall>(6,10)));
-    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(6,9,false,2)));
-    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(7,9,false,2)));
-    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(10,9,false,2)));
-    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(11,9,false,2)));
-    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(12,9,false,2)));
-    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(11,10,false,2)));
-    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(10,10,false,2)));
-    world_map->put_quiet(std::move(std::make_unique<SnakeBlock>(9,10,false,2)));
-
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(3,1,false,StickyLevel::Weak)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(4,1,false,StickyLevel::Weak)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(4,2,false,StickyLevel::Weak)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(4,3,false,StickyLevel::Weak)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(4,4,false,StickyLevel::Weak)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(3,4,false,StickyLevel::Weak)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(2,4,false,StickyLevel::Weak)));
-
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(1,2,false,StickyLevel::Strong)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(2,2,false,StickyLevel::Strong)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(3,2,false,StickyLevel::Strong)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(2,3,false,StickyLevel::Strong)));
-
-    world_map->put_quiet(std::move(std::make_unique<Wall>(9,1)));
-
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(7,1,false,StickyLevel::Weak)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(6,1,false,StickyLevel::Weak)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(6,2,false,StickyLevel::Weak)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(6,3,false,StickyLevel::Weak)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(6,4,false,StickyLevel::Weak)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(7,4,false,StickyLevel::Weak)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(8,4,false,StickyLevel::Weak)));
-
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(9,2,false,StickyLevel::Strong)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(8,2,false,StickyLevel::Strong)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(7,2,false,StickyLevel::Strong)));
-    world_map->put_quiet(std::move(std::make_unique<PushBlock>(8,3,false,StickyLevel::Strong)));
+    world_map->put_quiet(std::move(std::make_unique<PushBlock>(1,1,true,StickyLevel::None)));
 
     world_map->set_initial_state();
     Block* player = find_player(world_map.get());
@@ -235,6 +175,8 @@ int main(void) {
 
     ViewMode view_mode = ViewMode::Perspective;
 
+    bool edit_mode = false;
+
     while(!glfwWindowShouldClose(window)) {
         // Handle input
         auto delta_frame = std::make_unique<DeltaFrame>();
@@ -256,43 +198,66 @@ int main(void) {
                 cam_incline -= .01f;
             }
         }
-        if (DEV_MODE && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
-            if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-                Loader::save(world_map.get());
-            }
-            if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
-                WorldMap* new_world_map = Loader::load();
-                if (new_world_map) {
-                    world_map.reset(new_world_map);
-                    world_map->set_initial_state();
-                    player = find_player(world_map.get());
-                    undo_stack = UndoStack(1000);
+        if (edit_mode && view_mode == ViewMode::Ortho) {
+            editor.handle_input(delta_frame.get(), world_map.get(), player->pos());
+        }
+        if (DEV_MODE) {
+            if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+                if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+                    Loader::save(world_map.get());
                 }
-            }
-            if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) {
-                WorldMap* new_world_map = Loader::blank_map();
-                if (new_world_map) {
-                    world_map.reset(new_world_map);
-                    world_map->set_initial_state();
-                    player = find_player(world_map.get());
-                    undo_stack = UndoStack(1000);
-                }
-            }
-            if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
-                if (cooldown == 0) {
-                    player = find_player(world_map.get());
-                    cooldown = 3*MAX_COOLDOWN;
-                }
-            }
-            if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
-                if (cooldown == 0) {
-                    if (view_mode == ViewMode::Perspective) {
-                        view_mode = ViewMode::Ortho;
-                    } else {
-                        view_mode = ViewMode::Perspective;
+                if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+                    WorldMap* new_world_map = Loader::load();
+                    if (new_world_map) {
+                        world_map.reset(new_world_map);
+                        world_map->set_initial_state();
+                        player = find_player(world_map.get());
+                        undo_stack = UndoStack(1000);
                     }
-                    // It's a little too easy to do this more times than you mean to...
-                    cooldown = 3*MAX_COOLDOWN;
+                }
+                if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) {
+                    WorldMap* new_world_map = Loader::blank_map();
+                    if (new_world_map) {
+                        world_map.reset(new_world_map);
+                        world_map->set_initial_state();
+                        player = find_player(world_map.get());
+                        undo_stack = UndoStack(1000);
+                    }
+                }
+                if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+                    if (cooldown == 0) {
+                        player = find_player(world_map.get());
+                        cooldown = 3*MAX_COOLDOWN;
+                    }
+                }
+                if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+                    if (cooldown == 0) {
+                        edit_mode = !edit_mode;
+                        if (edit_mode) {
+                            std::cout << "Editor mode activated" << std::endl;
+                        } else {
+                            std::cout << "Editor mode deactivated" << std::endl;
+                        }
+                        cooldown = 3*MAX_COOLDOWN;
+                    }
+                }
+                if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+                    if (cooldown == 0) {
+                        world_map->set_initial_state();
+                        std::cout << "Resynced Map" << std::endl;
+                        cooldown = 3*MAX_COOLDOWN;
+                    }
+                }
+                if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
+                    if (cooldown == 0) {
+                        if (view_mode == ViewMode::Perspective) {
+                            view_mode = ViewMode::Ortho;
+                        } else {
+                            view_mode = ViewMode::Perspective;
+                        }
+                        // It's a little too easy to do this more times than you mean to...
+                        cooldown = 3*MAX_COOLDOWN;
+                    }
                 }
             }
         }
@@ -364,7 +329,7 @@ int main(void) {
 
         undo_stack.push(std::move(delta_frame));
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 
     glfwTerminate();
@@ -406,15 +371,26 @@ Block* find_player(WorldMap* world_map) {
 }
 
 void print_controls() {
-    std::cout << "Arrow keys to move\nZ to undo\nWASD to rotate camera" << std::endl;
+    std::cout << "Sokoban by Chris Hunt\n\n"
+        "Arrow keys to move\n"
+        "Z to undo\n"
+        "WASD to rotate camera\n"
+         << std::endl;
     if (!DEV_MODE) {
         return;
     }
     std::cout << "\nOther commands:\n\n"
-        "ctrl+S to save the current map\n"
-        "ctrl+L to load a map from the \\maps directory\n"
-        "ctrl+N to initialize a blank map (destroys current map!)\n"
-        "ctrl+V to switch between Perspective and Orthographic views\n"
-        "ctrl+P to focus the camera on a player object (chosen arbitrarily)\n"
+        "ctrl+S to Save the current map\n"
+        "ctrl+L to Load a map from the \\maps directory\n"
+        "ctrl+N to create a New map (destroys current map!)\n"
+        "ctrl+V to switch View Mode between Perspective and Orthographic\n"
+        "ctrl+E to toggle Edit Mode (only usable in Ortho view)\n"
+        "ctrl+P to cycle through Players to center the camera on\n"
+        "ctrl+F to Force map reinitialization (activating links, etc)\n"
+        << std::endl;
+    std::cout << "\nIn Edit Mode:\n\n"
+        "Use number keys to change active object\n"
+        "Left click to place active object on tile, Right click to delete\n"
+        "Note: you can undo creates/deletes in edit mode with Z\n"
         << std::endl;
 }

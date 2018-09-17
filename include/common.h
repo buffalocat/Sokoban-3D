@@ -79,4 +79,20 @@ const glm::vec4 ORANGE = glm::vec4(1.0f, 0.7f, 0.3f, 1.0f);
 // NOTE: the order matters here, for serialization reasons!
 const Point DIRECTIONS[4] = {Point{-1,0}, Point{0,-1}, Point{1,0}, Point{0,1}};
 
+
+const int SCREEN_WIDTH = 800;
+const int SCREEN_HEIGHT = 600;
+
+const int MESH_SIZE = 50;
+
+const float ORTHO_WIDTH = (float)SCREEN_WIDTH/(float)MESH_SIZE;
+const float ORTHO_HEIGHT = (float)SCREEN_HEIGHT/(float)MESH_SIZE;
+
+const int DEFAULT_BOARD_WIDTH = 17;
+const int DEFAULT_BOARD_HEIGHT = 13;
+
+const int MAX_COOLDOWN = 5;
+
+const bool DEV_MODE = true;
+
 #endif // COMMON_H

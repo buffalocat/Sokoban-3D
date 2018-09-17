@@ -305,7 +305,9 @@ void SnakeBlock::collect_unlinked_neighbors(WorldMap* world_map, std::unordered_
     }
 }
 
-void SnakeBlock::pull(WorldMap* world_map, DeltaFrame* delta_frame, std::unordered_set<SnakeBlock*>& check_snakes) {
+// NOTE: pull and pull_aux are fairly complicated and share quite a lot of information
+// Maybe refactor to a method object later?
+void SnakeBlock::pull(WorldMap* world_map, DeltaFrame* delta_frame, std::unordered_set<SnakeBlock*>& check_snakes, Point dir) {
     SnakeBlock *prev, *cur;
     cur = this;
     // The previous snake block is the adjacent one which was pushed.
@@ -320,7 +322,7 @@ void SnakeBlock::pull(WorldMap* world_map, DeltaFrame* delta_frame, std::unorder
         // If we reach the end of the snake, we can pull it
         if (cur->links().size() == 1) {
             check_snakes.insert(cur);
-            cur->pull_aux(world_map, delta_frame, check_snakes);
+            cur->pull_aux(world_map, delta_frame, check_snakes, dir);
             break;
         }
         // Progress down the snake
@@ -348,14 +350,14 @@ void SnakeBlock::pull(WorldMap* world_map, DeltaFrame* delta_frame, std::unorder
                 world_map->put(std::move(a_unique), delta_frame);
                 a->target_ = prev;
                 a->add_link(prev, delta_frame);
-                a->pull_aux(world_map, delta_frame, check_snakes);
+                a->pull_aux(world_map, delta_frame, check_snakes, dir);
 
                 auto b_unique = std::make_unique<SnakeBlock>(pos.x, pos.y, false, 1);
                 auto b = b_unique.get();
                 world_map->put(std::move(b_unique), delta_frame);
                 b->target_ = cur->target_;
                 b->add_link(cur->target_, delta_frame);
-                b->pull_aux(world_map, delta_frame, check_snakes);
+                b->pull_aux(world_map, delta_frame, check_snakes, dir);
 
                 // This snake won't get its target reset otherwise
                 // This causes problems post "resurrection" from undo!
@@ -364,8 +366,8 @@ void SnakeBlock::pull(WorldMap* world_map, DeltaFrame* delta_frame, std::unorder
             // The chain was even length; cut!
             else {
                 cur->remove_link(prev, delta_frame);
-                cur->pull_aux(world_map, delta_frame, check_snakes);
-                prev->pull_aux(world_map, delta_frame, check_snakes);
+                cur->pull_aux(world_map, delta_frame, check_snakes, dir);
+                prev->pull_aux(world_map, delta_frame, check_snakes, dir);
             }
             break;
         }
@@ -373,15 +375,26 @@ void SnakeBlock::pull(WorldMap* world_map, DeltaFrame* delta_frame, std::unorder
     }
 }
 
-void SnakeBlock::pull_aux(WorldMap* world_map, DeltaFrame* delta_frame, std::unordered_set<SnakeBlock*>& check_snakes) {
+void SnakeBlock::pull_aux(WorldMap* world_map, DeltaFrame* delta_frame, std::unordered_set<SnakeBlock*>& check_snakes, Point dir) {
     if (ends_ == 2) {
         collect_unlinked_neighbors(world_map, check_snakes);
     }
     SnakeBlock* cur = this;
     SnakeBlock* next = cur->target_;
+    Point cur_pos, next_pos;
     while (next) {
         auto obj_unique = world_map->take_quiet_id(cur->pos(), Layer::Solid, cur);
-        cur->set_pos(next->pos(), delta_frame);
+        next_pos = next->pos();
+        // When we are sufficiently close to a push, it's possible that the thing
+        // we're aiming for has already moved!  In this case, be sure to aim at
+        // its previous position instead.
+        if (cur->distance() <= 2) {
+            cur_pos = cur->pos();
+            if (abs(next_pos.x - cur_pos.x) + abs(next_pos.y - cur_pos.y) != 1) {
+                next_pos = Point{next_pos.x - dir.x, next_pos.y - dir.y};
+            }
+        }
+        cur->set_pos(next_pos, delta_frame);
         cur->reset_target();
         world_map->put_quiet(std::move(obj_unique));
         cur = next;

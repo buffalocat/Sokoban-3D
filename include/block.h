@@ -86,8 +86,8 @@ public:
     bool confused(WorldMap*);
     void check_add_local_links(WorldMap*, DeltaFrame*);
     void collect_unlinked_neighbors(WorldMap*, std::unordered_set<SnakeBlock*>&);
-    void pull(WorldMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&);
-    void pull_aux(WorldMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&);
+    void pull(WorldMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&, Point);
+    void pull_aux(WorldMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&, Point);
     void post_move_reset();
 
 private:

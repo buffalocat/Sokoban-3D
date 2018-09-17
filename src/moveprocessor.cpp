@@ -15,45 +15,39 @@ void MoveProcessor::try_move(DeltaFrame* delta_frame) {
     for (Component* comp : roots) {
         comp->resolve_contingent();
     }
-    // These are snakes whom we'll check for added links (due to un-confusion)
+    // Reset targets of unmoved snakes, look for snakes to check for link adding later
     std::unordered_set<SnakeBlock*> check_snakes = {};
     std::vector<SnakeBlock*> good_snakes = {};
-    // Snake pulling must occur before main movement
-    // But before that we have to reset snakes that weren't actually pushed!
     for (auto& sb : touched_snakes_) {
         if (comps_.count(sb) && comps_[sb]->good()) {
             good_snakes.push_back(sb);
+            if (sb->available()) {
+                sb->collect_unlinked_neighbors(map_, check_snakes);
+            }
         } else {
             sb->reset_target();
         }
     }
-    for (auto& sb : good_snakes) {
-        if (sb->available()) {
-            sb->collect_unlinked_neighbors(map_, check_snakes);
-        }
-        if (sb->distance() == 1) {
-            sb->pull(map_, delta_frame, check_snakes);
-        }
-    }
-    // This section will contain some Block-type specific code.
-    // I don't think this can be helped; for now we'll do it the dumb way.
+    // Standard block movement
     for (auto& p : comps_) {
         if (p.second->good()) {
             Block* obj = p.first;
-            // Check whether a moving snake may have unconfused any old neighbors!
-            // Also, pull snake chains.
-            // Universal block movement code
             auto obj_unique = map_->take_quiet_id(obj->pos(), Layer::Solid, obj);
             obj->shift_pos(dir_, delta_frame);
             map_->put_quiet(std::move(obj_unique));
         }
     }
-    // Clear out old links BEFORE checking for new ones
+    // Remove any links that were broken
     for (auto& block : maybe_broken_weak_) {
         block->check_remove_local_links(map_, delta_frame);
     }
-    // The second iteration is unavoidable; it's not obvious whether it's better to
-    // naively iterate through the whole set or to record the moved-set during the above
+    // Now that links are broken, we can pull snakes
+    for (auto& sb : good_snakes) {
+        if (sb->distance() == 1) {
+            sb->pull(map_, delta_frame, check_snakes, dir_);
+        }
+    }
+    // Now that everything has moved, check for created links
     for (auto& p : comps_) {
         if (p.second->good()) {
             p.first->check_add_local_links(map_, delta_frame);
@@ -91,6 +85,9 @@ Component* MoveProcessor::move_component(Block* block, bool recheck) {
                 // method called Block::weak_recheck()
                 auto moved_comp = move_component(link, false);
                 comp->add_weak(moved_comp);
+                // It is possible that we'll arrive at a branch "backwards", so
+                // it's better to have the connection be symmetric.
+                moved_comp->add_weak(comp);
                 if (moved_comp->bad()) {
                     maybe_broken_weak_.insert(link);
                 }

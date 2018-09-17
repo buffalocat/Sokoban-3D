@@ -304,7 +304,7 @@ int main(void) {
                 if (glfwGetKey(window, p.first) == GLFW_PRESS) {
                     //StartCounter();
                     MoveProcessor(world_map.get(), p.second).try_move(delta_frame.get());
-                    world_map->print_snake_info();
+                    //world_map->print_snake_info();
                     //std::cout << "Move took " << GetCounter() << std::endl;
                     cooldown = MAX_COOLDOWN;
                     break;

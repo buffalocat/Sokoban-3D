@@ -147,7 +147,10 @@ int main(void) {
     world_map->set_initial_state();
     Block* player = find_player(world_map.get());
 
-    Loader::load("tworooms.map");
+    world_map.reset(Loader::load("tworooms.map"));
+    world_map->set_initial_state();
+    player = find_player(world_map.get());
+
     Camera camera(world_map.get(), 16.0, player->pos());
     camera.push_context(std::make_unique<FixedCameraContext>(6,6,4,4,2,7.0f,8,8));
     camera.push_context(std::make_unique<NullCameraContext>(5,5,6,6,1));

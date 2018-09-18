@@ -87,8 +87,7 @@ void Loader::save_dialog(const WorldMap* world_map) {
         std::cout << "File name was empty; returning to game." << std::endl;
         return;
     }
-    file_name = MAP_DIRECTORY + file_name;
-    if (access(file_name.c_str(), F_OK) != -1) {
+    if (access((MAP_DIRECTORY + file_name).c_str(), F_OK) != -1) {
         std::cout << "File already exists! Save failed." << std::endl;
         return;
     } else {
@@ -98,6 +97,7 @@ void Loader::save_dialog(const WorldMap* world_map) {
 }
 
 void Loader::save(const WorldMap* world_map, std::string file_name) {
+    file_name = MAP_DIRECTORY + file_name;
     std::ofstream file;
     file.open(file_name, std::ios::out | std::ios::binary);
     bool big_map = world_map->width() > 255 || world_map->height() > 255;
@@ -122,8 +122,7 @@ WorldMap* Loader::load_dialog() {
         std::cout << "File name was empty; returning to game." << std::endl;
         return nullptr;
     }
-    file_name = MAP_DIRECTORY + file_name;
-    if (access(file_name.c_str(), F_OK) == -1) {
+    if (access((MAP_DIRECTORY + file_name).c_str(), F_OK) == -1) {
         std::cout << "File doesn't exist! Load failed." << std::endl;
         return nullptr;
     }
@@ -131,6 +130,7 @@ WorldMap* Loader::load_dialog() {
 }
 
 WorldMap* Loader::load(std::string file_name) {
+    file_name = MAP_DIRECTORY + file_name;
     std::ifstream file;
     file.open(file_name, std::ios::in | std::ios::binary);
     unsigned char buffer[8];

@@ -93,6 +93,9 @@ const int DEFAULT_BOARD_HEIGHT = 13;
 
 const int MAX_COOLDOWN = 5;
 
+const float DEFAULT_CAM_RADIUS = 16.0;
+
+
 const bool DEV_MODE = true;
 
 #endif // COMMON_H

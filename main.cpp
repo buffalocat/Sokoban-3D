@@ -38,6 +38,7 @@
 #include "loader.h"
 #include "moveprocessor.h"
 #include "editor.h"
+#include "camera.h"
 
 static PushBlock FAKE_PLAYER(0,0,true,StickyLevel::None);
 
@@ -143,9 +144,15 @@ int main(void) {
 
     auto world_map = std::make_unique<WorldMap>(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
     world_map->put_quiet(std::move(std::make_unique<PushBlock>(1,1,true,StickyLevel::None)));
-
     world_map->set_initial_state();
     Block* player = find_player(world_map.get());
+
+    Loader::load("tworooms.map");
+    Camera camera(world_map.get(), 16.0, player->pos());
+    camera.push_context(std::make_unique<FixedCameraContext>(6,6,4,4,2,7.0f,8,8));
+    camera.push_context(std::make_unique<NullCameraContext>(5,5,6,6,1));
+    camera.push_context(std::make_unique<FixedCameraContext>(11,2,3,6,2,10.0f,13,5));
+    camera.push_context(std::make_unique<NullCameraContext>(10,1,5,8,1));
 
     int cooldown = 0;
 
@@ -204,10 +211,10 @@ int main(void) {
         if (DEV_MODE) {
             if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
                 if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-                    Loader::save(world_map.get());
+                    Loader::save_dialog(world_map.get());
                 }
                 if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
-                    WorldMap* new_world_map = Loader::load();
+                    WorldMap* new_world_map = Loader::load_dialog();
                     if (new_world_map) {
                         world_map.reset(new_world_map);
                         world_map->set_initial_state();
@@ -269,6 +276,7 @@ int main(void) {
                 if (glfwGetKey(window, p.first) == GLFW_PRESS) {
                     //StartCounter();
                     MoveProcessor(world_map.get(), p.second).try_move(delta_frame.get());
+                    camera.set_target(player->pos());
                     //world_map->print_snake_info();
                     //std::cout << "Move took " << GetCounter() << std::endl;
                     cooldown = MAX_COOLDOWN;
@@ -288,24 +296,23 @@ int main(void) {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        camera.update();
+        cam_radius = camera.get_radius();
+        FPoint target_pos = camera.get_pos();
+
         cam_x = cos(cam_incline) * sin(cam_rotation) * cam_radius;
         cam_y = sin(cam_incline) * cam_radius;
         cam_z = cos(cam_incline) * cos(cam_rotation) * cam_radius;
 
-        Point player_pos = Point {0, 0};
-        if (player) {
-            player_pos = player->pos();
-        }
-
         if (view_mode == ViewMode::Perspective) {
-            view = glm::lookAt(glm::vec3(cam_x + player_pos.x, cam_y, cam_z + player_pos.y),
-                               glm::vec3(player_pos.x, 0.0f, player_pos.y),
+            view = glm::lookAt(glm::vec3(cam_x + target_pos.x, cam_y, cam_z + target_pos.y),
+                               glm::vec3(target_pos.x, 0.0f, target_pos.y),
                                glm::vec3(0.0f, 1.0f, 0.0f));
             view = glm::translate(view, glm::vec3(0.5, 0.0, 0.5));
             projection = glm::perspective(glm::radians(60.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT, 0.1f, 100.0f);
         } else { // view_mode == ViewMode::Ortho
-            view = glm::lookAt(glm::vec3(player_pos.x, 2.0f, player_pos.y),
-                               glm::vec3(player_pos.x, 0.0f, player_pos.y),
+            view = glm::lookAt(glm::vec3(target_pos.x, 2.0f, target_pos.y),
+                               glm::vec3(target_pos.x, 0.0f, target_pos.y),
                                glm::vec3(0.0f, 0.0f, -1.0f));
             projection = glm::ortho(-ORTHO_WIDTH/2.0f, ORTHO_WIDTH/2.0f, -ORTHO_HEIGHT/2.0f, ORTHO_HEIGHT/2.0f, 0.0f, 3.0f);
         }

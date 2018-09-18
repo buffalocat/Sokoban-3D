@@ -15,6 +15,7 @@ enum State {
     SmallDims = 1, // Gets width and height as 1 byte integers
     BigDims = 2, // Gets width and height as 2 byte integers
     Objects = 3, // Read in all map objects
+    CameraRect = 4, // Get a camera context rectangle
     End = 255,
 };
 
@@ -78,7 +79,7 @@ WorldMap* Loader::blank_map() {
 }
 
 
-void Loader::save(const WorldMap* world_map) {
+void Loader::save_dialog(const WorldMap* world_map) {
     std::cout << "Enter name to save file as: (enter blank line to quit saving)" << std::endl;
     std::string file_name;
     std::getline(std::cin, file_name);
@@ -93,9 +94,12 @@ void Loader::save(const WorldMap* world_map) {
     } else {
         std::cout << "That file name is ok!" << std::endl;
     }
+    return save(world_map, file_name);
+}
+
+void Loader::save(const WorldMap* world_map, std::string file_name) {
     std::ofstream file;
     file.open(file_name, std::ios::out | std::ios::binary);
-    std::cout << "Opened File" << std::endl;
     bool big_map = world_map->width() > 255 || world_map->height() > 255;
     if (big_map) {
         ; // Not allowing this yet
@@ -108,10 +112,9 @@ void Loader::save(const WorldMap* world_map) {
     world_map->serialize(file);
     file << static_cast<unsigned char>(State::End);
     file.close();
-    std::cout << "Exiting save dialog" << std::endl;
 }
 
-WorldMap* Loader::load() {
+WorldMap* Loader::load_dialog() {
     std::cout << "Enter name of file to load from: (enter blank line to quit loading)" << std::endl;
     std::string file_name;
     std::getline(std::cin, file_name);
@@ -124,6 +127,10 @@ WorldMap* Loader::load() {
         std::cout << "File doesn't exist! Load failed." << std::endl;
         return nullptr;
     }
+    return load(file_name);
+}
+
+WorldMap* Loader::load(std::string file_name) {
     std::ifstream file;
     file.open(file_name, std::ios::in | std::ios::binary);
     unsigned char buffer[8];

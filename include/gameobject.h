@@ -30,7 +30,6 @@ class WorldMap;
  */
 class GameObject {
 public:
-    GameObject(int x, int y);
     virtual ~GameObject() = 0;
     virtual ObjCode obj_code() = 0;
     virtual void serialize(std::ofstream& file) = 0;
@@ -44,6 +43,7 @@ public:
     bool wall() const;
 
 protected:
+    GameObject(int x, int y);
     Point pos_;
     bool wall_;
 };

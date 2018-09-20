@@ -19,6 +19,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <dear/imgui.h>
+#include <dear/imgui_impl_glfw.h>
+#include <dear/imgui_impl_opengl3.h>
+
 #pragma GCC diagnostic pop
 // Then turn them back on for standard includes and headers from this project
 
@@ -187,7 +191,32 @@ int main(void) {
 
     bool edit_mode = false;
 
+    // ImGui init
+
+    const char* glsl_version = "#version 330";
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
+    ImGui::StyleColorsDark();
+
+    bool show_demo_window = true;
+
     while(!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        if (show_demo_window) {
+            ImGui::ShowDemoWindow(&show_demo_window);
+        }
+        /*
         // Handle input
         auto delta_frame = std::make_unique<DeltaFrame>();
 
@@ -333,11 +362,22 @@ int main(void) {
 
         shader.setVec4("color", YELLOW);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+        */
+        ImGui::Render();
 
-        glfwPollEvents();
+        int display_w, display_h;
+        glfwMakeContextCurrent(window);
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        glfwMakeContextCurrent(window);
         glfwSwapBuffers(window);
 
-        undo_stack.push(std::move(delta_frame));
+        //undo_stack.push(std::move(delta_frame));
 
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }

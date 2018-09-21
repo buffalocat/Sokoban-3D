@@ -19,6 +19,7 @@
 
 #include "room.h"
 #include "shader.h"
+#include "editor.h"
 
 bool window_init(GLFWwindow*&);
 
@@ -52,6 +53,9 @@ int main(void) {
     if (!window_init(window)) {
         return -1;
     }
+
+    std::unique_ptr<int> test = {};
+    test.reset(new int(4));
 
     float cubeVertices[24];
     for (int i = 0; i < 8; ++i) {
@@ -105,7 +109,8 @@ int main(void) {
 
     // Init game logic stuff
 
-    Room room(window, &shader, DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
+    Editor editor;
+    Room room(window, &shader, &editor, DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
 
     glfwSwapInterval(0);
 
@@ -123,28 +128,37 @@ int main(void) {
     ImGui::StyleColorsDark();
 
     bool show_demo_window = true;
+    bool show_editor_window = true;
 
     while(!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
+        if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+            show_editor_window = true;
+        }
+
+        int display_w, display_h;
+        glfwMakeContextCurrent(window);
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        glClearColor(0.2, 0, 0.3, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        room.main_loop(show_editor_window);
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+
+        if (show_editor_window) {
+            editor.ShowMainWindow(&show_editor_window);
+        }
 
         if (show_demo_window) {
             ImGui::ShowDemoWindow(&show_demo_window);
         }
 
         ImGui::Render();
-
-        int display_w, display_h;
-        glfwMakeContextCurrent(window);
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
-        glClearColor(0, 0, 0, 0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        room.main_loop();
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

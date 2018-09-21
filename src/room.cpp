@@ -7,41 +7,52 @@
 #include "moveprocessor.h"
 #include "block.h"
 #include "shader.h"
+#include "editor.h"
 
 const char* MAP_DIRECTORY = "maps\\";
 
 // The "load" constructor
-Room::Room(GLFWwindow* window, Shader* shader, std::string map_name):
+Room::Room(GLFWwindow* window, Shader* shader, Editor* editor, std::string map_name):
     window_ {window},
     shader_ {shader},
+    editor_ {editor},
     map_ {},
     camera_ {},
-    undo_stack_ {std::make_unique<UndoStack>(DEFAULT_UNDO_DEPTH)},
+    undo_stack_ {},
     cooldown_ {0}
 {
+    editor_->set_room(this);
     load(map_name);
 }
 
 // The "default room" constructor
-Room::Room(GLFWwindow* window, Shader* shader, int width, int height):
+Room::Room(GLFWwindow* window, Shader* shader, Editor* editor, int width, int height):
     window_ {window},
     shader_ {shader},
+    editor_ {editor},
     map_ {},
     camera_ {},
-    undo_stack_ {std::make_unique<UndoStack>(DEFAULT_UNDO_DEPTH)},
+    undo_stack_ {},
     cooldown_ {0}
 {
+    editor_->set_room(this);
     width = std::max(1, std::min(256, width));
     height = std::max(1, std::min(256, height));
-    map_ = std::make_unique<RoomMap>(width, height);
-    camera_ = std::make_unique<Camera>(map_.get());
+    map_.reset(new RoomMap(width, height));
+    camera_.reset(new Camera(map_.get()));
+    undo_stack_.reset(new UndoStack(DEFAULT_UNDO_DEPTH));
 }
 
 // This is essentially the whole game loop
-void Room::main_loop() {
+void Room::main_loop(bool editor_mode) {
     auto delta_frame = std::make_unique<DeltaFrame>();
-    handle_input(delta_frame.get());
-    draw();
+    if (editor_mode) {
+        handle_input_editor_mode();
+        draw_editor_mode();
+    } else {
+        handle_input(delta_frame.get());
+        draw(false);
+    }
     undo_stack_->push(std::move(delta_frame));
 }
 
@@ -68,6 +79,7 @@ void Room::handle_input(DeltaFrame* delta_frame) {
     if (cooldown_ == 0) {
         if (glfwGetKey(window_, GLFW_KEY_Z) == GLFW_PRESS) {
             undo_stack_->pop(map_.get());
+            camera_->set_current_pos(player_->pos());
             cooldown_ = MAX_COOLDOWN;
         }
     } else {
@@ -75,7 +87,7 @@ void Room::handle_input(DeltaFrame* delta_frame) {
     }
 }
 
-void Room::draw() {
+void Room::draw(bool editor_mode) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     camera_->update();
@@ -86,15 +98,22 @@ void Room::draw() {
     float cam_incline = 0.1;
     float cam_rotation = 0.0;
 
-    float cam_x = cos(cam_incline) * sin(cam_rotation) * cam_radius;
-    float cam_y = sin(cam_incline) * cam_radius;
-    float cam_z = cos(cam_incline) * cos(cam_rotation) * cam_radius;
+    float cam_x = sin(cam_incline) * sin(cam_rotation) * cam_radius;
+    float cam_y = cos(cam_incline) * cam_radius;
+    float cam_z = sin(cam_incline) * cos(cam_rotation) * cam_radius;
 
-    view = glm::lookAt(glm::vec3(cam_x + target_pos.x, cam_y, cam_z + target_pos.y),
-                       glm::vec3(target_pos.x, 0.0f, target_pos.y),
-                       glm::vec3(0.0f, 1.0f, 0.0f));
-    view = glm::translate(view, glm::vec3(0.5, 0.0, 0.5));
-    projection = glm::perspective(glm::radians(60.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT, 0.1f, 100.0f);
+    if (editor_mode) {
+        view = glm::lookAt(glm::vec3(target_pos.x, 2.0f, target_pos.y),
+                           glm::vec3(target_pos.x, 0.0f, target_pos.y),
+                           glm::vec3(0.0f, 0.0f, -1.0f));
+        projection = glm::ortho(-ORTHO_WIDTH/2.0f, ORTHO_WIDTH/2.0f, -ORTHO_HEIGHT/2.0f, ORTHO_HEIGHT/2.0f, 0.0f, 3.0f);
+    } else {
+        view = glm::lookAt(glm::vec3(cam_x + target_pos.x, cam_y, cam_z + target_pos.y),
+                           glm::vec3(target_pos.x, 0.0f, target_pos.y),
+                           glm::vec3(0.0f, 1.0f, 0.0f));
+        view = glm::translate(view, glm::vec3(0.5, 0.0, 0.5));
+        projection = glm::perspective(glm::radians(60.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT, 0.1f, 100.0f);
+    }
 
     shader_->setMat4("view", view);
     shader_->setMat4("projection", projection);
@@ -109,6 +128,37 @@ void Room::draw() {
 
     shader_->setVec4("color", YELLOW);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+}
+
+void Room::handle_input_editor_mode() {
+    if (glfwGetKey(window_, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window_, true);
+    }
+    if (cooldown_ == 0) {
+        for (auto p : MOVEMENT_KEYS) {
+            if (glfwGetKey(window_, p.first) == GLFW_PRESS) {
+                if (glfwGetKey(window_, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+                    Point d = {FAST_MAP_MOVE * p.second.x, FAST_MAP_MOVE * p.second.y};
+                    editor_->shift_pos(d);
+                } else {
+                    editor_->shift_pos(p.second);
+                }
+                editor_->clamp_pos(map_->width(), map_->height());
+                camera_->set_current_pos(editor_->pos());
+                cooldown_ = MAX_COOLDOWN;
+                break;
+            }
+        }
+    }
+
+    if (cooldown_) {
+        --cooldown_;
+    }
+}
+
+void Room::draw_editor_mode() {
+    // Draw the usual things, but in Ortho mode
+    draw(true);
 }
 
 void Room::save(std::string map_name) {
@@ -128,26 +178,31 @@ void Room::save(std::string map_name) {
 }
 
 void Room::load(std::string map_name) {
+    if (map_name.size() == 0) {
+        return;
+    }
     std::string file_name = MAP_DIRECTORY + map_name;
     std::ifstream file;
+    if (access((file_name).c_str(), F_OK) == -1) {
+        std::cout << "File " << file_name << " doesn't exist! Load failed." << std::endl;
+        return;
+    }
     file.open(file_name, std::ios::in | std::ios::binary);
     unsigned char buffer[8];
     bool reading_file = true;
-    int counter = 0;
     while (reading_file) {
         file.read((char *)buffer, 1);
-        if (counter++ > 100) {
-            break;
-        }
         switch (static_cast<State>(buffer[0])) {
         case State::SmallDims : {
             file.read((char *)buffer, 2);
-            map_ = std::make_unique<RoomMap>(buffer[0], buffer[1]);
-            camera_ = std::make_unique<Camera>(map_.get());
+            RoomMap* newmap = new RoomMap(buffer[0], buffer[1]);
+            map_.reset(newmap);
+            camera_.reset(new Camera(map_.get()));
+            undo_stack_.reset(new UndoStack(DEFAULT_UNDO_DEPTH));
             break;
         }
         case State::BigDims : {
-            // This will be used later, mayber
+            // This will be used later, maybe
             break;
         }
         case State::Objects : {
@@ -165,48 +220,53 @@ void Room::load(std::string map_name) {
         }
     }
     file.close();
+    map_->set_initial_state();
+    player_ = map_->get_mover();
+    camera_->set_current_pos(player_->pos());
 }
 
 void Room::read_objects(std::ifstream& file) {
     unsigned char buffer[8];
-    file.read(reinterpret_cast<char *>(buffer), 1);
-    ObjCode code = static_cast<ObjCode>(buffer[0]);
-    if (code == ObjCode::NONE) {
-        return;
-    }
-    file.read((char *)buffer, BYTES_PER_OBJECT.at(code));
-    int px = buffer[0];
-    int py = buffer[1];
-    switch(code) {
-    case ObjCode::NONE :
-        break;
-    case ObjCode::Wall : {
-        map_->put_quiet(std::make_unique<Wall>(px, py));
-        break;
-    }
-    case ObjCode::PushBlock : {
-        bool car = (buffer[2] >> 7) == 1;
-        StickyLevel sticky = static_cast<StickyLevel>(buffer[2] & 3);
-        map_->put_quiet(std::make_unique<PushBlock>(px, py, car, sticky));
-        break;
-    }
-    case ObjCode::SnakeBlock : {
-        bool car = (buffer[2] >> 7) == 1;
-        int ends = (buffer[2] & 1) + 1;
-        map_->put_quiet(std::make_unique<SnakeBlock>(px, py, car, ends));
-        for (int i = 0; i < 4; ++i) {
-            if ((buffer[2] >> i) & 2) { // Effectively, shift right by i+1
-                Point d = DIRECTIONS[i];
-                // Check whether there's an object adjacent to this one AND whether it's a SnakeBlock
-                SnakeBlock* adj = dynamic_cast<SnakeBlock*>(map_->view(Point{px + d.x, py + d.y}, Layer::Solid));
-                if (adj) {
-                    adj->add_link(static_cast<Block*>(map_->view(Point{buffer[0], buffer[1]}, Layer::Solid)), nullptr);
+    while (true) {
+        file.read(reinterpret_cast<char *>(buffer), 1);
+        ObjCode code = static_cast<ObjCode>(buffer[0]);
+        if (code == ObjCode::NONE) {
+            return;
+        }
+        file.read((char *)buffer, BYTES_PER_OBJECT.at(code));
+        int px = buffer[0];
+        int py = buffer[1];
+        switch(code) {
+        case ObjCode::NONE :
+            break;
+        case ObjCode::Wall : {
+            map_->put_quiet(std::make_unique<Wall>(px, py));
+            break;
+        }
+        case ObjCode::PushBlock : {
+            bool car = (buffer[2] >> 7) == 1;
+            StickyLevel sticky = static_cast<StickyLevel>(buffer[2] & 3);
+            map_->put_quiet(std::make_unique<PushBlock>(px, py, car, sticky));
+            break;
+        }
+        case ObjCode::SnakeBlock : {
+            bool car = (buffer[2] >> 7) == 1;
+            int ends = (buffer[2] & 1) + 1;
+            map_->put_quiet(std::make_unique<SnakeBlock>(px, py, car, ends));
+            for (int i = 0; i < 4; ++i) {
+                if ((buffer[2] >> i) & 2) { // Effectively, shift right by i+1
+                    Point d = DIRECTIONS[i];
+                    // Check whether there's an object adjacent to this one AND whether it's a SnakeBlock
+                    SnakeBlock* adj = dynamic_cast<SnakeBlock*>(map_->view(Point{px + d.x, py + d.y}, Layer::Solid));
+                    if (adj) {
+                        adj->add_link(static_cast<Block*>(map_->view(Point{buffer[0], buffer[1]}, Layer::Solid)), nullptr);
+                    }
                 }
             }
+            break;
         }
-        break;
-    }
-    default :
-        break;
+        default :
+            break;
+        }
     }
 }

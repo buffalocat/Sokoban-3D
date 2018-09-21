@@ -19,7 +19,8 @@ public:
     int width() const;
     int height() const;
     const std::deque<Block*>& movers();
-    Block* prime_mover();
+    Block* get_mover();
+    Block* cycle_movers();
     void add_mover(Block*);
 
     void serialize(std::ofstream& file) const;

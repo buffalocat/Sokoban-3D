@@ -1,5 +1,63 @@
-#include "common.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+
+#include <dear/imgui.h>
+
+#pragma GCC diagnostic pop
+
 #include "editor.h"
+#include "room.h"
+
+Editor::Editor(): pos_ {Point{0,0}}, room_ {} {}
+
+Point Editor::pos() {
+    return pos_;
+}
+
+void Editor::shift_pos(Point d) {
+    pos_ = Point{pos_.x + d.x, pos_.y + d.y};
+}
+
+void Editor::set_pos(Point p) {
+    pos_ = p;
+}
+
+void Editor::clamp_pos(int width, int height) {
+    pos_ = Point {
+        std::max(0, std::min(width-1, pos_.x)),
+        std::max(0, std::min(height-1, pos_.y))
+    };
+}
+
+Room* Editor::room() {
+    std::cout << "room_ is " << room_ << std::endl;
+    return room_;
+}
+
+void Editor::set_room(Room* room) {
+    room_ = room;
+    std::cout << "We just set room_ to " << room_ << std::endl;
+}
+
+void Editor::ShowMainWindow(bool* p_open) {
+    if (!ImGui::Begin("My Editor Window", p_open, 0)) {
+        ImGui::End();
+        return;
+    }
+
+    if (ImGui::TreeNode("Save/Load")) {
+        static char buf[32] = "";
+        ImGui::InputText("map file", buf, IM_ARRAYSIZE(buf));
+        if (ImGui::Button("Load Map")) {
+            room_->load(buf);
+        }
+        ImGui::TreePop();
+    }
+
+    ImGui::End();
+}
+
+/*
 #include "gameobject.h"
 #include "block.h"
 
@@ -76,3 +134,4 @@ void Editor::destroy_obj(DeltaFrame* delta_frame, RoomMap* room_map) {
     }
     room_map->take(pos_, Layer::Solid, delta_frame);
 }
+*/

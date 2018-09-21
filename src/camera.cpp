@@ -123,6 +123,12 @@ void Camera::set_target(Point pos) {
     target_rad_ = context_->radius(pos);
 }
 
+void Camera::set_current_pos(Point pos) {
+    target_pos_ = pos;
+    cur_pos_ = pos;
+}
+
+
 void Camera::update() {
     cur_pos_ = FPoint{damp_avg(target_pos_.x, cur_pos_.x), damp_avg(target_pos_.y, cur_pos_.y)};
     cur_rad_ = damp_avg(target_rad_, cur_rad_);

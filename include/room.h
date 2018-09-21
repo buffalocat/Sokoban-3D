@@ -12,6 +12,7 @@
 
 class GLFWwindow;
 class Shader;
+class Editor;
 class RoomMap;
 class Camera;
 class UndoStack;
@@ -20,25 +21,28 @@ class Block;
 
 class Room {
 public:
-    Room(GLFWwindow*, Shader* shader, std::string map_name);
-    Room(GLFWwindow*, Shader* shader, int width, int height);
+    Room(GLFWwindow*, Shader* shader, Editor* editor, std::string map_name);
+    Room(GLFWwindow*, Shader* shader, Editor* editor, int width, int height);
     // Initialization helpers
     void load(std::string map_name);
     void read_objects(std::ifstream& file);
     void save(std::string map_name);
 
-    void main_loop();
+    void main_loop(bool editor_mode);
     void handle_input(DeltaFrame*);
-    void update();
-    void draw();
+    void draw(bool editor_mode);
+
+    void handle_input_editor_mode();
+    void draw_editor_mode();
 
 private:
     GLFWwindow* window_;
     Shader* shader_;
+    Editor* editor_;
     std::unique_ptr<RoomMap> map_;
     std::unique_ptr<Camera> camera_;
     std::unique_ptr<UndoStack> undo_stack_;
-    int cooldown_ = 0;
+    int cooldown_;
 
     Block* player_;
 

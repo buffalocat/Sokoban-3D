@@ -1,5 +1,5 @@
-#ifndef COMMON_CONSTANTS_H
-#define COMMON_CONSTANTS_H
+#ifndef COMMON_H
+#define COMMON_H
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
@@ -103,7 +103,7 @@ const int DEFAULT_UNDO_DEPTH = 1000;
 
 const float DEFAULT_CAM_RADIUS = 16.0;
 
-const bool DEV_MODE = true;
+const int FAST_MAP_MOVE = 10;
 
 enum State {
     SmallDims = 1, // Gets width and height as 1 byte integers
@@ -127,4 +127,4 @@ const std::unordered_map<int, Point> MOVEMENT_KEYS {
     {GLFW_KEY_UP,    Point {0,-1}},
 };
 
-#endif // COMMON_CONSTANTS_H
+#endif // COMMON_H

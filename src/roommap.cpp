@@ -32,8 +32,16 @@ const std::deque<Block*>& RoomMap::movers() {
     return movers_;
 }
 
+Block* RoomMap::get_mover() {
+    if (!movers_.empty()) {
+        return movers_.back();
+    } else {
+        return nullptr;
+    }
+}
+
 // Return a mover, and also cycle camera targets!
-Block* RoomMap::prime_mover() {
+Block* RoomMap::cycle_movers() {
     if (!movers_.empty()) {
         Block* cur = movers_.back();
         movers_.pop_back();

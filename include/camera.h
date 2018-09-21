@@ -83,6 +83,7 @@ public:
     Camera(RoomMap*);
     void update();
     void set_target(Point);
+    void set_current_pos(Point);
     float get_radius();
     FPoint get_pos();
     void push_context(std::unique_ptr<CameraContext>);
@@ -98,7 +99,6 @@ private:
     float cur_rad_;
     FPoint target_pos_;
     FPoint cur_pos_;
-
 };
 
 float damp_avg(float target, float cur);

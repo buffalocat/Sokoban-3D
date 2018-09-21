@@ -114,49 +114,9 @@ void Room::handle_input_editor_mode() {
             }
         }
     }
-    if (!ImGui::IsMouseHoveringAnyWindow()) {
-        if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-            Point pos = get_pos_from_mouse();
-            if (map_->valid(pos)) {
-                create_obj(pos);
-            }
-        } else if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-            Point pos = get_pos_from_mouse();
-            if (map_->valid(pos)) {
-                delete_obj(pos);
-            }
-        }
-    }
+    editor_->handle_input();
     if (cooldown_) {
         --cooldown_;
-    }
-}
-
-Point Room::get_pos_from_mouse() {
-    double xpos, ypos;
-    glfwGetCursorPos(window_, &xpos, &ypos);
-    FPoint cam_pos = camera_->get_pos();
-    if (xpos >= 0 && xpos < SCREEN_WIDTH && ypos >= 0 && ypos < SCREEN_HEIGHT) {
-        int x = ((int)xpos + MESH_SIZE*cam_pos.x - (SCREEN_WIDTH - MESH_SIZE) / 2) / MESH_SIZE;
-        int y = ((int)ypos + MESH_SIZE*cam_pos.y - (SCREEN_HEIGHT - MESH_SIZE) / 2) / MESH_SIZE;
-        return Point{x, y};
-    }
-    return Point{-1, -1};
-}
-
-void Room::create_obj(Point pos) {
-    if (!map_->view(pos, Layer::Solid)) {
-        auto obj = editor_->create_obj(pos);
-        if (obj) {
-            map_->put_quiet(std::move(obj));
-        }
-    }
-}
-
-void Room::delete_obj(Point pos) {
-    GameObject* obj = map_->view(pos, Layer::Solid);
-    if (obj) {
-        map_->take_quiet(obj);
     }
 }
 
@@ -206,6 +166,39 @@ void Room::draw(bool editor_mode) {
 void Room::draw_editor_mode() {
     // Draw the usual things, but in Ortho mode
     draw(true);
+    // Maybe draw other indicators over the map
+}
+
+void Room::create_obj(Point pos) {
+    if (!map_->view(pos, Layer::Solid)) {
+        auto obj = editor_->create_obj(pos);
+        if (obj) {
+            map_->put_quiet(std::move(obj));
+        }
+    }
+}
+
+void Room::delete_obj(Point pos) {
+    GameObject* obj = map_->view(pos, Layer::Solid);
+    if (obj) {
+        map_->take_quiet(obj);
+    }
+}
+
+Point Room::get_pos_from_mouse() {
+    double xpos, ypos;
+    glfwGetCursorPos(window_, &xpos, &ypos);
+    FPoint cam_pos = camera_->get_pos();
+    if (xpos >= 0 && xpos < SCREEN_WIDTH && ypos >= 0 && ypos < SCREEN_HEIGHT) {
+        int x = ((int)xpos + MESH_SIZE*cam_pos.x - (SCREEN_WIDTH - MESH_SIZE) / 2) / MESH_SIZE;
+        int y = ((int)ypos + MESH_SIZE*cam_pos.y - (SCREEN_HEIGHT - MESH_SIZE) / 2) / MESH_SIZE;
+        return Point{x, y};
+    }
+    return Point{-1, -1};
+}
+
+bool Room::valid(Point pos) {
+    return map_->valid(pos);
 }
 
 void Room::save(std::string map_name, bool overwrite) {
@@ -261,6 +254,10 @@ void Room::load(std::string map_name) {
             read_objects(file);
             break;
         }
+        case State::CameraRect : {
+            read_camera_rects(file);
+            break;
+        }
         case State::End : {
             reading_file = false;
             break;
@@ -287,39 +284,9 @@ void Room::read_objects(std::ifstream& file) {
             return;
         }
         file.read((char *)buffer, BYTES_PER_OBJECT.at(code));
-        int px = buffer[0];
-        int py = buffer[1];
-        switch(code) {
-        case ObjCode::NONE :
-            break;
-        case ObjCode::Wall : {
-            map_->put_quiet(std::make_unique<Wall>(px, py));
-            break;
-        }
-        case ObjCode::PushBlock : {
-            bool car = (buffer[2] >> 7) == 1;
-            StickyLevel sticky = static_cast<StickyLevel>(buffer[2] & 3);
-            map_->put_quiet(std::make_unique<PushBlock>(px, py, car, sticky));
-            break;
-        }
-        case ObjCode::SnakeBlock : {
-            bool car = (buffer[2] >> 7) == 1;
-            int ends = (buffer[2] & 1) + 1;
-            map_->put_quiet(std::make_unique<SnakeBlock>(px, py, car, ends));
-            for (int i = 0; i < 4; ++i) {
-                if ((buffer[2] >> i) & 2) { // Effectively, shift right by i+1
-                    Point d = DIRECTIONS[i];
-                    // Check whether there's an object adjacent to this one AND whether it's a SnakeBlock
-                    SnakeBlock* adj = dynamic_cast<SnakeBlock*>(map_->view(Point{px + d.x, py + d.y}, Layer::Solid));
-                    if (adj) {
-                        adj->add_link(static_cast<Block*>(map_->view(Point{buffer[0], buffer[1]}, Layer::Solid)), nullptr);
-                    }
-                }
-            }
-            break;
-        }
-        default :
-            break;
-        }
+        map_->put_quiet(std::unique_ptr<GameObject>(GameObject::deser_map[(int)code](buffer)));
     }
+}
+
+void Room::read_camera_rects(std::ifstream& file) {
 }

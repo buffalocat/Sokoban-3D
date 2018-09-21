@@ -9,6 +9,10 @@ GameObject::GameObject(int x, int y): pos_ {x, y}, wall_ {true} {}
 
 GameObject::~GameObject() {}
 
+ObjCode GameObject::obj_code() {
+    return code_map[typeid(this).hash_code()];
+}
+
 Layer GameObject::layer() const {
     return Layer::Solid;
 }
@@ -41,8 +45,8 @@ void Wall::cleanup(DeltaFrame* delta_frame) {}
 
 void Wall::reinit() {}
 
-ObjCode Wall::obj_code() {
-    return ObjCode::Wall;
-}
-
 void Wall::serialize(std::ofstream& file) {}
+
+GameObject* Wall::deserialize(unsigned char* b) {
+    return new Wall(b[0], b[1]);
+}

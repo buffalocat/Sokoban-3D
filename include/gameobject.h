@@ -13,8 +13,11 @@ class RoomMap;
  */
 class GameObject {
 public:
+    static std::unordered_map<size_t, ObjCode> code_map;
+    static std::unordered_map<int, GameObject* (*)(unsigned char*)> deser_map;
+
     virtual ~GameObject() = 0;
-    virtual ObjCode obj_code() = 0;
+    virtual ObjCode obj_code();
     virtual void serialize(std::ofstream& file) = 0;
     Layer layer() const;
     Point pos() const;
@@ -37,8 +40,8 @@ class Wall: public GameObject {
 public:
     Wall(int x, int y);
     ~Wall();
-    ObjCode obj_code();
     void serialize(std::ofstream& file);
+    static GameObject* deserialize(unsigned char* buffer);
     void draw(Shader*);
     void cleanup(DeltaFrame*);
     void reinit();

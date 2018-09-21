@@ -9,7 +9,7 @@
 #include "room.h"
 #include "block.h"
 
-Editor::Editor(): pos_ {Point{0,0}}, room_ {},
+Editor::Editor(GLFWwindow* window): window_ {window}, room_ {}, pos_ {Point{0,0}},
 solid_obj {(int)ObjCode::NONE}, pb_sticky {(int)StickyLevel::None},
 is_car {true}, sb_ends {2}
 {}
@@ -31,10 +31,6 @@ void Editor::clamp_pos(int width, int height) {
         std::max(0, std::min(width-1, pos_.x)),
         std::max(0, std::min(height-1, pos_.y))
     };
-}
-
-Room* Editor::room() {
-    return room_;
 }
 
 void Editor::set_room(Room* room) {
@@ -91,6 +87,21 @@ void Editor::ShowMainWindow(bool* p_open) {
     }
 
     ImGui::End();
+}
+
+void Editor::handle_input() {
+    if (ImGui::IsMouseHoveringAnyWindow()) {
+        return;
+    }
+    Point mouse_pos = room_->get_pos_from_mouse();
+    if (!room_->valid(mouse_pos)) {
+        return;
+    }
+    if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        room_->create_obj(mouse_pos);
+    } else if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+        room_->delete_obj(mouse_pos);
+    }
 }
 
 std::unique_ptr<GameObject> Editor::create_obj(Point pos) {

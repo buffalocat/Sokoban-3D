@@ -52,8 +52,8 @@ public:
     PushBlock(int x, int y);
     PushBlock(int x, int y, bool car, StickyLevel sticky);
     ~PushBlock();
-    ObjCode obj_code();
     void serialize(std::ofstream& file);
+    static GameObject* deserialize(unsigned char* buffer);
     bool push_recheck(MoveProcessor*);
     void set_sticky(StickyLevel sticky);
     void draw(Shader*);
@@ -73,8 +73,8 @@ public:
     SnakeBlock(int x, int y);
     SnakeBlock(int x, int y, bool car, unsigned int ends);
     ~SnakeBlock();
-    ObjCode obj_code();
     void serialize(std::ofstream& file);
+    static GameObject* deserialize(unsigned char* buffer);
     bool push_recheck(MoveProcessor*);
     unsigned int ends();
     int distance();

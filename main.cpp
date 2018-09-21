@@ -21,7 +21,15 @@
 #include "shader.h"
 #include "editor.h"
 
+#include "gameobject.h"
+#include "block.h"
+
 bool window_init(GLFWwindow*&);
+
+
+std::unordered_map<size_t, ObjCode> GameObject::code_map;
+std::unordered_map<int, GameObject* (*)(unsigned char*)> GameObject::deser_map;
+void init_game_object_maps();
 
 // Code copied from https://stackoverflow.com/questions/1739259/how-to-use-queryperformancecounter for profiling!
 #include <windows.h>
@@ -54,8 +62,7 @@ int main(void) {
         return -1;
     }
 
-    std::unique_ptr<int> test = {};
-    test.reset(new int(4));
+    init_game_object_maps();
 
     float cubeVertices[24];
     for (int i = 0; i < 8; ++i) {
@@ -109,7 +116,7 @@ int main(void) {
 
     // Init game logic stuff
 
-    Editor editor;
+    Editor editor(window);
     Room room(window, &shader, &editor, DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
 
     glfwSwapInterval(0);
@@ -127,7 +134,7 @@ int main(void) {
 
     ImGui::StyleColorsDark();
 
-    bool show_demo_window = false;
+    bool show_demo_window = true;
     bool show_editor_window = true;
 
     while(!glfwWindowShouldClose(window)) {
@@ -195,3 +202,16 @@ bool window_init(GLFWwindow*& window) {
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     return true;
 }
+
+#define SERIALIZE_SETUP(CLASS) {\
+    GameObject::code_map[typeid(CLASS).hash_code()] = ObjCode::CLASS;\
+    GameObject::deser_map[(int)ObjCode::CLASS] = &CLASS::deserialize;\
+}
+
+void init_game_object_maps() {
+    SERIALIZE_SETUP(Wall)
+    SERIALIZE_SETUP(PushBlock)
+    SERIALIZE_SETUP(SnakeBlock)
+}
+
+#undef SERIALIZE_SETUP

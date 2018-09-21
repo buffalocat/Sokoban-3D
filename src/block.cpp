@@ -141,10 +141,6 @@ StickyLevel PushBlock::sticky() {
     return sticky_;
 }
 
-ObjCode PushBlock::obj_code() {
-    return ObjCode::PushBlock;
-}
-
 const BlockSet& PushBlock::get_strong_links() {
     if (sticky_ == StickyLevel::Strong) {
         return links_;
@@ -167,6 +163,12 @@ void PushBlock::serialize(std::ofstream& file) {
         ser |= 1 << 7; // car stored in 8th bit
     }
     file << ser;
+}
+
+GameObject* PushBlock::deserialize(unsigned char* b) {
+    bool car = (b[2] >> 7) == 1;
+    StickyLevel sticky = static_cast<StickyLevel>(b[2] & 3);
+    return new PushBlock(b[0], b[1], car, sticky);
 }
 
 bool PushBlock::push_recheck(MoveProcessor* mp) {
@@ -229,10 +231,6 @@ void SnakeBlock::draw(Shader* shader) {
     Block::draw(shader);
 }
 
-ObjCode SnakeBlock::obj_code() {
-    return ObjCode::SnakeBlock;
-}
-
 void SnakeBlock::serialize(std::ofstream& file) {
     unsigned char ser = ends_ - 1; // ends - 1 in 1st bit
     Point p, q;
@@ -250,6 +248,28 @@ void SnakeBlock::serialize(std::ofstream& file) {
     }
     file << ser;
 }
+
+GameObject* SnakeBlock::deserialize(unsigned char* b) {
+    bool car = (b[2] >> 7) == 1;
+    int ends = (b[2] & 1) + 1;
+    return new SnakeBlock(b[0], b[1], car, ends);
+}
+
+//NOTE: This code needs to go somewhere! "Persistent Links" should
+// be a map structure independent of the things they link!!
+// For now, loading linked snakes will be broken.
+/*
+for (int i = 0; i < 4; ++i) {
+    if ((buffer[2] >> i) & 2) { // Effectively, shift right by i+1
+        Point d = DIRECTIONS[i];
+        // Check whether there's an object adjacent to this one AND whether it's a SnakeBlock
+        SnakeBlock* adj = dynamic_cast<SnakeBlock*>(map_->view(Point{px + d.x, py + d.y}, Layer::Solid));
+        if (adj) {
+            adj->add_link(static_cast<Block*>(map_->view(Point{buffer[0], buffer[1]}, Layer::Solid)), nullptr);
+        }
+    }
+}
+*/
 
 bool SnakeBlock::push_recheck(MoveProcessor* mp) {
     bool recheck = (distance_ == 1);

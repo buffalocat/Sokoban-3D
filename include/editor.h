@@ -8,14 +8,15 @@ class GameObject;
 
 class Editor {
 public:
-    Editor();
+    Editor(GLFWwindow*);
     //Internal state methods
     Point pos();
     void shift_pos(Point d);
     void set_pos(Point p);
     void clamp_pos(int width, int height);
-    Room* room();
     void set_room(Room* room);
+
+    void handle_input();
 
     std::unique_ptr<GameObject> create_obj(Point pos);
 
@@ -23,8 +24,9 @@ public:
     void ShowMainWindow(bool* p_open);
 
 private:
-    Point pos_;
+    GLFWwindow* window_;
     Room* room_;
+    Point pos_;
 
     //State variables for creation options, etc.
     int solid_obj;

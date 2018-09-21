@@ -30,6 +30,8 @@
 #include <vector>
 #include <iostream>
 
+#include <typeinfo>
+
 class GameObject;
 class Block;
 

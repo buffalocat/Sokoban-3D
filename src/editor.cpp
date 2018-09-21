@@ -7,8 +7,12 @@
 
 #include "editor.h"
 #include "room.h"
+#include "block.h"
 
-Editor::Editor(): pos_ {Point{0,0}}, room_ {} {}
+Editor::Editor(): pos_ {Point{0,0}}, room_ {},
+solid_obj {(int)ObjCode::NONE}, pb_sticky {(int)StickyLevel::None},
+is_car {true}, sb_ends {2}
+{}
 
 Point Editor::pos() {
     return pos_;
@@ -30,13 +34,11 @@ void Editor::clamp_pos(int width, int height) {
 }
 
 Room* Editor::room() {
-    std::cout << "room_ is " << room_ << std::endl;
     return room_;
 }
 
 void Editor::set_room(Room* room) {
     room_ = room;
-    std::cout << "We just set room_ to " << room_ << std::endl;
 }
 
 void Editor::ShowMainWindow(bool* p_open) {
@@ -47,91 +49,60 @@ void Editor::ShowMainWindow(bool* p_open) {
 
     if (ImGui::TreeNode("Save/Load")) {
         static char buf[32] = "";
-        ImGui::InputText("map file", buf, IM_ARRAYSIZE(buf));
+        ImGui::InputText(".map", buf, IM_ARRAYSIZE(buf));
         if (ImGui::Button("Load Map")) {
             room_->load(buf);
         }
+        if (ImGui::Button("Save Map")) {
+            room_->save(buf, false);
+        }
+        if (ImGui::Button("Save Map (Force Overwrite)")) {
+            room_->save(buf, true);
+        }
+        ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNode("Create Solid Objects")) {
+
+        ImGui::RadioButton("Wall", &solid_obj, (int)ObjCode::Wall);
+        ImGui::RadioButton("PushBlock", &solid_obj, (int)ObjCode::PushBlock);
+        ImGui::RadioButton("SnakeBlock", &solid_obj, (int)ObjCode::SnakeBlock);
+
+        ImGui::Text("Object Properties");
+
+        if (solid_obj == (int)ObjCode::Wall) { }
+        else if (solid_obj == (int)ObjCode::PushBlock) {
+            ImGui::Text("Stickiness");
+            ImGui::RadioButton("Not Sticky", &pb_sticky, (int)StickyLevel::None);
+            ImGui::RadioButton("Weakly Sticky", &pb_sticky, (int)StickyLevel::Weak);
+            ImGui::RadioButton("Strongly Sticky", &pb_sticky, (int)StickyLevel::Strong);
+
+            ImGui::Checkbox("Is Player?", &is_car);
+        }
+        else if (solid_obj == (int)ObjCode::SnakeBlock) {
+            ImGui::Text("Number of Ends");
+            ImGui::RadioButton("One Ended", &sb_ends, 1);
+            ImGui::RadioButton("Two Ended", &sb_ends, 2);
+
+            ImGui::Checkbox("Is Player?", &is_car);
+        }
+
         ImGui::TreePop();
     }
 
     ImGui::End();
 }
 
-/*
-#include "gameobject.h"
-#include "block.h"
-
-Editor::Editor(GLFWwindow* window): window_ {window}, type_ {1}, pos_ {Point{0,0}}, valid_pos_ {false} {}
-
-void Editor::handle_input(DeltaFrame* delta_frame, RoomMap* room_map, Point cam_pos) {
-    for (int i = 0; i < 10; ++i) {
-        if (glfwGetKey(window_, GLFW_KEY_0 + i) == GLFW_PRESS) {
-            type_ = i;
-            break;
-        }
+std::unique_ptr<GameObject> Editor::create_obj(Point pos) {
+    int x = pos.x;
+    int y = pos.y;
+    switch (solid_obj) {
+    case (int)ObjCode::Wall :
+        return std::make_unique<Wall>(x, y);
+    case (int)ObjCode::PushBlock :
+        return std::make_unique<PushBlock>(x, y, is_car, static_cast<StickyLevel>(pb_sticky));
+    case (int)ObjCode::SnakeBlock :
+        return std::make_unique<SnakeBlock>(x, y, is_car, sb_ends);
     }
-
-    if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        get_pos(room_map, cam_pos);
-        if (!valid_pos_) {
-            return;
-        }
-        create_obj(delta_frame, room_map);
-    } else if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-        get_pos(room_map, cam_pos);
-        if (!valid_pos_) {
-            return;
-        }
-        destroy_obj(delta_frame, room_map);
-    }
+    return nullptr;
 }
-
-void Editor::get_pos(RoomMap* room_map, Point cam_pos) {
-    double xpos, ypos;
-    glfwGetCursorPos(window_, &xpos, &ypos);
-    valid_pos_ = false;
-    if (xpos >= 0 && xpos < SCREEN_WIDTH && ypos >= 0 && ypos < SCREEN_HEIGHT) {
-        int x = ((int)xpos + MESH_SIZE*cam_pos.x - (SCREEN_WIDTH - MESH_SIZE) / 2) / MESH_SIZE;
-        int y = ((int)ypos + MESH_SIZE*cam_pos.y - (SCREEN_HEIGHT - MESH_SIZE) / 2) / MESH_SIZE;
-        pos_ = Point{x, y};
-        valid_pos_ = room_map->valid(pos_);
-    }
-}
-
-void Editor::create_obj(DeltaFrame* delta_frame, RoomMap* room_map) {
-    if (room_map->view(pos_, Layer::Solid)) {
-        return;
-    }
-    int x = pos_.x;
-    int y = pos_.y;
-    switch (type_) {
-    case 1: room_map->put(std::move(std::make_unique<Wall>(x,y)), delta_frame);
-        break;
-    case 2: room_map->put(std::move(std::make_unique<PushBlock>(x,y,false,StickyLevel::None)), delta_frame);
-        break;
-    case 3: room_map->put(std::move(std::make_unique<PushBlock>(x,y,false,StickyLevel::Weak)), delta_frame);
-        break;
-    case 4: room_map->put(std::move(std::make_unique<PushBlock>(x,y,false,StickyLevel::Strong)), delta_frame);
-        break;
-    case 5: room_map->put(std::move(std::make_unique<PushBlock>(x,y,true,StickyLevel::None)), delta_frame);
-        break;
-    case 6: room_map->put(std::move(std::make_unique<PushBlock>(x,y,true,StickyLevel::Weak)), delta_frame);
-        break;
-    case 7: room_map->put(std::move(std::make_unique<PushBlock>(x,y,true,StickyLevel::Strong)), delta_frame);
-        break;
-    case 8: room_map->put(std::move(std::make_unique<SnakeBlock>(x,y,false,2)), delta_frame);
-        break;
-    case 9: room_map->put(std::move(std::make_unique<SnakeBlock>(x,y,false,1)), delta_frame);
-        break;
-    default:
-        break;
-    }
-}
-
-void Editor::destroy_obj(DeltaFrame* delta_frame, RoomMap* room_map) {
-    if (!room_map->view(pos_, Layer::Solid)) {
-        return;
-    }
-    room_map->take(pos_, Layer::Solid, delta_frame);
-}
-*/

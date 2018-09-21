@@ -19,7 +19,7 @@ public:
     Layer layer() const;
     Point pos() const;
     Point shifted_pos(Point) const;
-    virtual void draw(Shader*, int) = 0;
+    virtual void draw(Shader*) = 0;
     virtual void cleanup(DeltaFrame*) = 0;
     virtual void reinit() = 0;
     // If not wall(), then downcast to Block is safe
@@ -39,7 +39,7 @@ public:
     ~Wall();
     ObjCode obj_code();
     void serialize(std::ofstream& file);
-    void draw(Shader*, int);
+    void draw(Shader*);
     void cleanup(DeltaFrame*);
     void reinit();
 };

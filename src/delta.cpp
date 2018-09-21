@@ -53,13 +53,13 @@ void DeletionDelta::revert(RoomMap* room_map) {
 CreationDelta::CreationDelta(GameObject* object): object_ {object} {}
 
 void CreationDelta::revert(RoomMap* room_map) {
-    room_map->take_quiet_id(object_->pos(), object_->layer(), object_);
+    room_map->take_quiet(object_);
 }
 
 MotionDelta::MotionDelta(Block* object, Point p): object_ {object}, p_ {p} {}
 
 void MotionDelta::revert(RoomMap* room_map) {
-    auto object_unique = room_map->take_quiet_id(object_->pos(), object_->layer(), object_);
+    auto object_unique = room_map->take_quiet(object_);
     object_->set_pos(p_, nullptr);
     room_map->put_quiet(std::move(object_unique));
 }

@@ -127,7 +127,7 @@ int main(void) {
 
     ImGui::StyleColorsDark();
 
-    bool show_demo_window = true;
+    bool show_demo_window = false;
     bool show_editor_window = true;
 
     while(!glfwWindowShouldClose(window)) {

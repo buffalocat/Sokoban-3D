@@ -25,11 +25,11 @@ void Block::set_car(bool car) {
     car_ = car;
 }
 
-void Block::draw(Shader* shader, int height) {
+void Block::draw(Shader* shader) {
     Point p = pos();
     glm::mat4 model;
     if (car_) {
-        model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.0f + height, p.y));
+        model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.0f, p.y));
         model = glm::scale(model, glm::vec3(0.5f, 0.2f, 0.5f));
         shader->setMat4("model", model);
         shader->setVec4("color", PINK);
@@ -40,7 +40,7 @@ void Block::draw(Shader* shader, int height) {
     for (auto link : links_) {
         Point q = link->pos();
         Point d {q.x - p.x, q.y - p.y};
-        model = glm::translate(glm::mat4(), glm::vec3(0.2f*d.x, 0.5f + height, 0.2f*d.y));
+        model = glm::translate(glm::mat4(), glm::vec3(0.2f*d.x, 0.5f, 0.2f*d.y));
         model = glm::translate(model, glm::vec3(p.x, 0.5f, p.y));
         model = glm::scale(model, glm::vec3(0.1f + 0.2f*abs(d.x), 0.1f, 0.1f + 0.2f*abs(d.y)));
         shader->setMat4("model", model);
@@ -122,9 +122,9 @@ void PushBlock::set_sticky(StickyLevel sticky) {
     sticky_ = sticky;
 }
 
-void PushBlock::draw(Shader* shader, int height) {
+void PushBlock::draw(Shader* shader) {
     Point p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f + height, p.y));
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f, p.y));
     shader->setMat4("model", model);
     if (sticky_ == StickyLevel::None) {
         shader->setVec4("color", GREEN);
@@ -134,7 +134,7 @@ void PushBlock::draw(Shader* shader, int height) {
         shader->setVec4("color", RED);
     }
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-    Block::draw(shader, height);
+    Block::draw(shader);
 }
 
 StickyLevel PushBlock::sticky() {
@@ -214,9 +214,9 @@ void SnakeBlock::reset_target() {
     distance_ = -1;
 }
 
-void SnakeBlock::draw(Shader* shader, int height) {
+void SnakeBlock::draw(Shader* shader) {
     Point p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f + height, p.y));
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f, p.y));
     model = glm::scale(model, glm::vec3(0.7071f, 1, 0.7071f));
     model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0, 1, 0));
     shader->setMat4("model", model);
@@ -226,7 +226,7 @@ void SnakeBlock::draw(Shader* shader, int height) {
         shader->setVec4("color", DARK_PURPLE);
     }
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-    Block::draw(shader, height);
+    Block::draw(shader);
 }
 
 ObjCode SnakeBlock::obj_code() {
@@ -343,7 +343,7 @@ void SnakeBlock::pull(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered
             // The chain was odd length; split the middle block!
             else if (d == cur->distance_) {
                 Point pos = cur->pos();
-                room_map->take_id(pos, Layer::Solid, cur, delta_frame);
+                room_map->take(cur, delta_frame);
 
                 auto a_unique = std::make_unique<SnakeBlock>(pos.x, pos.y, false, 1);
                 auto a = a_unique.get();
@@ -383,7 +383,7 @@ void SnakeBlock::pull_aux(RoomMap* room_map, DeltaFrame* delta_frame, std::unord
     SnakeBlock* next = cur->target_;
     Point cur_pos, next_pos;
     while (next) {
-        auto obj_unique = room_map->take_quiet_id(cur->pos(), Layer::Solid, cur);
+        auto obj_unique = room_map->take_quiet(cur);
         next_pos = next->pos();
         // When we are sufficiently close to a push, it's possible that the thing
         // we're aiming for has already moved!  In this case, be sure to aim at

@@ -10,7 +10,7 @@ class SnakeBlock;
 
 enum class Layer;
 
-typedef std::array<std::vector<std::unique_ptr<GameObject>>, static_cast<unsigned int>(Layer::COUNT)> MapCell;
+typedef std::vector<std::unique_ptr<GameObject>> MapCell;
 
 class RoomMap {
 public:
@@ -26,10 +26,8 @@ public:
     void serialize(std::ofstream& file) const;
 
     GameObject* view(Point, Layer);
-    void take(Point, Layer, DeltaFrame*);
-    void take_id(Point, Layer, GameObject*, DeltaFrame*);
-    std::unique_ptr<GameObject> take_quiet(Point, Layer);
-    std::unique_ptr<GameObject> take_quiet_id(Point, Layer, GameObject*);
+    void take(GameObject*, DeltaFrame*);
+    std::unique_ptr<GameObject> take_quiet(GameObject*);
     void put(std::unique_ptr<GameObject>, DeltaFrame*);
     void put_quiet(std::unique_ptr<GameObject>);
 

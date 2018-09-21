@@ -56,13 +56,11 @@ Block* RoomMap::cycle_movers() {
 void RoomMap::serialize(std::ofstream& file) const {
     for (int x = 0; x != width_; ++x) {
         for (int y = 0; y != height_; ++y) {
-            for (auto& layer : map_[x][y]) {
-                for (auto& object : layer) {
-                    file << static_cast<unsigned char>(object->obj_code());
-                    file << static_cast<unsigned char>(x);
-                    file << static_cast<unsigned char>(y);
-                    object->serialize(file);
-                }
+            for (auto& object : map_[x][y]) {
+                file << static_cast<unsigned char>(object->obj_code());
+                file << static_cast<unsigned char>(x);
+                file << static_cast<unsigned char>(y);
+                object->serialize(file);
             }
         }
     }
@@ -71,83 +69,63 @@ void RoomMap::serialize(std::ofstream& file) const {
 
 GameObject* RoomMap::view(Point pos, Layer layer) {
     if (valid(pos)) {
-        auto &vec = map_[pos.x][pos.y][static_cast<unsigned int>(layer)];
-        if (!vec.empty()) {
-            return vec.back().get();
+        for (auto& obj : map_[pos.x][pos.y]) {
+            if (obj->layer() == layer) {
+                return obj.get();
+            }
         }
     }
     return nullptr;
 }
 
-void RoomMap::take(Point pos, Layer layer, DeltaFrame* delta_frame) {
-    if (valid(pos)) {
-        auto &vec = map_[pos.x][pos.y][static_cast<unsigned int>(layer)];
-        if (!vec.empty()) {
-            vec.back()->cleanup(delta_frame);
-            delta_frame->push(std::make_unique<DeletionDelta>(std::move(vec.back())));
-            vec.pop_back();
+void RoomMap::take(GameObject* object, DeltaFrame* delta_frame) {
+    Point pos = object->pos();
+    auto &vec = map_[pos.x][pos.y];
+    for (auto&& it = vec.begin(); it != vec.end(); ++it) {
+        if ((*it).get() == object) {
+            (*it)->cleanup(delta_frame);
+            delta_frame->push(std::make_unique<DeletionDelta>(std::move(*it)));
+            vec.erase(it);
+            return;
         }
     }
+    throw std::runtime_error("Tried to take an object that wasn't there!");
 }
 
-void RoomMap::take_id(Point pos, Layer layer, GameObject* id, DeltaFrame* delta_frame) {
-    if (valid(pos)) {
-        auto &vec = map_[pos.x][pos.y][static_cast<unsigned int>(layer)];
-        for (auto&& it = vec.begin(); it != vec.end(); ++it) {
-            if ((*it).get() == id) {
-                (*it)->cleanup(delta_frame);
-                delta_frame->push(std::make_unique<DeletionDelta>(std::move(*it)));
-                vec.erase(it);
-                return;
-            }
-        }
-        throw std::runtime_error("Tried to take an object that wasn't there!");
-    }
-    throw std::runtime_error("Tried to take an object from an invalid location!");
-}
-
-std::unique_ptr<GameObject> RoomMap::take_quiet(Point pos, Layer layer) {
-    if (valid(pos)) {
-        auto &vec = map_[pos.x][pos.y][static_cast<unsigned int>(layer)];
-        if (!vec.empty()) {
-            auto obj = std::move(vec.back());
-            vec.pop_back();
+std::unique_ptr<GameObject> RoomMap::take_quiet(GameObject* object) {
+    Point pos = object->pos();
+    auto &vec = map_[pos.x][pos.y];
+    for (auto&& it = vec.begin(); it != vec.end(); ++it) {
+        if ((*it).get() == object) {
+            auto obj = std::move(*it);
+            vec.erase(it);
             return obj;
         }
     }
-    return nullptr;
-}
-
-std::unique_ptr<GameObject> RoomMap::take_quiet_id(Point pos, Layer layer, GameObject* id) {
-    if (valid(pos)) {
-        auto &vec = map_[pos.x][pos.y][static_cast<unsigned int>(layer)];
-        for (auto&& it = vec.begin(); it != vec.end(); ++it) {
-            if ((*it).get() == id) {
-                auto obj = std::move(*it);
-                vec.erase(it);
-                return obj;
-            }
-        }
-        throw std::runtime_error("Tried to (quietly) take an object that wasn't there!");
-    }
-    throw std::runtime_error("Tried to (quietly) take an object from an invalid location!");
+    throw std::runtime_error("Tried to (quietly) take an object that wasn't there!");
 }
 
 void RoomMap::put(std::unique_ptr<GameObject> object, DeltaFrame* delta_frame) {
+    if (!object) {
+        return;
+    }
     Point pos = object->pos();
     if (valid(pos)) {
         delta_frame->push(std::make_unique<CreationDelta>(object.get()));
-        map_[pos.x][pos.y][static_cast<unsigned int>(object->layer())].push_back(std::move(object));
+        map_[pos.x][pos.y].push_back(std::move(object));
     } else {
         throw std::runtime_error("Tried to put an object in an invalid location!");
     }
 }
 
 void RoomMap::put_quiet(std::unique_ptr<GameObject> object) {
+    if (!object) {
+        return;
+    }
     Point pos = object->pos();
     if (valid(pos)) {
         Block* block = dynamic_cast<Block*>(object.get());
-        map_[pos.x][pos.y][static_cast<unsigned int>(object->layer())].push_back(std::move(object));
+        map_[pos.x][pos.y].push_back(std::move(object));
     } else {
         throw std::runtime_error("Tried to (quietly) put an object in an invalid location!");
     }
@@ -162,11 +140,8 @@ void RoomMap::add_mover(Block* block) {
 void RoomMap::draw(Shader* shader) {
     for (auto& column : map_) {
         for (auto& cell : column) {
-            for (auto& layer : cell) {
-                int i = 0;
-                for (auto& object : layer) {
-                    object->draw(shader, i++);
-                }
+            for (auto& object : cell) {
+                object->draw(shader);
             }
         }
     }

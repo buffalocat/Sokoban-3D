@@ -29,9 +29,9 @@ Wall::Wall(int x, int y): GameObject(x, y) {}
 
 Wall::~Wall() {}
 
-void Wall::draw(Shader* shader, int height) {
+void Wall::draw(Shader* shader) {
     Point p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f + height, p.y));
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f, p.y));
     shader->setMat4("model", model);
     shader->setVec4("color", BLACK);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);

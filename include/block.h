@@ -19,7 +19,7 @@ public:
     virtual ~Block() = 0;
     bool car();
     void set_car(bool car);
-    void draw(Shader*, int);
+    void draw(Shader*);
     virtual bool push_recheck(MoveProcessor*) = 0;
     virtual const BlockSet& get_strong_links() = 0;
     virtual const BlockSet& get_weak_links() = 0;
@@ -56,7 +56,7 @@ public:
     void serialize(std::ofstream& file);
     bool push_recheck(MoveProcessor*);
     void set_sticky(StickyLevel sticky);
-    void draw(Shader*, int);
+    void draw(Shader*);
     StickyLevel sticky();
     const BlockSet& get_strong_links();
     const BlockSet& get_weak_links();
@@ -81,7 +81,7 @@ public:
     void reset_target();
     const BlockSet& get_strong_links();
     const BlockSet& get_weak_links();
-    void draw(Shader*, int);
+    void draw(Shader*);
     bool available();
     bool confused(RoomMap*);
     void check_add_local_links(RoomMap*, DeltaFrame*);

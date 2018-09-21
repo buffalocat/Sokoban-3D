@@ -3,6 +3,13 @@
 #include <iostream>
 #include <string>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+
+#include <dear/imgui.h>
+
+#pragma GCC diagnostic pop
+
 #include "room.h"
 #include "moveprocessor.h"
 #include "block.h"
@@ -87,6 +94,72 @@ void Room::handle_input(DeltaFrame* delta_frame) {
     }
 }
 
+void Room::handle_input_editor_mode() {
+    if (glfwGetKey(window_, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window_, true);
+    }
+    if (cooldown_ == 0) {
+        for (auto p : MOVEMENT_KEYS) {
+            if (glfwGetKey(window_, p.first) == GLFW_PRESS) {
+                if (glfwGetKey(window_, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+                    Point d = {FAST_MAP_MOVE * p.second.x, FAST_MAP_MOVE * p.second.y};
+                    editor_->shift_pos(d);
+                } else {
+                    editor_->shift_pos(p.second);
+                }
+                editor_->clamp_pos(map_->width(), map_->height());
+                camera_->set_current_pos(editor_->pos());
+                cooldown_ = MAX_COOLDOWN;
+                break;
+            }
+        }
+    }
+    if (!ImGui::IsMouseHoveringAnyWindow()) {
+        if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            Point pos = get_pos_from_mouse();
+            if (map_->valid(pos)) {
+                create_obj(pos);
+            }
+        } else if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+            Point pos = get_pos_from_mouse();
+            if (map_->valid(pos)) {
+                delete_obj(pos);
+            }
+        }
+    }
+    if (cooldown_) {
+        --cooldown_;
+    }
+}
+
+Point Room::get_pos_from_mouse() {
+    double xpos, ypos;
+    glfwGetCursorPos(window_, &xpos, &ypos);
+    FPoint cam_pos = camera_->get_pos();
+    if (xpos >= 0 && xpos < SCREEN_WIDTH && ypos >= 0 && ypos < SCREEN_HEIGHT) {
+        int x = ((int)xpos + MESH_SIZE*cam_pos.x - (SCREEN_WIDTH - MESH_SIZE) / 2) / MESH_SIZE;
+        int y = ((int)ypos + MESH_SIZE*cam_pos.y - (SCREEN_HEIGHT - MESH_SIZE) / 2) / MESH_SIZE;
+        return Point{x, y};
+    }
+    return Point{-1, -1};
+}
+
+void Room::create_obj(Point pos) {
+    if (!map_->view(pos, Layer::Solid)) {
+        auto obj = editor_->create_obj(pos);
+        if (obj) {
+            map_->put_quiet(std::move(obj));
+        }
+    }
+}
+
+void Room::delete_obj(Point pos) {
+    GameObject* obj = map_->view(pos, Layer::Solid);
+    if (obj) {
+        map_->take_quiet(obj);
+    }
+}
+
 void Room::draw(bool editor_mode) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -130,40 +203,18 @@ void Room::draw(bool editor_mode) {
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 }
 
-void Room::handle_input_editor_mode() {
-    if (glfwGetKey(window_, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window_, true);
-    }
-    if (cooldown_ == 0) {
-        for (auto p : MOVEMENT_KEYS) {
-            if (glfwGetKey(window_, p.first) == GLFW_PRESS) {
-                if (glfwGetKey(window_, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-                    Point d = {FAST_MAP_MOVE * p.second.x, FAST_MAP_MOVE * p.second.y};
-                    editor_->shift_pos(d);
-                } else {
-                    editor_->shift_pos(p.second);
-                }
-                editor_->clamp_pos(map_->width(), map_->height());
-                camera_->set_current_pos(editor_->pos());
-                cooldown_ = MAX_COOLDOWN;
-                break;
-            }
-        }
-    }
-
-    if (cooldown_) {
-        --cooldown_;
-    }
-}
-
 void Room::draw_editor_mode() {
     // Draw the usual things, but in Ortho mode
     draw(true);
 }
 
-void Room::save(std::string map_name) {
-    std::string file_name = MAP_DIRECTORY + map_name;
+void Room::save(std::string map_name, bool overwrite) {
+    std::string file_name = MAP_DIRECTORY + map_name + ".map";
     std::ofstream file;
+    if (access((file_name).c_str(), F_OK) != -1 && !overwrite) {
+        std::cout << "File \"" << file_name << "\" already exists! Save failed." << std::endl;
+        return;
+    }
     file.open(file_name, std::ios::out | std::ios::binary);
 
     file << static_cast<unsigned char>(State::SmallDims);
@@ -175,16 +226,17 @@ void Room::save(std::string map_name) {
 
     file << static_cast<unsigned char>(State::End);
     file.close();
+    std::cout <<  file_name << " saved." << std::endl;
 }
 
 void Room::load(std::string map_name) {
     if (map_name.size() == 0) {
         return;
     }
-    std::string file_name = MAP_DIRECTORY + map_name;
+    std::string file_name = MAP_DIRECTORY + map_name + ".map";
     std::ifstream file;
     if (access((file_name).c_str(), F_OK) == -1) {
-        std::cout << "File " << file_name << " doesn't exist! Load failed." << std::endl;
+        std::cout << "File \"" << file_name << "\" doesn't exist! Load failed." << std::endl;
         return;
     }
     file.open(file_name, std::ios::in | std::ios::binary);
@@ -223,6 +275,7 @@ void Room::load(std::string map_name) {
     map_->set_initial_state();
     player_ = map_->get_mover();
     camera_->set_current_pos(player_->pos());
+    std::cout << map_name << " loaded." << std::endl;
 }
 
 void Room::read_objects(std::ifstream& file) {

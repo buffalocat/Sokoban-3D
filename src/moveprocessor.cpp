@@ -32,7 +32,7 @@ void MoveProcessor::try_move(DeltaFrame* delta_frame) {
     for (auto& p : comps_) {
         if (p.second->good()) {
             Block* obj = p.first;
-            auto obj_unique = map_->take_quiet_id(obj->pos(), Layer::Solid, obj);
+            auto obj_unique = map_->take_quiet(obj);
             obj->shift_pos(dir_, delta_frame);
             map_->put_quiet(std::move(obj_unique));
         }

@@ -26,7 +26,7 @@ public:
     // Initialization helpers
     void load(std::string map_name);
     void read_objects(std::ifstream& file);
-    void save(std::string map_name);
+    void save(std::string map_name, bool overwrite);
 
     void main_loop(bool editor_mode);
     void handle_input(DeltaFrame*);
@@ -34,6 +34,10 @@ public:
 
     void handle_input_editor_mode();
     void draw_editor_mode();
+
+    Point get_pos_from_mouse();
+    void create_obj(Point);
+    void delete_obj(Point);
 
 private:
     GLFWwindow* window_;

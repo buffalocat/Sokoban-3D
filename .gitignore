@@ -35,3 +35,6 @@
 *.cscope_file_list
 *.depend
 *.layout
+
+# Init file for Dear ImGui (it belongs in the repository, but there's no need to track changes)
+imgui.ini

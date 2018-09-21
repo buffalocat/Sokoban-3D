@@ -1,9 +1,7 @@
-#ifndef WORLDMAP_H
-#define WORLDMAP_H
+#ifndef ROOMMAP_H
+#define ROOMMAP_H
 
 #include "common.h"
-
-#include <fstream>
 
 class Shader;
 class DeltaFrame;
@@ -14,9 +12,9 @@ enum class Layer;
 
 typedef std::array<std::vector<std::unique_ptr<GameObject>>, static_cast<unsigned int>(Layer::COUNT)> MapCell;
 
-class WorldMap {
+class RoomMap {
 public:
-    WorldMap(int width, int height);
+    RoomMap(int width, int height);
     bool valid(Point pos);
     int width() const;
     int height() const;
@@ -49,4 +47,4 @@ private:
     std::deque<Block*> movers_;
 };
 
-#endif // WORLDMAP_H
+#endif // ROOMMAP_H

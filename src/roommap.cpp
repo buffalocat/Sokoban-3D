@@ -1,4 +1,4 @@
-#include "worldmap.h"
+#include "roommap.h"
 #include <iostream>
 #include <unordered_map>
 
@@ -7,7 +7,7 @@
 #include "block.h"
 
 
-WorldMap::WorldMap(int width, int height): width_ {width}, height_ {height}, map_ {}, movers_ {} {
+RoomMap::RoomMap(int width, int height): width_ {width}, height_ {height}, map_ {}, movers_ {} {
     for (int i = 0; i != width; ++i) {
         map_.push_back({});
         for (int j = 0; j != height; ++j) {
@@ -16,24 +16,24 @@ WorldMap::WorldMap(int width, int height): width_ {width}, height_ {height}, map
     }
 }
 
-bool WorldMap::valid(Point pos) {
+bool RoomMap::valid(Point pos) {
     return (0 <= pos.x) && (pos.x < width_) && (0 <= pos.y) && (pos.y < height_);
 }
 
-int WorldMap::width() const {
+int RoomMap::width() const {
     return width_;
 }
 
-int WorldMap::height() const {
+int RoomMap::height() const {
     return height_;
 }
 
-const std::deque<Block*>& WorldMap::movers() {
+const std::deque<Block*>& RoomMap::movers() {
     return movers_;
 }
 
 // Return a mover, and also cycle camera targets!
-Block* WorldMap::prime_mover() {
+Block* RoomMap::prime_mover() {
     if (!movers_.empty()) {
         Block* cur = movers_.back();
         movers_.pop_back();
@@ -45,7 +45,7 @@ Block* WorldMap::prime_mover() {
 }
 
 // Assuming not big_map
-void WorldMap::serialize(std::ofstream& file) const {
+void RoomMap::serialize(std::ofstream& file) const {
     for (int x = 0; x != width_; ++x) {
         for (int y = 0; y != height_; ++y) {
             for (auto& layer : map_[x][y]) {
@@ -61,7 +61,7 @@ void WorldMap::serialize(std::ofstream& file) const {
     file << static_cast<unsigned char>(ObjCode::NONE);
 }
 
-GameObject* WorldMap::view(Point pos, Layer layer) {
+GameObject* RoomMap::view(Point pos, Layer layer) {
     if (valid(pos)) {
         auto &vec = map_[pos.x][pos.y][static_cast<unsigned int>(layer)];
         if (!vec.empty()) {
@@ -71,7 +71,7 @@ GameObject* WorldMap::view(Point pos, Layer layer) {
     return nullptr;
 }
 
-void WorldMap::take(Point pos, Layer layer, DeltaFrame* delta_frame) {
+void RoomMap::take(Point pos, Layer layer, DeltaFrame* delta_frame) {
     if (valid(pos)) {
         auto &vec = map_[pos.x][pos.y][static_cast<unsigned int>(layer)];
         if (!vec.empty()) {
@@ -82,7 +82,7 @@ void WorldMap::take(Point pos, Layer layer, DeltaFrame* delta_frame) {
     }
 }
 
-void WorldMap::take_id(Point pos, Layer layer, GameObject* id, DeltaFrame* delta_frame) {
+void RoomMap::take_id(Point pos, Layer layer, GameObject* id, DeltaFrame* delta_frame) {
     if (valid(pos)) {
         auto &vec = map_[pos.x][pos.y][static_cast<unsigned int>(layer)];
         for (auto&& it = vec.begin(); it != vec.end(); ++it) {
@@ -98,7 +98,7 @@ void WorldMap::take_id(Point pos, Layer layer, GameObject* id, DeltaFrame* delta
     throw std::runtime_error("Tried to take an object from an invalid location!");
 }
 
-std::unique_ptr<GameObject> WorldMap::take_quiet(Point pos, Layer layer) {
+std::unique_ptr<GameObject> RoomMap::take_quiet(Point pos, Layer layer) {
     if (valid(pos)) {
         auto &vec = map_[pos.x][pos.y][static_cast<unsigned int>(layer)];
         if (!vec.empty()) {
@@ -110,7 +110,7 @@ std::unique_ptr<GameObject> WorldMap::take_quiet(Point pos, Layer layer) {
     return nullptr;
 }
 
-std::unique_ptr<GameObject> WorldMap::take_quiet_id(Point pos, Layer layer, GameObject* id) {
+std::unique_ptr<GameObject> RoomMap::take_quiet_id(Point pos, Layer layer, GameObject* id) {
     if (valid(pos)) {
         auto &vec = map_[pos.x][pos.y][static_cast<unsigned int>(layer)];
         for (auto&& it = vec.begin(); it != vec.end(); ++it) {
@@ -125,7 +125,7 @@ std::unique_ptr<GameObject> WorldMap::take_quiet_id(Point pos, Layer layer, Game
     throw std::runtime_error("Tried to (quietly) take an object from an invalid location!");
 }
 
-void WorldMap::put(std::unique_ptr<GameObject> object, DeltaFrame* delta_frame) {
+void RoomMap::put(std::unique_ptr<GameObject> object, DeltaFrame* delta_frame) {
     Point pos = object->pos();
     if (valid(pos)) {
         delta_frame->push(std::make_unique<CreationDelta>(object.get()));
@@ -135,7 +135,7 @@ void WorldMap::put(std::unique_ptr<GameObject> object, DeltaFrame* delta_frame) 
     }
 }
 
-void WorldMap::put_quiet(std::unique_ptr<GameObject> object) {
+void RoomMap::put_quiet(std::unique_ptr<GameObject> object) {
     Point pos = object->pos();
     if (valid(pos)) {
         Block* block = dynamic_cast<Block*>(object.get());
@@ -145,13 +145,13 @@ void WorldMap::put_quiet(std::unique_ptr<GameObject> object) {
     }
 }
 
-void WorldMap::add_mover(Block* block) {
+void RoomMap::add_mover(Block* block) {
     if (block->car()) {
         movers_.push_back(block);
     }
 }
 
-void WorldMap::draw(Shader* shader) {
+void RoomMap::draw(Shader* shader) {
     for (auto& column : map_) {
         for (auto& cell : column) {
             for (auto& layer : cell) {
@@ -164,7 +164,7 @@ void WorldMap::draw(Shader* shader) {
     }
 }
 
-void WorldMap::set_initial_state() {
+void RoomMap::set_initial_state() {
     std::unordered_set<SnakeBlock*> available_snakes = {};
     movers_ = {};
     for (int x = 0; x != width_; ++x) {
@@ -193,7 +193,7 @@ void WorldMap::set_initial_state() {
 }
 
 // NOTE: Just for debugging! But snakes still have problems, so we still need it.
-void WorldMap::print_snake_info() {
+void RoomMap::print_snake_info() {
     std::cout << std::endl;
     for (int x = 0; x != width_; ++x) {
         for (int y = 0; y != height_; ++y) {

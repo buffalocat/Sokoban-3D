@@ -5,7 +5,7 @@
 
 #include <queue>
 
-class WorldMap;
+class RoomMap;
 
 struct FPoint {
     float x;
@@ -80,7 +80,7 @@ public:
 
 class Camera {
 public:
-    Camera(WorldMap*, float rad, Point pos);
+    Camera(RoomMap*);
     void update();
     void set_target(Point);
     float get_radius();
@@ -88,6 +88,9 @@ public:
     void push_context(std::unique_ptr<CameraContext>);
 
 private:
+    int width_;
+    int height_;
+    FreeCameraContext default_context_;
     CameraContext* context_;
     std::vector<std::unique_ptr<CameraContext>> loaded_contexts_;
     std::vector<std::vector<CameraContext*>> context_map_;
@@ -95,6 +98,7 @@ private:
     float cur_rad_;
     FPoint target_pos_;
     FPoint cur_pos_;
+
 };
 
 float damp_avg(float target, float cur);

@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-class WorldMap;
+class RoomMap;
 class GameObject;
 class Block;
 class PushBlock;
@@ -13,14 +13,14 @@ enum class Layer;
 
 class Delta {
 public:
-    virtual void revert(WorldMap*) = 0;
+    virtual void revert(RoomMap*) = 0;
     virtual ~Delta() {};
 };
 
 class DeltaFrame {
 public:
     DeltaFrame();
-    void revert(WorldMap*);
+    void revert(RoomMap*);
     void push(std::unique_ptr<Delta>);
     bool trivial();
 
@@ -32,7 +32,7 @@ class UndoStack {
 public:
     UndoStack(unsigned int max_depth);
     void push(std::unique_ptr<DeltaFrame>);
-    void pop(WorldMap*);
+    void pop(RoomMap*);
 
 private:
     unsigned int max_depth_;
@@ -43,7 +43,7 @@ private:
 class CreationDelta: public Delta {
 public:
     CreationDelta(GameObject* object);
-    void revert(WorldMap*);
+    void revert(RoomMap*);
 
 private:
     GameObject* object_;
@@ -52,7 +52,7 @@ private:
 class DeletionDelta: public Delta {
 public:
     DeletionDelta(std::unique_ptr<GameObject>);
-    void revert(WorldMap*);
+    void revert(RoomMap*);
 
 private:
     std::unique_ptr<GameObject> object_;
@@ -61,7 +61,7 @@ private:
 class MotionDelta: public Delta {
 public:
     MotionDelta(Block* object, Point p);
-    void revert(WorldMap*);
+    void revert(RoomMap*);
 
 private:
     Block* object_;
@@ -71,7 +71,7 @@ private:
 class AddLinkDelta: public Delta {
 public:
     AddLinkDelta(Block* a, Block* b);
-    void revert(WorldMap*);
+    void revert(RoomMap*);
 
 private:
     Block* a_;
@@ -81,7 +81,7 @@ private:
 class RemoveLinkDelta: public Delta {
 public:
     RemoveLinkDelta(Block* a, Block* b);
-    void revert(WorldMap*);
+    void revert(RoomMap*);
 
 private:
     Block* a_;

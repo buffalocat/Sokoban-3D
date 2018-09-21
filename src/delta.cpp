@@ -1,6 +1,6 @@
 #include "delta.h"
 #include "gameobject.h"
-#include "worldmap.h"
+#include "roommap.h"
 #include "block.h"
 
 #include <iostream>
@@ -18,9 +18,9 @@ void UndoStack::push(std::unique_ptr<DeltaFrame> delta_frame) {
     }
 }
 
-void UndoStack::pop(WorldMap* world_map) {
+void UndoStack::pop(RoomMap* room_map) {
     if (size_ > 0) {
-        (*frames_.back()).revert(world_map);
+        (*frames_.back()).revert(room_map);
         frames_.pop_back();
         --size_;
     }
@@ -28,9 +28,9 @@ void UndoStack::pop(WorldMap* world_map) {
 
 DeltaFrame::DeltaFrame(): deltas_ {} {}
 
-void DeltaFrame::revert(WorldMap* world_map) {
+void DeltaFrame::revert(RoomMap* room_map) {
     for (auto it = deltas_.rbegin(); it != deltas_.rend(); ++it) {
-        (**it).revert(world_map);
+        (**it).revert(room_map);
     }
 }
 
@@ -44,34 +44,34 @@ bool DeltaFrame::trivial() {
 
 DeletionDelta::DeletionDelta(std::unique_ptr<GameObject> object): object_ {std::move(object)} {}
 
-void DeletionDelta::revert(WorldMap* world_map) {
+void DeletionDelta::revert(RoomMap* room_map) {
     GameObject* obj = object_.get();
-    world_map->put_quiet(std::move(object_));
+    room_map->put_quiet(std::move(object_));
     obj->reinit();
 }
 
 CreationDelta::CreationDelta(GameObject* object): object_ {object} {}
 
-void CreationDelta::revert(WorldMap* world_map) {
-    world_map->take_quiet_id(object_->pos(), object_->layer(), object_);
+void CreationDelta::revert(RoomMap* room_map) {
+    room_map->take_quiet_id(object_->pos(), object_->layer(), object_);
 }
 
 MotionDelta::MotionDelta(Block* object, Point p): object_ {object}, p_ {p} {}
 
-void MotionDelta::revert(WorldMap* world_map) {
-    auto object_unique = world_map->take_quiet_id(object_->pos(), object_->layer(), object_);
+void MotionDelta::revert(RoomMap* room_map) {
+    auto object_unique = room_map->take_quiet_id(object_->pos(), object_->layer(), object_);
     object_->set_pos(p_, nullptr);
-    world_map->put_quiet(std::move(object_unique));
+    room_map->put_quiet(std::move(object_unique));
 }
 
 AddLinkDelta::AddLinkDelta(Block* a, Block* b): a_ {a}, b_ {b} {}
 
-void AddLinkDelta::revert(WorldMap* world_map) {
+void AddLinkDelta::revert(RoomMap* room_map) {
     a_->remove_link(b_, nullptr);
 }
 
 RemoveLinkDelta::RemoveLinkDelta(Block* a, Block* b): a_ {a}, b_ {b} {}
 
-void RemoveLinkDelta::revert(WorldMap* world_map) {
+void RemoveLinkDelta::revert(RoomMap* room_map) {
     a_->add_link(b_, nullptr);
 }

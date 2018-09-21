@@ -69,13 +69,19 @@
 		<Unit filename="include/block.h" />
 		<Unit filename="include/camera.h" />
 		<Unit filename="include/common.h" />
+		<Unit filename="include/dear/imgui.cpp" />
+		<Unit filename="include/dear/imgui_demo.cpp" />
+		<Unit filename="include/dear/imgui_draw.cpp" />
+		<Unit filename="include/dear/imgui_impl_glfw.cpp" />
+		<Unit filename="include/dear/imgui_impl_opengl3.cpp" />
+		<Unit filename="include/dear/imgui_widgets.cpp" />
 		<Unit filename="include/delta.h" />
 		<Unit filename="include/editor.h" />
 		<Unit filename="include/gameobject.h" />
-		<Unit filename="include/loader.h" />
 		<Unit filename="include/moveprocessor.h" />
+		<Unit filename="include/room.h" />
+		<Unit filename="include/roommap.h" />
 		<Unit filename="include/shader.h" />
-		<Unit filename="include/worldmap.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="shaders/shader.fs" />
 		<Unit filename="shaders/shader.vs" />
@@ -85,10 +91,10 @@
 		<Unit filename="src/delta.cpp" />
 		<Unit filename="src/editor.cpp" />
 		<Unit filename="src/gameobject.cpp" />
-		<Unit filename="src/loader.cpp" />
 		<Unit filename="src/moveprocessor.cpp" />
+		<Unit filename="src/room.cpp" />
+		<Unit filename="src/roommap.cpp" />
 		<Unit filename="src/shader.cpp" />
-		<Unit filename="src/worldmap.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

@@ -1,8 +1,8 @@
 #include "moveprocessor.h"
 #include "block.h"
-#include "worldmap.h"
+#include "roommap.h"
 
-MoveProcessor::MoveProcessor(WorldMap* world_map, Point dir): map_ {world_map}, dir_ {dir}, comps_ {},
+MoveProcessor::MoveProcessor(RoomMap* room_map, Point dir): map_ {room_map}, dir_ {dir}, comps_ {},
 maybe_broken_weak_ {}, touched_snakes_ {} {}
 
 void MoveProcessor::try_move(DeltaFrame* delta_frame) {

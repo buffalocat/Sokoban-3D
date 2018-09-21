@@ -1,5 +1,5 @@
 #include "camera.h"
-#include "worldmap.h"
+#include "roommap.h"
 #include <algorithm>
 
 FPoint::FPoint(float ax, float ay): x {ax}, y {ay} {}
@@ -79,11 +79,14 @@ float NullCameraContext::radius(Point pos) {
     return DEFAULT_CAM_RADIUS;
 }
 
-
-Camera::Camera(WorldMap* world_map, float rad, Point pos): context_ {}, loaded_contexts_ {}, context_map_ {}, target_rad_ {rad}, cur_rad_ {rad}, target_pos_ {pos}, cur_pos_ {pos} {
-    auto default_context = std::make_unique<FreeCameraContext>(0, 0, world_map->width(), world_map->height(), 0);
-    context_map_ = std::vector<std::vector<CameraContext*>>(world_map->width(), std::vector<CameraContext*>(world_map->height(), default_context.get()));
-    loaded_contexts_.push_back(std::move(default_context));
+Camera::Camera(RoomMap* room_map): width_ {room_map->width()}, height_ {room_map->height()},
+    default_context_ {FreeCameraContext(0, 0, room_map->width(), room_map->height(), 0)},
+    context_ {}, loaded_contexts_ {},
+    context_map_ {},
+    target_rad_ {DEFAULT_CAM_RADIUS}, cur_rad_ {DEFAULT_CAM_RADIUS},
+    target_pos_ {FPoint{0,0}}, cur_pos_ {FPoint{0,0}}
+{
+    context_map_ = std::vector<std::vector<CameraContext*>>(room_map->width(), std::vector<CameraContext*>(room_map->height(), &default_context_));
 }
 
 void Camera::push_context(std::unique_ptr<CameraContext> context) {
@@ -101,6 +104,7 @@ void Camera::push_context(std::unique_ptr<CameraContext> context) {
     }
     loaded_contexts_.push_back(std::move(context));
 }
+
 
 float Camera::get_radius() {
     return cur_rad_;

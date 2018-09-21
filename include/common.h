@@ -1,5 +1,5 @@
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef COMMON_CONSTANTS_H
+#define COMMON_CONSTANTS_H
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
@@ -9,7 +9,12 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wmissing-declarations"
 
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #pragma GCC diagnostic pop
 
@@ -75,6 +80,7 @@ const glm::vec4 DARK_PURPLE = glm::vec4(0.3f, 0.2f, 0.6f, 1.0f);
 const glm::vec4 RED = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
 const glm::vec4 BLACK = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 const glm::vec4 ORANGE = glm::vec4(1.0f, 0.7f, 0.3f, 1.0f);
+const glm::vec4 YELLOW = glm::vec4(0.7f, 0.7f, 0.3f, 1.0f);
 
 // NOTE: the order matters here, for serialization reasons!
 const Point DIRECTIONS[4] = {Point{-1,0}, Point{0,-1}, Point{1,0}, Point{0,1}};
@@ -93,9 +99,32 @@ const int DEFAULT_BOARD_HEIGHT = 13;
 
 const int MAX_COOLDOWN = 5;
 
-const float DEFAULT_CAM_RADIUS = 16.0;
+const int DEFAULT_UNDO_DEPTH = 1000;
 
+const float DEFAULT_CAM_RADIUS = 16.0;
 
 const bool DEV_MODE = true;
 
-#endif // COMMON_H
+enum State {
+    SmallDims = 1, // Gets width and height as 1 byte integers
+    BigDims = 2, // Gets width and height as 2 byte integers
+    Objects = 3, // Read in all map objects
+    CameraRect = 4, // Get a camera context rectangle
+    End = 255,
+};
+
+const std::unordered_map<ObjCode, unsigned int, ObjCodeHash> BYTES_PER_OBJECT = {
+    {ObjCode::NONE, 0},
+    {ObjCode::Wall, 2},
+    {ObjCode::PushBlock, 3},
+    {ObjCode::SnakeBlock, 3},
+};
+
+const std::unordered_map<int, Point> MOVEMENT_KEYS {
+    {GLFW_KEY_RIGHT, Point {1, 0}},
+    {GLFW_KEY_LEFT,  Point {-1,0}},
+    {GLFW_KEY_DOWN,  Point {0, 1}},
+    {GLFW_KEY_UP,    Point {0,-1}},
+};
+
+#endif // COMMON_CONSTANTS_H

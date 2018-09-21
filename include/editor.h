@@ -16,17 +16,17 @@
 
 #pragma GCC diagnostic pop
 
-#include "worldmap.h"
+#include "roommap.h"
 #include "common.h"
 
 
 class Editor {
 public:
     Editor(GLFWwindow*);
-    void handle_input(DeltaFrame*, WorldMap*, Point cam_pos);
-    void get_pos(WorldMap*, Point cam_pos);
-    void create_obj(DeltaFrame*, WorldMap*);
-    void destroy_obj(DeltaFrame*, WorldMap*);
+    void handle_input(DeltaFrame*, RoomMap*, Point cam_pos);
+    void get_pos(RoomMap*, Point cam_pos);
+    void create_obj(DeltaFrame*, RoomMap*);
+    void destroy_obj(DeltaFrame*, RoomMap*);
 
 private:
     GLFWwindow* window_;

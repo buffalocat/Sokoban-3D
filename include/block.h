@@ -30,8 +30,8 @@ public:
     void remove_link(Block*, DeltaFrame*);
     void cleanup(DeltaFrame*);
     void reinit();
-    void check_remove_local_links(WorldMap*, DeltaFrame*);
-    virtual void check_add_local_links(WorldMap*, DeltaFrame*) = 0;
+    void check_remove_local_links(RoomMap*, DeltaFrame*);
+    virtual void check_add_local_links(RoomMap*, DeltaFrame*) = 0;
     virtual void post_move_reset();
 
 protected:
@@ -60,7 +60,7 @@ public:
     StickyLevel sticky();
     const BlockSet& get_strong_links();
     const BlockSet& get_weak_links();
-    void check_add_local_links(WorldMap*, DeltaFrame*);
+    void check_add_local_links(RoomMap*, DeltaFrame*);
 
 private:
     StickyLevel sticky_;
@@ -83,11 +83,11 @@ public:
     const BlockSet& get_weak_links();
     void draw(Shader*, int);
     bool available();
-    bool confused(WorldMap*);
-    void check_add_local_links(WorldMap*, DeltaFrame*);
-    void collect_unlinked_neighbors(WorldMap*, std::unordered_set<SnakeBlock*>&);
-    void pull(WorldMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&, Point);
-    void pull_aux(WorldMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&, Point);
+    bool confused(RoomMap*);
+    void check_add_local_links(RoomMap*, DeltaFrame*);
+    void collect_unlinked_neighbors(RoomMap*, std::unordered_set<SnakeBlock*>&);
+    void pull(RoomMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&, Point);
+    void pull_aux(RoomMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&, Point);
     void post_move_reset();
 
 private:

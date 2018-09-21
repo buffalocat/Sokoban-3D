@@ -4,7 +4,7 @@
 #include "common.h"
 
 class Block;
-class WorldMap;
+class RoomMap;
 class DeltaFrame;
 class SnakeBlock;
 
@@ -45,7 +45,7 @@ private:
 
 class MoveProcessor {
 public:
-    MoveProcessor(WorldMap*, Point);
+    MoveProcessor(RoomMap*, Point);
     void try_move(DeltaFrame*);
     Component* move_component(Block* block, bool recheck);
     void try_push(Component*, Point);
@@ -54,7 +54,7 @@ public:
     void insert_touched_snake(SnakeBlock*);
 
 private:
-    WorldMap* map_;
+    RoomMap* map_;
     Point dir_;
     std::unordered_map<Block*, std::shared_ptr<Component>> comps_;
     // Sets for marking where interesting things happened

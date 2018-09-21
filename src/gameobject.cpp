@@ -1,5 +1,7 @@
+#include "common.h"
+
 #include "gameobject.h"
-#include "worldmap.h"
+#include "roommap.h"
 #include "shader.h"
 #include "delta.h"
 

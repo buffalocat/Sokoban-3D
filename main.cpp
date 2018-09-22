@@ -27,7 +27,7 @@
 bool window_init(GLFWwindow*&);
 
 
-std::unordered_map<size_t, ObjCode> GameObject::code_map;
+std::unordered_map<std::type_index, ObjCode> GameObject::code_map;
 std::unordered_map<int, GameObject* (*)(unsigned char*)> GameObject::deser_map;
 void init_game_object_maps();
 
@@ -204,7 +204,7 @@ bool window_init(GLFWwindow*& window) {
 }
 
 #define SERIALIZE_SETUP(CLASS) {\
-    GameObject::code_map[typeid(CLASS).hash_code()] = ObjCode::CLASS;\
+    GameObject::code_map[typeid(CLASS)] = ObjCode::CLASS;\
     GameObject::deser_map[(int)ObjCode::CLASS] = &CLASS::deserialize;\
 }
 

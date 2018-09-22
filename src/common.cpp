@@ -11,12 +11,10 @@ std::ostream& operator<<(std::ostream& os, const Point& p)
     return os;
 }
 
-std::size_t PointHash::operator()(const Point& p) const
-{
+std::size_t PointHash::operator()(const Point& p) const {
     return (p.x << 8) + p.y;
 }
 
-std::size_t ObjCodeHash::operator()(const ObjCode& c) const
-{
+std::size_t ObjCodeHash::operator()(const ObjCode& c) const {
     return static_cast<unsigned char>(c);
 }

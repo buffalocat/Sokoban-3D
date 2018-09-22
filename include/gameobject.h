@@ -13,7 +13,7 @@ class RoomMap;
  */
 class GameObject {
 public:
-    static std::unordered_map<size_t, ObjCode> code_map;
+    static std::unordered_map<std::type_index, ObjCode> code_map;
     static std::unordered_map<int, GameObject* (*)(unsigned char*)> deser_map;
 
     virtual ~GameObject() = 0;

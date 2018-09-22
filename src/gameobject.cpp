@@ -10,7 +10,7 @@ GameObject::GameObject(int x, int y): pos_ {x, y}, wall_ {true} {}
 GameObject::~GameObject() {}
 
 ObjCode GameObject::obj_code() {
-    return code_map[typeid(this).hash_code()];
+    return code_map[typeid(this)];
 }
 
 Layer GameObject::layer() const {

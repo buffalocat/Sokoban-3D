@@ -2,6 +2,15 @@
 #include "roommap.h"
 #include <algorithm>
 
+void float_ser(std::ofstream& file, float f) {
+    file << (unsigned char)f;
+    file << (unsigned char)(256.0*f);
+}
+
+float float_deser(unsigned char high, unsigned char low) {
+    return (float)high + (float)low/256.0;
+}
+
 FPoint::FPoint(float ax, float ay): x {ax}, y {ay} {}
 
 FPoint::FPoint(const Point& p): x {static_cast<float>(p.x)}, y {static_cast<float>(p.y)} {}
@@ -14,14 +23,20 @@ bool CameraContext::is_null() {
     return false;
 }
 
-FreeCameraContext::FreeCameraContext(int x, int y, int w, int h, int priority):
-CameraContext(x, y, w, h, priority), radius_ {} {
-    radius_ = DEFAULT_CAM_RADIUS;
+void CameraContext::serialize(std::ofstream& file) {
+    file << (unsigned char)x_;
+    file << (unsigned char)y_;
+    file << (unsigned char)w_;
+    file << (unsigned char)h_;
+    file << (unsigned char)priority_;
 }
+
+FreeCameraContext::FreeCameraContext(int x, int y, int w, int h, int priority, float radius):
+CameraContext(x, y, w, h, priority), radius_ {radius} {}
 
 FreeCameraContext::~FreeCameraContext() {}
 
-Point FreeCameraContext::center(Point pos) {
+FPoint FreeCameraContext::center(Point pos) {
     return pos;
 }
 
@@ -29,29 +44,50 @@ float FreeCameraContext::radius(Point pos) {
     return radius_;
 }
 
-FixedCameraContext::FixedCameraContext(int x, int y, int w, int h, int priority, float radius, int cx, int cy):
-CameraContext(x, y, w, h, priority), cx_ {cx}, cy_ {cy}, radius_ {radius} {
-    //radius_ = DEFAULT_CAM_RADIUS;
+void FreeCameraContext::serialize(std::ofstream& file) {
+    file << (unsigned char)CameraCode::Free;
+    CameraContext::serialize(file);
+    float_ser(file, radius_);
 }
+
+CameraContext* FreeCameraContext::deserialize(unsigned char* b) {
+    return new FreeCameraContext(b[0], b[1], b[2], b[3], b[4],
+                                 float_deser(b[5], b[6]));
+}
+
+FixedCameraContext::FixedCameraContext(int x, int y, int w, int h, int priority, float radius, float cx, float cy):
+CameraContext(x, y, w, h, priority), radius_ {radius}, cx_ {cx}, cy_ {cy} {}
 
 FixedCameraContext::~FixedCameraContext() {}
 
-Point FixedCameraContext::center(Point pos) {
-    return Point{cx_, cy_};
+FPoint FixedCameraContext::center(Point pos) {
+    return FPoint{cx_, cy_};
 }
 
 float FixedCameraContext::radius(Point pos) {
     return radius_;
 }
 
-ClampedCameraContext::ClampedCameraContext(int x, int y, int w, int h, int priority, int xpad, int ypad):
-CameraContext(x, y, w, h, priority), xpad_ {xpad}, ypad_ {ypad}, radius_ {} {
-    radius_ = DEFAULT_CAM_RADIUS;
+void FixedCameraContext::serialize(std::ofstream& file) {
+    file << (unsigned char)CameraCode::Fixed;
+    CameraContext::serialize(file);
+    float_ser(file, radius_);
+    float_ser(file, cx_);
+    float_ser(file, cy_);
 }
+
+CameraContext* FixedCameraContext::deserialize(unsigned char* b) {
+    return new FixedCameraContext(b[0], b[1], b[2], b[3], b[4],
+                                  float_deser(b[5], b[6]),
+                                  float_deser(b[7], b[8]), float_deser(b[9], b[10]));
+}
+
+ClampedCameraContext::ClampedCameraContext(int x, int y, int w, int h, int priority, float radius, int xpad, int ypad):
+CameraContext(x, y, w, h, priority), radius_ {radius}, xpad_ {xpad}, ypad_ {ypad} {}
 
 ClampedCameraContext::~ClampedCameraContext() {}
 
-Point ClampedCameraContext::center(Point pos) {
+FPoint ClampedCameraContext::center(Point pos) {
     return Point{
         std::min(std::max(pos.x, x_ + xpad_), x_ + w_ - xpad_),
         std::min(std::max(pos.y, y_ + ypad_), y_ + h_ - ypad_)
@@ -60,6 +96,20 @@ Point ClampedCameraContext::center(Point pos) {
 
 float ClampedCameraContext::radius(Point pos) {
     return radius_;
+}
+
+void ClampedCameraContext::serialize(std::ofstream& file) {
+    file << (unsigned char)CameraCode::Clamped;
+    CameraContext::serialize(file);
+    float_ser(file, radius_);
+    file << (unsigned char) xpad_;
+    file << (unsigned char) ypad_;
+}
+
+CameraContext* ClampedCameraContext::deserialize(unsigned char* b) {
+    return new ClampedCameraContext(b[0], b[1], b[2], b[3], b[4],
+                                    float_deser(b[5], b[6]),
+                                    b[7], b[8]);
 }
 
 NullCameraContext::NullCameraContext(int x, int y, int w, int h, int priority):
@@ -71,7 +121,7 @@ bool NullCameraContext::is_null() {
     return true;
 }
 
-Point NullCameraContext::center(Point pos) {
+FPoint NullCameraContext::center(Point pos) {
     return pos;
 }
 
@@ -79,14 +129,31 @@ float NullCameraContext::radius(Point pos) {
     return DEFAULT_CAM_RADIUS;
 }
 
+void NullCameraContext::serialize(std::ofstream& file) {
+    file << (unsigned char)CameraCode::Null;
+    CameraContext::serialize(file);
+}
+
+CameraContext* NullCameraContext::deserialize(unsigned char* b) {
+    return new NullCameraContext(b[0], b[1], b[2], b[3], b[4]);
+}
+
 Camera::Camera(RoomMap* room_map): width_ {room_map->width()}, height_ {room_map->height()},
-    default_context_ {FreeCameraContext(0, 0, room_map->width(), room_map->height(), 0)},
+    default_context_ {FreeCameraContext(0, 0, room_map->width(), room_map->height(), 0, DEFAULT_CAM_RADIUS)},
     context_ {}, loaded_contexts_ {},
     context_map_ {},
     target_rad_ {DEFAULT_CAM_RADIUS}, cur_rad_ {DEFAULT_CAM_RADIUS},
     target_pos_ {FPoint{0,0}}, cur_pos_ {FPoint{0,0}}
 {
     context_map_ = std::vector<std::vector<CameraContext*>>(room_map->width(), std::vector<CameraContext*>(room_map->height(), &default_context_));
+}
+
+void Camera::serialize(std::ofstream& file) {
+    file << static_cast<unsigned char>(State::CameraRect);
+    for (auto& context : loaded_contexts_) {
+        context->serialize(file);
+    }
+    file << static_cast<unsigned char>(CameraCode::NONE);
 }
 
 void Camera::push_context(std::unique_ptr<CameraContext> context) {
@@ -103,6 +170,9 @@ void Camera::push_context(std::unique_ptr<CameraContext> context) {
         }
     }
     loaded_contexts_.push_back(std::move(context));
+    auto c = static_cast<FixedCameraContext*>(loaded_contexts_.back().get());
+    std::cout << "c is " << c << std::endl;
+    std::cout << "it's at " << c->x_ << "," << c->y_ << " with dims " << c->w_ << "," << c->h_ << " and center " << c->cx_ << "," << c->cy_ << std::endl;
 }
 
 

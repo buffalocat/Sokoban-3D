@@ -30,8 +30,6 @@
 #include <vector>
 #include <iostream>
 
-#include <typeindex>
-
 class GameObject;
 class Block;
 
@@ -71,8 +69,20 @@ enum class ObjCode {
     SnakeBlock,
 };
 
+enum class CameraCode {
+    NONE,
+    Free,
+    Fixed,
+    Clamped,
+    Null,
+};
+
 struct ObjCodeHash {
     std::size_t operator()(const ObjCode& c) const;
+};
+
+struct CameraCodeHash {
+    std::size_t operator()(const CameraCode& c) const;
 };
 
 const glm::vec4 GREEN = glm::vec4(0.6f, 0.9f, 0.7f, 1.0f);
@@ -118,13 +128,6 @@ enum State {
     CameraRect = 4, // Get a camera context rectangle
     SnakeLink = 5, // Link two snakes (1 = Right, 2 = Down)
     End = 255,
-};
-
-const std::unordered_map<ObjCode, unsigned int, ObjCodeHash> BYTES_PER_OBJECT = {
-    {ObjCode::NONE, 0},
-    {ObjCode::Wall, 2},
-    {ObjCode::PushBlock, 3},
-    {ObjCode::SnakeBlock, 3},
 };
 
 const std::unordered_map<int, Point> MOVEMENT_KEYS {

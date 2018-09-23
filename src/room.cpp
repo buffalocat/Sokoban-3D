@@ -11,10 +11,13 @@
 #pragma GCC diagnostic pop
 
 #include "room.h"
+
+#include "editor.h"
+#include "camera.h"
+#include "shader.h"
+
 #include "moveprocessor.h"
 #include "block.h"
-#include "shader.h"
-#include "editor.h"
 
 const char* MAP_DIRECTORY = "maps\\";
 
@@ -52,6 +55,10 @@ Room::Room(GLFWwindow* window, Shader* shader, int width, int height):
 
 void Room::set_editor(Editor* editor) {
     editor_ = editor;
+}
+
+Camera* Room::camera() {
+    return camera_.get();
 }
 
 // This is essentially the whole game loop
@@ -209,8 +216,6 @@ void Room::delete_obj(Point pos) {
     }
 }
 
-
-
 Point Room::get_pos_from_mouse() {
     double xpos, ypos;
     glfwGetCursorPos(window_, &xpos, &ypos);
@@ -241,6 +246,8 @@ void Room::save(std::string map_name, bool overwrite) {
     file << static_cast<unsigned char>(map_->height());
 
     map_->serialize(file);
+
+    camera_->serialize(file);
 
     file << static_cast<unsigned char>(State::End);
     file.close();
@@ -301,6 +308,21 @@ void Room::load(std::string map_name) {
     std::cout << map_name << " loaded." << std::endl;
 }
 
+const std::unordered_map<ObjCode, unsigned int, ObjCodeHash> BYTES_PER_OBJECT = {
+    {ObjCode::NONE, 0},
+    {ObjCode::Wall, 2},
+    {ObjCode::PushBlock, 3},
+    {ObjCode::SnakeBlock, 3},
+};
+
+const std::unordered_map<CameraCode, unsigned int, CameraCodeHash> BYTES_PER_CAMERA = {
+    {CameraCode::NONE, 0},
+    {CameraCode::Free, 7},
+    {CameraCode::Fixed, 11},
+    {CameraCode::Clamped, 9},
+    {CameraCode::Null, 5},
+};
+
 void Room::read_objects(std::ifstream& file) {
     unsigned char buffer[8];
     while (true) {
@@ -325,7 +347,29 @@ void Room::read_objects(std::ifstream& file) {
 }
 
 void Room::read_camera_rects(std::ifstream& file) {
-
+    unsigned char buffer[16];
+    while (true) {
+        file.read(reinterpret_cast<char *>(buffer), 1);
+        CameraCode code = static_cast<CameraCode>(buffer[0]);
+        file.read((char *)buffer, BYTES_PER_CAMERA.at(code));
+        switch (code) {
+        case CameraCode::Free :
+            camera_->push_context(std::unique_ptr<CameraContext>(FreeCameraContext::deserialize(buffer)));
+            break;
+        case CameraCode::Fixed :
+            camera_->push_context(std::unique_ptr<CameraContext>(FixedCameraContext::deserialize(buffer)));
+            break;
+        case CameraCode::Clamped :
+            camera_->push_context(std::unique_ptr<CameraContext>(ClampedCameraContext::deserialize(buffer)));
+            break;
+        case CameraCode::Null :
+            camera_->push_context(std::unique_ptr<CameraContext>(NullCameraContext::deserialize(buffer)));
+            break;
+        case CameraCode::NONE :
+        default :
+            return;
+        }
+    }
 }
 
 void Room::read_snake_link(std::ifstream& file) {

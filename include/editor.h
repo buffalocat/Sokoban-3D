@@ -42,6 +42,8 @@ private:
     int sb_ends;
 };
 
+class Camera;
+
 class CameraTab: public EditorTab {
 public:
     CameraTab(Room*);
@@ -49,6 +51,15 @@ public:
     void draw();
     void handle_left_click(Point);
     void handle_right_click(Point);
+
+private:
+    Camera* camera_;
+    int x1;
+    int y1;
+    int x2;
+    int y2;
+    float radius;
+    int priority;
 };
 
 class Editor {

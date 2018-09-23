@@ -18,9 +18,10 @@ class CameraContext {
 public:
     CameraContext(int x, int y, int w, int h, int priority);
     virtual ~CameraContext() = 0;
-    virtual Point center(Point) = 0;
-    virtual float radius(Point) = 0;
     virtual bool is_null();
+    virtual FPoint center(Point) = 0;
+    virtual float radius(Point) = 0;
+    virtual void serialize(std::ofstream& file);
 
 protected:
     int x_;
@@ -34,10 +35,12 @@ protected:
 
 class FreeCameraContext: public CameraContext {
 public:
-    FreeCameraContext(int x, int y, int w, int h, int priority);
+    FreeCameraContext(int x, int y, int w, int h, int priority, float radius);
     ~FreeCameraContext();
-    Point center(Point);
+    FPoint center(Point);
     float radius(Point);
+    void serialize(std::ofstream& file);
+    static CameraContext* deserialize(unsigned char* buffer);
 
 private:
     float radius_;
@@ -45,28 +48,33 @@ private:
 
 class FixedCameraContext: public CameraContext {
 public:
-    FixedCameraContext(int x, int y, int w, int h, int priority, float radius, int cx, int cy);
+    FixedCameraContext(int x, int y, int w, int h, int priority, float radius, float cx, float cy);
     ~FixedCameraContext();
-    Point center(Point);
+    FPoint center(Point);
     float radius(Point);
+    void serialize(std::ofstream& file);
+    static CameraContext* deserialize(unsigned char* buffer);
 
 private:
-    int cx_;
-    int cy_;
     float radius_;
+    float cx_;
+    float cy_;
+    friend class Camera;
 };
 
 class ClampedCameraContext: public CameraContext {
 public:
-    ClampedCameraContext(int x, int y, int w, int h, int priority, int xpad, int ypad);
+    ClampedCameraContext(int x, int y, int w, int h, int priority, float radius, int xpad, int ypad);
     ~ClampedCameraContext();
-    Point center(Point);
+    FPoint center(Point);
     float radius(Point);
+    void serialize(std::ofstream& file);
+    static CameraContext* deserialize(unsigned char* buffer);
 
 private:
+    float radius_;
     int xpad_;
     int ypad_;
-    float radius_;
 };
 
 class NullCameraContext: public CameraContext {
@@ -74,13 +82,16 @@ public:
     NullCameraContext(int x, int y, int w, int h, int priority);
     ~NullCameraContext();
     bool is_null();
-    Point center(Point);
+    FPoint center(Point);
     float radius(Point);
+    void serialize(std::ofstream& file);
+    static CameraContext* deserialize(unsigned char* buffer);
 };
 
 class Camera {
 public:
     Camera(RoomMap*);
+    void serialize(std::ofstream& file);
     void update();
     void set_target(Point);
     void set_current_pos(Point);

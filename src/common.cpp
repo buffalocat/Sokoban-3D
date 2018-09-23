@@ -18,3 +18,7 @@ std::size_t PointHash::operator()(const Point& p) const {
 std::size_t ObjCodeHash::operator()(const ObjCode& c) const {
     return static_cast<unsigned char>(c);
 }
+
+std::size_t CameraCodeHash::operator()(const CameraCode& c) const {
+    return static_cast<unsigned char>(c);
+}

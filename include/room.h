@@ -32,6 +32,8 @@ public:
 
     void set_editor(Editor* editor);
 
+    Camera* camera();
+
     void main_loop(bool& editor_mode);
     void handle_input(DeltaFrame*);
     void draw(bool editor_mode);

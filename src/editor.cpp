@@ -120,7 +120,13 @@ void ObjectTab::draw() {
 }
 
 void CameraTab::draw() {
-
+    if (ImGui::Button("Create Camera Rect")) {
+        int x = std::min(x1, x2);
+        int y = std::min(y1, y2);
+        int w = abs(x1 - x2) + 1;
+        int h = abs(y1 - y2) + 1;
+        camera_->push_context(std::make_unique<FixedCameraContext>(x, y, w, h, priority, radius, x + w/2.0, y + h/2.0));
+    }
 }
 
 void SaveLoadTab::handle_left_click(Point) {}
@@ -150,8 +156,15 @@ void ObjectTab::handle_right_click(Point pos) {
     room_->delete_obj(pos);
 }
 
-void CameraTab::handle_left_click(Point) {}
-void CameraTab::handle_right_click(Point) {}
+void CameraTab::handle_left_click(Point pos) {
+    x1 = pos.x;
+    y1 = pos.y;
+}
+
+void CameraTab::handle_right_click(Point pos) {
+    x2 = pos.x;
+    y2 = pos.y;
+}
 
 EditorTab::EditorTab(Room* room): room_ {room} {}
 EditorTab::~EditorTab() {}
@@ -166,6 +179,8 @@ is_car {true}, sb_ends {2} {}
 
 ObjectTab::~ObjectTab() {}
 
-CameraTab::CameraTab(Room* room): EditorTab(room) {}
+CameraTab::CameraTab(Room* room): EditorTab(room), camera_ {room->camera()},
+x1 {0}, y1 {0}, x2 {0}, y2 {0},
+radius {6.0}, priority {10} {}
 
 CameraTab::~CameraTab() {}

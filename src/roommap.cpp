@@ -6,7 +6,6 @@
 #include "delta.h"
 #include "block.h"
 
-
 RoomMap::RoomMap(int width, int height): width_ {width}, height_ {height}, map_ {}, movers_ {} {
     for (int i = 0; i != width; ++i) {
         map_.push_back({});

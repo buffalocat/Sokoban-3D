@@ -26,7 +26,8 @@ Room::Room(GLFWwindow* window, Shader* shader, Editor* editor, std::string map_n
     map_ {},
     camera_ {},
     undo_stack_ {},
-    cooldown_ {0}
+    cooldown_ {0},
+    player_ {}
 {
     editor_->set_room(this);
     load(map_name);
@@ -40,7 +41,8 @@ Room::Room(GLFWwindow* window, Shader* shader, Editor* editor, int width, int he
     map_ {},
     camera_ {},
     undo_stack_ {},
-    cooldown_ {0}
+    cooldown_ {0},
+    player_ {}
 {
     editor_->set_room(this);
     width = std::max(1, std::min(256, width));
@@ -51,8 +53,13 @@ Room::Room(GLFWwindow* window, Shader* shader, Editor* editor, int width, int he
 }
 
 // This is essentially the whole game loop
-void Room::main_loop(bool editor_mode) {
+void Room::main_loop(bool& editor_mode) {
     auto delta_frame = std::make_unique<DeltaFrame>();
+    if (cooldown_ == 0 && glfwGetKey(window_, GLFW_KEY_E) == GLFW_PRESS
+        && glfwGetKey(window_, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+        editor_mode = !editor_mode;
+        cooldown_ = MAX_COOLDOWN;
+    }
     if (editor_mode) {
         handle_input_editor_mode();
         draw_editor_mode();
@@ -67,7 +74,7 @@ void Room::handle_input(DeltaFrame* delta_frame) {
     if (glfwGetKey(window_, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window_, true);
     }
-    if (cooldown_ == 0) {
+    if (cooldown_ == 0 && player_) {
         for (auto p : MOVEMENT_KEYS) {
             // For starters, we'll use a naive input processing method.
             // In particular, the precedence of keys is arbitrary
@@ -85,9 +92,12 @@ void Room::handle_input(DeltaFrame* delta_frame) {
     // We can't move and undo on the same frame, so we check again
     if (cooldown_ == 0) {
         if (glfwGetKey(window_, GLFW_KEY_Z) == GLFW_PRESS) {
-            undo_stack_->pop(map_.get());
-            camera_->set_current_pos(player_->pos());
-            cooldown_ = MAX_COOLDOWN;
+            if (undo_stack_->pop(map_.get())) {
+                if (player_) {
+                    camera_->set_current_pos(player_->pos());
+                }
+                cooldown_ = MAX_COOLDOWN;
+            }
         }
     } else {
         --cooldown_;
@@ -173,7 +183,11 @@ void Room::create_obj(Point pos) {
     if (!map_->view(pos, Layer::Solid)) {
         auto obj = editor_->create_obj(pos);
         if (obj) {
+            Block* block = dynamic_cast<Block*>(obj.get());
             map_->put_quiet(std::move(obj));
+            if (block) {
+                block->check_add_local_links(map_.get(), nullptr);
+            }
         }
     }
 }
@@ -181,9 +195,21 @@ void Room::create_obj(Point pos) {
 void Room::delete_obj(Point pos) {
     GameObject* obj = map_->view(pos, Layer::Solid);
     if (obj) {
+        obj->cleanup(nullptr);
+        auto sb = dynamic_cast<SnakeBlock*>(obj);
         map_->take_quiet(obj);
+        if (sb) {
+            for (auto& d : DIRECTIONS) {
+                auto snake = dynamic_cast<SnakeBlock*>(map_->view(Point{pos.x + d.x, pos.y + d.y}, Layer::Solid));
+                if (snake) {
+                    snake->check_add_local_links(map_.get(), nullptr);
+                }
+            }
+        }
     }
 }
+
+
 
 Point Room::get_pos_from_mouse() {
     double xpos, ypos;
@@ -214,7 +240,6 @@ void Room::save(std::string map_name, bool overwrite) {
     file << static_cast<unsigned char>(map_->width());
     file << static_cast<unsigned char>(map_->height());
 
-    file << static_cast<unsigned char>(State::Objects);
     map_->serialize(file);
 
     file << static_cast<unsigned char>(State::End);
@@ -238,40 +263,41 @@ void Room::load(std::string map_name) {
     while (reading_file) {
         file.read((char *)buffer, 1);
         switch (static_cast<State>(buffer[0])) {
-        case State::SmallDims : {
+        case State::SmallDims :
             file.read((char *)buffer, 2);
-            RoomMap* newmap = new RoomMap(buffer[0], buffer[1]);
-            map_.reset(newmap);
+            map_.reset(new RoomMap(buffer[0], buffer[1]));
             camera_.reset(new Camera(map_.get()));
             undo_stack_.reset(new UndoStack(DEFAULT_UNDO_DEPTH));
             break;
-        }
-        case State::BigDims : {
+        case State::BigDims :
             // This will be used later, maybe
             break;
-        }
-        case State::Objects : {
+        case State::Objects :
             read_objects(file);
             break;
-        }
-        case State::CameraRect : {
+        case State::CameraRect :
             read_camera_rects(file);
             break;
-        }
-        case State::End : {
+        case State::SnakeLink :
+            read_snake_link(file);
+            break;
+        case State::End :
             reading_file = false;
             break;
-        }
-        default : {
+        default :
+            std::cout << "Read a bad State:: code!!" << std::endl;
             reading_file = false;
             break;
-        }
         }
     }
     file.close();
     map_->set_initial_state();
     player_ = map_->get_mover();
-    camera_->set_current_pos(player_->pos());
+    if (player_) {
+        camera_->set_current_pos(player_->pos());
+    } else {
+        camera_->set_current_pos(Point{0,0});
+    }
     std::cout << map_name << " loaded." << std::endl;
 }
 
@@ -280,13 +306,38 @@ void Room::read_objects(std::ifstream& file) {
     while (true) {
         file.read(reinterpret_cast<char *>(buffer), 1);
         ObjCode code = static_cast<ObjCode>(buffer[0]);
-        if (code == ObjCode::NONE) {
+        file.read((char *)buffer, BYTES_PER_OBJECT.at(code));
+        switch (code) {
+        case ObjCode::Wall :
+            map_->put_quiet(std::unique_ptr<GameObject>(Wall::deserialize(buffer)));
+            break;
+        case ObjCode::PushBlock :
+            map_->put_quiet(std::unique_ptr<GameObject>(PushBlock::deserialize(buffer)));
+            break;
+        case ObjCode::SnakeBlock :
+            map_->put_quiet(std::unique_ptr<GameObject>(SnakeBlock::deserialize(buffer)));
+            break;
+        case ObjCode::NONE :
+        default :
             return;
         }
-        file.read((char *)buffer, BYTES_PER_OBJECT.at(code));
-        map_->put_quiet(std::unique_ptr<GameObject>(GameObject::deser_map[(int)code](buffer)));
     }
 }
 
 void Room::read_camera_rects(std::ifstream& file) {
+
+}
+
+void Room::read_snake_link(std::ifstream& file) {
+    unsigned char buffer[3];
+    file.read(reinterpret_cast<char *>(buffer), 3);
+    SnakeBlock* sb = static_cast<SnakeBlock*>(map_->view(Point{buffer[0], buffer[1]}, Layer::Solid));
+    // Linked right
+    if (buffer[2] & 1) {
+        sb->add_link(static_cast<SnakeBlock*>(map_->view(Point{buffer[0]+1, buffer[1]}, Layer::Solid)), nullptr);
+    }
+    // Linked down
+    if (buffer[2] & 2) {
+        sb->add_link(static_cast<SnakeBlock*>(map_->view(Point{buffer[0], buffer[1]+1}, Layer::Solid)), nullptr);
+    }
 }

@@ -87,10 +87,14 @@ const glm::vec4 YELLOW = glm::vec4(0.7f, 0.7f, 0.3f, 1.0f);
 // NOTE: the order matters here, for serialization reasons!
 const Point DIRECTIONS[4] = {Point{-1,0}, Point{0,-1}, Point{1,0}, Point{0,1}};
 
-
+#define SOKOBAN_LARGE_WINDOW
+#ifdef SOKOBAN_LARGE_WINDOW
+const int SCREEN_WIDTH = 1200;
+const int SCREEN_HEIGHT = 900;
+#else
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
-
+#endif
 const int MESH_SIZE = 50;
 
 const float ORTHO_WIDTH = (float)SCREEN_WIDTH/(float)MESH_SIZE;
@@ -112,6 +116,7 @@ enum State {
     BigDims = 2, // Gets width and height as 2 byte integers
     Objects = 3, // Read in all map objects
     CameraRect = 4, // Get a camera context rectangle
+    SnakeLink = 5, // Link two snakes (1 = Right, 2 = Down)
     End = 255,
 };
 

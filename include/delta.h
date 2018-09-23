@@ -32,7 +32,7 @@ class UndoStack {
 public:
     UndoStack(unsigned int max_depth);
     void push(std::unique_ptr<DeltaFrame>);
-    void pop(RoomMap*);
+    bool pop(RoomMap*);
 
 private:
     unsigned int max_depth_;

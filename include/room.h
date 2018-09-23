@@ -27,9 +27,10 @@ public:
     void load(std::string map_name);
     void read_objects(std::ifstream& file);
     void read_camera_rects(std::ifstream& file);
+    void read_snake_link(std::ifstream& file);
     void save(std::string map_name, bool overwrite);
 
-    void main_loop(bool editor_mode);
+    void main_loop(bool& editor_mode);
     void handle_input(DeltaFrame*);
     void draw(bool editor_mode);
 

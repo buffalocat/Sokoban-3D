@@ -54,6 +54,9 @@ Block* RoomMap::cycle_movers() {
 
 // Assuming not big_map
 void RoomMap::serialize(std::ofstream& file) const {
+    std::vector<GameObject*> rel_check;
+    // Serialize raw object data
+    file << static_cast<unsigned char>(State::Objects);
     for (int x = 0; x != width_; ++x) {
         for (int y = 0; y != height_; ++y) {
             for (auto& object : map_[x][y]) {
@@ -61,10 +64,17 @@ void RoomMap::serialize(std::ofstream& file) const {
                 file << static_cast<unsigned char>(x);
                 file << static_cast<unsigned char>(y);
                 object->serialize(file);
+                if (object->relation_check()) {
+                    rel_check.push_back(object.get());
+                }
             }
         }
     }
     file << static_cast<unsigned char>(ObjCode::NONE);
+    // Serialize relational data
+    for (auto& object : rel_check) {
+        object->relation_serialize(file);
+    }
 }
 
 GameObject* RoomMap::view(Point pos, Layer layer) {
@@ -148,43 +158,15 @@ void RoomMap::draw(Shader* shader) {
 }
 
 void RoomMap::set_initial_state() {
-    std::unordered_set<SnakeBlock*> available_snakes = {};
     movers_ = {};
     for (int x = 0; x != width_; ++x) {
         for (int y = 0; y != height_; ++y) {
-            auto block = dynamic_cast<Block*>(view(Point{x,y}, Layer::Solid));
-            if (block) {
-                add_mover(block);
-                block->check_add_local_links(this, nullptr);
-
-                auto sb = dynamic_cast<SnakeBlock*>(block);
-                if (sb && sb->available() && !sb->confused(this)) {
-                    available_snakes.insert(sb);
-                }
-            }
-        }
-    }
-    // Add links for all snakes!
-    for (auto sb : available_snakes) {
-        for (auto& d : DIRECTIONS) {
-            auto adj = dynamic_cast<SnakeBlock*>(view(sb->shifted_pos(d), Layer::Solid));
-            if (adj && available_snakes.count(adj)) {
-                sb->add_link(adj, nullptr);
-            }
-        }
-    }
-}
-
-// NOTE: Just for debugging! But snakes still have problems, so we still need it.
-void RoomMap::print_snake_info() {
-    std::cout << std::endl;
-    for (int x = 0; x != width_; ++x) {
-        for (int y = 0; y != height_; ++y) {
-            auto sb = dynamic_cast<SnakeBlock*>(view(Point{x,y}, Layer::Solid));
-            if (sb) {
-                std::cout << "SnakeBlock at " << sb->pos() <<
-                    " with dist " << sb->distance() << //" and target " << sb->target() <<
-                    " and it's avaiable? " << sb->available() << " and confused? " << sb->confused(this) << std::endl;
+            // There's no need to check for snakes; it's easier to just
+            // store their link data in the map
+            auto pb = dynamic_cast<PushBlock*>(view(Point{x,y}, Layer::Solid));
+            if (pb) {
+                add_mover(pb);
+                pb->check_add_local_links(this, nullptr);
             }
         }
     }

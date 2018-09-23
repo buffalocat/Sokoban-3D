@@ -13,18 +13,22 @@ class RoomMap;
  */
 class GameObject {
 public:
-    static std::unordered_map<std::type_index, ObjCode> code_map;
-    static std::unordered_map<int, GameObject* (*)(unsigned char*)> deser_map;
-
     virtual ~GameObject() = 0;
-    virtual ObjCode obj_code();
+    virtual ObjCode obj_code() = 0;
     virtual void serialize(std::ofstream& file) = 0;
+    virtual bool relation_check() = 0;
+    virtual void relation_serialize(std::ofstream& file) = 0;
     Layer layer() const;
     Point pos() const;
     Point shifted_pos(Point) const;
     virtual void draw(Shader*) = 0;
-    virtual void cleanup(DeltaFrame*) = 0;
+
+    /// Called when an existing object is "revived" via undo
+    // Hence it doesn't need a DeltaFrame
     virtual void reinit() = 0;
+    /// Called when an object is destroyed
+    virtual void cleanup(DeltaFrame*) = 0;
+
     // If not wall(), then downcast to Block is safe
     bool wall() const;
 
@@ -40,8 +44,12 @@ class Wall: public GameObject {
 public:
     Wall(int x, int y);
     ~Wall();
+    ObjCode obj_code();
     void serialize(std::ofstream& file);
     static GameObject* deserialize(unsigned char* buffer);
+    bool relation_check();
+    void relation_serialize(std::ofstream& file);
+
     void draw(Shader*);
     void cleanup(DeltaFrame*);
     void reinit();

@@ -118,6 +118,10 @@ PushBlock::PushBlock(int x, int y, bool car, StickyLevel sticky): Block(x, y, ca
 
 PushBlock::~PushBlock() {}
 
+ObjCode PushBlock::obj_code() {
+    return ObjCode::PushBlock;
+}
+
 void PushBlock::set_sticky(StickyLevel sticky) {
     sticky_ = sticky;
 }
@@ -171,6 +175,12 @@ GameObject* PushBlock::deserialize(unsigned char* b) {
     return new PushBlock(b[0], b[1], car, sticky);
 }
 
+bool PushBlock::relation_check() {
+    return false;
+}
+
+void PushBlock::relation_serialize(std::ofstream& file) {}
+
 bool PushBlock::push_recheck(MoveProcessor* mp) {
     return false;
 }
@@ -190,6 +200,10 @@ SnakeBlock::SnakeBlock(int x, int y): Block(x, y), ends_ {2}, distance_ {-1}, ta
 SnakeBlock::SnakeBlock(int x, int y, bool car, unsigned int ends): Block(x, y, car), ends_ {(ends == 1 || ends == 2) ? ends : 2}, distance_ {-1}, target_ {nullptr} {}
 
 SnakeBlock::~SnakeBlock() {}
+
+ObjCode SnakeBlock::obj_code() {
+    return ObjCode::SnakeBlock;
+}
 
 const BlockSet& SnakeBlock::get_strong_links() {
     return EMPTY_BLOCK_SET;
@@ -255,21 +269,29 @@ GameObject* SnakeBlock::deserialize(unsigned char* b) {
     return new SnakeBlock(b[0], b[1], car, ends);
 }
 
-//NOTE: This code needs to go somewhere! "Persistent Links" should
-// be a map structure independent of the things they link!!
-// For now, loading linked snakes will be broken.
-/*
-for (int i = 0; i < 4; ++i) {
-    if ((buffer[2] >> i) & 2) { // Effectively, shift right by i+1
-        Point d = DIRECTIONS[i];
-        // Check whether there's an object adjacent to this one AND whether it's a SnakeBlock
-        SnakeBlock* adj = dynamic_cast<SnakeBlock*>(map_->view(Point{px + d.x, py + d.y}, Layer::Solid));
-        if (adj) {
-            adj->add_link(static_cast<Block*>(map_->view(Point{buffer[0], buffer[1]}, Layer::Solid)), nullptr);
+bool SnakeBlock::relation_check() {
+    return true;
+}
+
+void SnakeBlock::relation_serialize(std::ofstream& file) {
+    unsigned char link_encode = 0;
+    for (auto& link : links_) {
+        Point q = link->pos();
+        // Snake links are always adjacent, and we only bother to
+        // record links to the Right or Down
+        if (q.x > pos_.x) {
+            ++link_encode;
+        } else if (q.y > pos_.y) {
+            link_encode += 2;
         }
     }
+    if (link_encode) {
+        file << static_cast<unsigned char>(State::SnakeLink);
+        file << static_cast<unsigned char>(pos_.x);
+        file << static_cast<unsigned char>(pos_.y);
+        file << link_encode;
+    }
 }
-*/
 
 bool SnakeBlock::push_recheck(MoveProcessor* mp) {
     bool recheck = (distance_ == 1);

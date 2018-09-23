@@ -3,6 +3,12 @@
 
 #include "common.h"
 
+enum class EditorMode {
+    SaveLoad,
+    Objects,
+    Camera,
+};
+
 class Room;
 class GameObject;
 
@@ -18,6 +24,10 @@ public:
 
     void handle_input();
 
+    void draw_saveload_tab();
+    void draw_objects_tab();
+    void draw_camera_tab();
+
     std::unique_ptr<GameObject> create_obj(Point pos);
 
     //GUI drawing methods
@@ -27,6 +37,8 @@ private:
     GLFWwindow* window_;
     Room* room_;
     Point pos_;
+
+    EditorMode mode_;
 
     //State variables for creation options, etc.
     int solid_obj;

@@ -9,10 +9,6 @@ GameObject::GameObject(int x, int y): pos_ {x, y}, wall_ {true} {}
 
 GameObject::~GameObject() {}
 
-ObjCode GameObject::obj_code() {
-    return code_map[typeid(this)];
-}
-
 Layer GameObject::layer() const {
     return Layer::Solid;
 }
@@ -33,6 +29,10 @@ Wall::Wall(int x, int y): GameObject(x, y) {}
 
 Wall::~Wall() {}
 
+ObjCode Wall::obj_code() {
+    return ObjCode::Wall;
+}
+
 void Wall::draw(Shader* shader) {
     Point p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f, p.y));
@@ -50,3 +50,9 @@ void Wall::serialize(std::ofstream& file) {}
 GameObject* Wall::deserialize(unsigned char* b) {
     return new Wall(b[0], b[1]);
 }
+
+bool Wall::relation_check() {
+    return false;
+}
+
+void Wall::relation_serialize(std::ofstream& file) {}

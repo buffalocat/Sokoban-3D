@@ -18,12 +18,14 @@ void UndoStack::push(std::unique_ptr<DeltaFrame> delta_frame) {
     }
 }
 
-void UndoStack::pop(RoomMap* room_map) {
+bool UndoStack::pop(RoomMap* room_map) {
     if (size_ > 0) {
         (*frames_.back()).revert(room_map);
         frames_.pop_back();
         --size_;
+        return true;
     }
+    return false;
 }
 
 DeltaFrame::DeltaFrame(): deltas_ {} {}

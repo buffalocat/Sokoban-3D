@@ -10,6 +10,7 @@
 #include "block.h"
 
 Editor::Editor(GLFWwindow* window): window_ {window}, room_ {}, pos_ {Point{0,0}},
+mode_ {EditorMode::SaveLoad},
 solid_obj {(int)ObjCode::NONE}, pb_sticky {(int)StickyLevel::None},
 is_car {true}, sb_ends {2}
 {}
@@ -43,50 +44,74 @@ void Editor::ShowMainWindow(bool* p_open) {
         return;
     }
 
-    if (ImGui::TreeNode("Save/Load")) {
-        static char buf[32] = "";
-        ImGui::InputText(".map", buf, IM_ARRAYSIZE(buf));
-        if (ImGui::Button("Load Map")) {
-            room_->load(buf);
-        }
-        if (ImGui::Button("Save Map")) {
-            room_->save(buf, false);
-        }
-        if (ImGui::Button("Save Map (Force Overwrite)")) {
-            room_->save(buf, true);
-        }
-        ImGui::TreePop();
+    if (ImGui::Button("Save/Load")) {
+        mode_ = EditorMode::SaveLoad;
+    } ImGui::SameLine();
+    if (ImGui::Button("Create/Delete Objects")) {
+        mode_ = EditorMode::Objects;
+    } ImGui::SameLine();
+    if (ImGui::Button("Camera")) {
+        mode_ = EditorMode::Camera;
     }
 
-    if (ImGui::TreeNode("Create Solid Objects")) {
-
-        ImGui::RadioButton("Wall", &solid_obj, (int)ObjCode::Wall);
-        ImGui::RadioButton("PushBlock", &solid_obj, (int)ObjCode::PushBlock);
-        ImGui::RadioButton("SnakeBlock", &solid_obj, (int)ObjCode::SnakeBlock);
-
-        ImGui::Text("Object Properties");
-
-        if (solid_obj == (int)ObjCode::Wall) { }
-        else if (solid_obj == (int)ObjCode::PushBlock) {
-            ImGui::Text("Stickiness");
-            ImGui::RadioButton("Not Sticky", &pb_sticky, (int)StickyLevel::None);
-            ImGui::RadioButton("Weakly Sticky", &pb_sticky, (int)StickyLevel::Weak);
-            ImGui::RadioButton("Strongly Sticky", &pb_sticky, (int)StickyLevel::Strong);
-
-            ImGui::Checkbox("Is Player?", &is_car);
-        }
-        else if (solid_obj == (int)ObjCode::SnakeBlock) {
-            ImGui::Text("Number of Ends");
-            ImGui::RadioButton("One Ended", &sb_ends, 1);
-            ImGui::RadioButton("Two Ended", &sb_ends, 2);
-
-            ImGui::Checkbox("Is Player?", &is_car);
-        }
-
-        ImGui::TreePop();
+    switch (mode_) {
+    case EditorMode::SaveLoad :
+        draw_saveload_tab();
+        break;
+    case EditorMode::Objects :
+        draw_objects_tab();
+        break;
+    case EditorMode::Camera :
+        draw_camera_tab();
+        break;
+    default:
+        break;
     }
 
     ImGui::End();
+}
+
+void Editor::draw_saveload_tab() {
+    static char buf[32] = "";
+    ImGui::InputText(".map", buf, IM_ARRAYSIZE(buf));
+    if (ImGui::Button("Load Map")) {
+        room_->load(buf);
+    }
+    if (ImGui::Button("Save Map")) {
+        room_->save(buf, false);
+    }
+    if (ImGui::Button("Save Map (Force Overwrite)")) {
+        room_->save(buf, true);
+    }
+}
+
+void Editor::draw_objects_tab() {
+    ImGui::RadioButton("Wall", &solid_obj, (int)ObjCode::Wall);
+    ImGui::RadioButton("PushBlock", &solid_obj, (int)ObjCode::PushBlock);
+    ImGui::RadioButton("SnakeBlock", &solid_obj, (int)ObjCode::SnakeBlock);
+
+    ImGui::Text("Object Properties");
+
+    if (solid_obj == (int)ObjCode::Wall) { }
+    else if (solid_obj == (int)ObjCode::PushBlock) {
+        ImGui::Text("Stickiness");
+        ImGui::RadioButton("Not Sticky", &pb_sticky, (int)StickyLevel::None);
+        ImGui::RadioButton("Weakly Sticky", &pb_sticky, (int)StickyLevel::Weak);
+        ImGui::RadioButton("Strongly Sticky", &pb_sticky, (int)StickyLevel::Strong);
+
+        ImGui::Checkbox("Is Player?", &is_car);
+    }
+    else if (solid_obj == (int)ObjCode::SnakeBlock) {
+        ImGui::Text("Number of Ends");
+        ImGui::RadioButton("One Ended", &sb_ends, 1);
+        ImGui::RadioButton("Two Ended", &sb_ends, 2);
+
+        ImGui::Checkbox("Is Player?", &is_car);
+    }
+}
+
+void Editor::draw_camera_tab() {
+
 }
 
 void Editor::handle_input() {

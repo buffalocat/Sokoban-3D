@@ -109,8 +109,10 @@ int main(void) {
 
     // Init game logic stuff
 
-    Editor editor(window);
-    Room room(window, &shader, &editor, DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
+
+    Room room(window, &shader, DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
+    Editor editor(window, &room);
+    room.set_editor(&editor);
 
     glfwSwapInterval(0);
 

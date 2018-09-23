@@ -9,11 +9,13 @@
 #include "room.h"
 #include "block.h"
 
-Editor::Editor(GLFWwindow* window): window_ {window}, room_ {}, pos_ {Point{0,0}},
-mode_ {EditorMode::SaveLoad},
-solid_obj {(int)ObjCode::NONE}, pb_sticky {(int)StickyLevel::None},
-is_car {true}, sb_ends {2}
-{}
+Editor::Editor(GLFWwindow* window, Room* room): window_ {window}, room_ {room}, pos_ {Point{0,0}},
+save_load_tab_ {SaveLoadTab(room)},
+object_tab_ {ObjectTab(room)},
+camera_tab_ {CameraTab(room)}
+{
+    active_tab_ = &save_load_tab_;
+}
 
 Point Editor::pos() {
     return pos_;
@@ -34,10 +36,6 @@ void Editor::clamp_pos(int width, int height) {
     };
 }
 
-void Editor::set_room(Room* room) {
-    room_ = room;
-}
-
 void Editor::ShowMainWindow(bool* p_open) {
     if (!ImGui::Begin("My Editor Window", p_open, 0)) {
         ImGui::End();
@@ -45,33 +43,44 @@ void Editor::ShowMainWindow(bool* p_open) {
     }
 
     if (ImGui::Button("Save/Load")) {
-        mode_ = EditorMode::SaveLoad;
+        active_tab_ = &save_load_tab_;
     } ImGui::SameLine();
     if (ImGui::Button("Create/Delete Objects")) {
-        mode_ = EditorMode::Objects;
+        active_tab_ = &object_tab_;
     } ImGui::SameLine();
     if (ImGui::Button("Camera")) {
-        mode_ = EditorMode::Camera;
+        active_tab_ = &camera_tab_;
     }
 
-    switch (mode_) {
-    case EditorMode::SaveLoad :
-        draw_saveload_tab();
-        break;
-    case EditorMode::Objects :
-        draw_objects_tab();
-        break;
-    case EditorMode::Camera :
-        draw_camera_tab();
-        break;
-    default:
-        break;
-    }
+    active_tab_->draw();
 
     ImGui::End();
 }
 
-void Editor::draw_saveload_tab() {
+bool Editor::want_capture_keyboard() {
+    return ImGui::GetIO().WantCaptureKeyboard;
+}
+
+bool Editor::want_capture_mouse() {
+    return ImGui::GetIO().WantCaptureMouse;
+}
+
+void Editor::handle_input() {
+    if (want_capture_mouse()) {
+        return;
+    }
+    Point mouse_pos = room_->get_pos_from_mouse();
+    if (!room_->valid(mouse_pos)) {
+        return;
+    }
+    if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        active_tab_->handle_left_click(mouse_pos);
+    } else if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+        active_tab_->handle_right_click(mouse_pos);
+    }
+}
+
+void SaveLoadTab::draw() {
     static char buf[32] = "";
     ImGui::InputText(".map", buf, IM_ARRAYSIZE(buf));
     if (ImGui::Button("Load Map")) {
@@ -85,7 +94,7 @@ void Editor::draw_saveload_tab() {
     }
 }
 
-void Editor::draw_objects_tab() {
+void ObjectTab::draw() {
     ImGui::RadioButton("Wall", &solid_obj, (int)ObjCode::Wall);
     ImGui::RadioButton("PushBlock", &solid_obj, (int)ObjCode::PushBlock);
     ImGui::RadioButton("SnakeBlock", &solid_obj, (int)ObjCode::SnakeBlock);
@@ -110,35 +119,53 @@ void Editor::draw_objects_tab() {
     }
 }
 
-void Editor::draw_camera_tab() {
+void CameraTab::draw() {
 
 }
 
-void Editor::handle_input() {
-    if (ImGui::IsMouseHoveringAnyWindow()) {
-        return;
-    }
-    Point mouse_pos = room_->get_pos_from_mouse();
-    if (!room_->valid(mouse_pos)) {
-        return;
-    }
-    if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        room_->create_obj(mouse_pos);
-    } else if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-        room_->delete_obj(mouse_pos);
-    }
-}
+void SaveLoadTab::handle_left_click(Point) {}
+void SaveLoadTab::handle_right_click(Point) {}
 
-std::unique_ptr<GameObject> Editor::create_obj(Point pos) {
+void ObjectTab::handle_left_click(Point pos) {
     int x = pos.x;
     int y = pos.y;
+    std::unique_ptr<GameObject> obj;
     switch (solid_obj) {
     case (int)ObjCode::Wall :
-        return std::make_unique<Wall>(x, y);
+        obj = std::make_unique<Wall>(x, y);
+        break;
     case (int)ObjCode::PushBlock :
-        return std::make_unique<PushBlock>(x, y, is_car, static_cast<StickyLevel>(pb_sticky));
+        obj = std::make_unique<PushBlock>(x, y, is_car, static_cast<StickyLevel>(pb_sticky));
+        break;
     case (int)ObjCode::SnakeBlock :
-        return std::make_unique<SnakeBlock>(x, y, is_car, sb_ends);
+        obj = std::make_unique<SnakeBlock>(x, y, is_car, sb_ends);
+        break;
+    default:
+        return;
     }
-    return nullptr;
+    room_->create_obj(std::move(obj));
 }
+
+void ObjectTab::handle_right_click(Point pos) {
+    room_->delete_obj(pos);
+}
+
+void CameraTab::handle_left_click(Point) {}
+void CameraTab::handle_right_click(Point) {}
+
+EditorTab::EditorTab(Room* room): room_ {room} {}
+EditorTab::~EditorTab() {}
+
+SaveLoadTab::SaveLoadTab(Room* room): EditorTab(room) {}
+
+SaveLoadTab::~SaveLoadTab() {}
+
+ObjectTab::ObjectTab(Room* room): EditorTab(room),
+solid_obj {(int)ObjCode::NONE}, pb_sticky {(int)StickyLevel::None},
+is_car {true}, sb_ends {2} {}
+
+ObjectTab::~ObjectTab() {}
+
+CameraTab::CameraTab(Room* room): EditorTab(room) {}
+
+CameraTab::~CameraTab() {}

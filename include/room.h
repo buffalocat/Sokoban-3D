@@ -21,14 +21,16 @@ class Block;
 
 class Room {
 public:
-    Room(GLFWwindow*, Shader* shader, Editor* editor, std::string map_name);
-    Room(GLFWwindow*, Shader* shader, Editor* editor, int width, int height);
+    Room(GLFWwindow*, Shader* shader, std::string map_name);
+    Room(GLFWwindow*, Shader* shader, int width, int height);
     // Initialization helpers
     void load(std::string map_name);
     void read_objects(std::ifstream& file);
     void read_camera_rects(std::ifstream& file);
     void read_snake_link(std::ifstream& file);
     void save(std::string map_name, bool overwrite);
+
+    void set_editor(Editor* editor);
 
     void main_loop(bool& editor_mode);
     void handle_input(DeltaFrame*);
@@ -37,7 +39,7 @@ public:
     void handle_input_editor_mode();
     void draw_editor_mode();
 
-    void create_obj(Point);
+    void create_obj(std::unique_ptr<GameObject>);
     void delete_obj(Point);
 
     Point get_pos_from_mouse();

@@ -19,37 +19,39 @@
 const char* MAP_DIRECTORY = "maps\\";
 
 // The "load" constructor
-Room::Room(GLFWwindow* window, Shader* shader, Editor* editor, std::string map_name):
+Room::Room(GLFWwindow* window, Shader* shader, std::string map_name):
     window_ {window},
     shader_ {shader},
-    editor_ {editor},
+    editor_ {},
     map_ {},
     camera_ {},
     undo_stack_ {},
     cooldown_ {0},
     player_ {}
 {
-    editor_->set_room(this);
     load(map_name);
 }
 
 // The "default room" constructor
-Room::Room(GLFWwindow* window, Shader* shader, Editor* editor, int width, int height):
+Room::Room(GLFWwindow* window, Shader* shader, int width, int height):
     window_ {window},
     shader_ {shader},
-    editor_ {editor},
+    editor_ {},
     map_ {},
     camera_ {},
     undo_stack_ {},
     cooldown_ {0},
     player_ {}
 {
-    editor_->set_room(this);
     width = std::max(1, std::min(256, width));
     height = std::max(1, std::min(256, height));
     map_.reset(new RoomMap(width, height));
     camera_.reset(new Camera(map_.get()));
     undo_stack_.reset(new UndoStack(DEFAULT_UNDO_DEPTH));
+}
+
+void Room::set_editor(Editor* editor) {
+    editor_ = editor;
 }
 
 // This is essentially the whole game loop
@@ -108,7 +110,7 @@ void Room::handle_input_editor_mode() {
     if (glfwGetKey(window_, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window_, true);
     }
-    if (cooldown_ == 0) {
+    if (cooldown_ == 0 && !editor_->want_capture_keyboard()) {
         for (auto p : MOVEMENT_KEYS) {
             if (glfwGetKey(window_, p.first) == GLFW_PRESS) {
                 if (glfwGetKey(window_, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
@@ -179,15 +181,13 @@ void Room::draw_editor_mode() {
     // Maybe draw other indicators over the map
 }
 
-void Room::create_obj(Point pos) {
-    if (!map_->view(pos, Layer::Solid)) {
-        auto obj = editor_->create_obj(pos);
-        if (obj) {
-            Block* block = dynamic_cast<Block*>(obj.get());
-            map_->put_quiet(std::move(obj));
-            if (block) {
-                block->check_add_local_links(map_.get(), nullptr);
-            }
+//NOTE: obj guaranteed to be valid
+void Room::create_obj(std::unique_ptr<GameObject> obj) {
+    if (!map_->view(obj->pos(), Layer::Solid)) {
+        Block* block = dynamic_cast<Block*>(obj.get());
+        map_->put_quiet(std::move(obj));
+        if (block) {
+            block->check_add_local_links(map_.get(), nullptr);
         }
     }
 }

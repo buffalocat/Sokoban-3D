@@ -55,26 +55,32 @@ typedef std::unordered_map<Point, GameObject*, PointHash> PosIdMap;
 //typedef std::pair<Point, GameObject*> PosId;
 //typedef std::vector<PosId> PosIdVec;
 
+//NOTE: all enums here should be explicitly numbered, because they are largely
+// used in serializing maps.  Maps should never go "out of date", unless a
+// feature absolutely has to be removed from the system (even then, the
+// numbering of the items around it should stay the same).
+
 enum class Layer {
-    Floor,
-    Player,
-    Solid,
-    COUNT,
+    Floor = 1,
+    Player = 2,
+    Solid = 3,
+    COUNT = 4,
 };
 
 enum class ObjCode {
-    NONE,
-    Wall,
-    PushBlock,
-    SnakeBlock,
+    NONE = 0,
+    Wall = 1,
+    PushBlock = 2,
+    SnakeBlock = 3,
+    Door = 4,
 };
 
 enum class CameraCode {
-    NONE,
-    Free,
-    Fixed,
-    Clamped,
-    Null,
+    NONE = 0,
+    Free = 1,
+    Fixed = 2,
+    Clamped = 3,
+    Null = 4,
 };
 
 struct ObjCodeHash {
@@ -89,7 +95,9 @@ const glm::vec4 GREEN = glm::vec4(0.6f, 0.9f, 0.7f, 1.0f);
 const glm::vec4 PINK = glm::vec4(0.9f, 0.6f, 0.7f, 1.0f);
 const glm::vec4 PURPLE = glm::vec4(0.7f, 0.5f, 0.9f, 1.0f);
 const glm::vec4 DARK_PURPLE = glm::vec4(0.3f, 0.2f, 0.6f, 1.0f);
+const glm::vec4 BLUE = glm::vec4(0.0f, 0.3f, 0.8f, 1.0f);
 const glm::vec4 RED = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
+const glm::vec4 DARK_RED = glm::vec4(0.6f, 0.0f, 0.1f, 1.0f);
 const glm::vec4 BLACK = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 const glm::vec4 ORANGE = glm::vec4(1.0f, 0.7f, 0.3f, 1.0f);
 const glm::vec4 YELLOW = glm::vec4(0.7f, 0.7f, 0.3f, 1.0f);
@@ -97,7 +105,7 @@ const glm::vec4 YELLOW = glm::vec4(0.7f, 0.7f, 0.3f, 1.0f);
 // NOTE: the order matters here, for serialization reasons!
 const Point DIRECTIONS[4] = {Point{-1,0}, Point{0,-1}, Point{1,0}, Point{0,1}};
 
-#define SOKOBAN_LARGE_WINDOW
+//#define SOKOBAN_LARGE_WINDOW
 #ifdef SOKOBAN_LARGE_WINDOW
 const int SCREEN_WIDTH = 1200;
 const int SCREEN_HEIGHT = 900;
@@ -115,7 +123,7 @@ const int DEFAULT_BOARD_HEIGHT = 13;
 
 const int MAX_COOLDOWN = 5;
 
-const int DEFAULT_UNDO_DEPTH = 1000;
+const int MAX_UNDO_DEPTH = 1000;
 
 const float DEFAULT_CAM_RADIUS = 16.0;
 
@@ -127,6 +135,9 @@ enum State {
     Objects = 3, // Read in all map objects
     CameraRect = 4, // Get a camera context rectangle
     SnakeLink = 5, // Link two snakes (1 = Right, 2 = Down)
+    DoorDest = 6, // Give a door a destination Map + Pos
+    NoPlayer = 7, // Flag at the beginning of .map; the player must be coming from outside
+    BlockedDoor = 8, // Coords of blocked doors in map; the player can't come here
     End = 255,
 };
 

@@ -7,15 +7,15 @@
 BlockSet Block::EMPTY_BLOCK_SET {};
 
 // Push is the "default" BlockType
-Block::Block(int x, int y): GameObject(x, y), car_ {false}, links_ {} {
-    wall_ = false;
-}
+Block::Block(int x, int y): GameObject(x, y), car_ {false}, links_ {} {}
 
-Block::Block(int x, int y, bool car): GameObject(x, y), car_ {car}, links_ {} {
-    wall_ = false;
-}
+Block::Block(int x, int y, bool car): GameObject(x, y), car_ {car}, links_ {} {}
 
 Block::~Block() {}
+
+Layer Block::layer() {
+    return Layer::Solid;
+}
 
 bool Block::car() {
     return car_;
@@ -48,24 +48,14 @@ void Block::draw(Shader* shader) {
     }
 }
 
-void Block::shift_pos(Point d, DeltaFrame* delta_frame) {
-    if (delta_frame) {
-        delta_frame->push(std::make_unique<MotionDelta>(this, pos_));
-    }
+void Block::shift_pos(Point d) {
     pos_.x += d.x;
     pos_.y += d.y;
 }
 
-void Block::set_pos(Point p, DeltaFrame* delta_frame) {
-    if (delta_frame) {
-        delta_frame->push(std::make_unique<MotionDelta>(this, pos_));
-    }
+void Block::set_pos(Point p) {
     pos_.x = p.x;
     pos_.y = p.y;
-}
-
-BlockSet Block::links() {
-    return links_;
 }
 
 void Block::add_link(Block* link, DeltaFrame* delta_frame) {
@@ -84,6 +74,15 @@ void Block::remove_link(Block* link, DeltaFrame* delta_frame) {
     link->links_.erase(this);
     if (delta_frame)
         delta_frame->push(std::make_unique<RemoveLinkDelta>(this, link));
+}
+
+// This only gets called during room change, with a non-trivial DeltaFrame
+void Block::remove_all_links(DeltaFrame* delta_frame) {
+    for (auto link : links_) {
+        links_.erase(link);
+        link->links_.erase(this);
+        delta_frame->push(std::make_unique<RemoveLinkDelta>(this, link));
+    }
 }
 
 void Block::cleanup(DeltaFrame* delta_frame) {
@@ -362,13 +361,13 @@ void SnakeBlock::pull(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered
     int d = 1;
     while (true) {
         // If we reach the end of the snake, we can pull it
-        if (cur->links().size() == 1) {
+        if (cur->links_.size() == 1) {
             check_snakes.insert(cur);
             cur->pull_aux(room_map, delta_frame, check_snakes, dir);
             break;
         }
         // Progress down the snake
-        for (auto link : cur->links()) {
+        for (auto link : cur->links_) {
             if (link != prev) {
                 cur->distance_ = d++;
                 prev = cur;
@@ -436,7 +435,8 @@ void SnakeBlock::pull_aux(RoomMap* room_map, DeltaFrame* delta_frame, std::unord
                 next_pos = Point{next_pos.x - dir.x, next_pos.y - dir.y};
             }
         }
-        cur->set_pos(next_pos, delta_frame);
+        delta_frame->push(std::make_unique<MotionDelta>(cur, cur->pos(), room_map));
+        cur->set_pos(next_pos);
         cur->reset_target();
         room_map->put_quiet(std::move(obj_unique));
         cur = next;

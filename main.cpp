@@ -57,13 +57,6 @@ int main(void) {
         return -1;
     }
 
-    float my_float = 34.5678;
-
-    unsigned char high = (unsigned char)my_float;
-    unsigned char low = (unsigned char)(256*my_float);
-
-    std::cout << "my_float has parts " << (int)high << " and " << (int)low << std::endl;
-
     float cubeVertices[24];
     for (int i = 0; i < 8; ++i) {
         cubeVertices[3*i] = (i & 1) - 0.5f;
@@ -116,10 +109,10 @@ int main(void) {
 
     // Init game logic stuff
 
-
-    Room room(window, &shader, DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
-    Editor editor(window, &room);
-    room.set_editor(&editor);
+    RoomManager mgr(window, &shader);
+    Editor editor(window, &mgr);
+    mgr.set_editor(&editor);
+    mgr.init_make(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
 
     glfwSwapInterval(0);
 
@@ -151,7 +144,7 @@ int main(void) {
         glClearColor(0.2, 0, 0.3, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        room.main_loop(show_editor_window);
+        mgr.main_loop(show_editor_window);
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();

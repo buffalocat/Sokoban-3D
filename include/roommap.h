@@ -26,6 +26,7 @@ public:
     void serialize(std::ofstream& file) const;
 
     GameObject* view(Point, Layer);
+    GameObject* view(Point, ObjCode);
     void take(GameObject*, DeltaFrame*);
     std::unique_ptr<GameObject> take_quiet(GameObject*);
     void put(std::unique_ptr<GameObject>, DeltaFrame*);

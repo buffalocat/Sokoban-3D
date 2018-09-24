@@ -2,6 +2,9 @@
 #include "roommap.h"
 #include <algorithm>
 
+// Because we only work with dyadic rationals,
+// the floats that get read in and out should
+// never accumulate any error.
 void float_ser(std::ofstream& file, float f) {
     file << (unsigned char)f;
     file << (unsigned char)(256.0*f);
@@ -171,8 +174,6 @@ void Camera::push_context(std::unique_ptr<CameraContext> context) {
     }
     loaded_contexts_.push_back(std::move(context));
     auto c = static_cast<FixedCameraContext*>(loaded_contexts_.back().get());
-    std::cout << "c is " << c << std::endl;
-    std::cout << "it's at " << c->x_ << "," << c->y_ << " with dims " << c->w_ << "," << c->h_ << " and center " << c->cx_ << "," << c->cy_ << std::endl;
 }
 
 
@@ -198,7 +199,6 @@ void Camera::set_current_pos(Point pos) {
     cur_pos_ = pos;
 }
 
-
 void Camera::update() {
     cur_pos_ = FPoint{damp_avg(target_pos_.x, cur_pos_.x), damp_avg(target_pos_.y, cur_pos_.y)};
     cur_rad_ = damp_avg(target_rad_, cur_rad_);
@@ -207,7 +207,7 @@ void Camera::update() {
 // We have a few magic numbers for tweaking camera smoothness
 // This function may be something more interesting than exponential damping later
 float damp_avg(float target, float cur) {
-    if (fabs(target - cur) <= 0.01) {
+    if (fabs(target - cur) <= 0.0001) {
         return target;
     } else {
         return (target + 8*cur)/9.0;

@@ -8,12 +8,15 @@
 #include "editor.h"
 #include "room.h"
 #include "block.h"
+#include "door.h"
 
-Editor::Editor(GLFWwindow* window, Room* room): window_ {window}, room_ {room}, pos_ {Point{0,0}},
+Editor::Editor(GLFWwindow* window, RoomManager* room): window_ {window}, room_ {room}, pos_ {Point{0,0}},
 save_load_tab_ {SaveLoadTab(room)},
 object_tab_ {ObjectTab(room)},
-camera_tab_ {CameraTab(room)}
+camera_tab_ {CameraTab(room)},
+door_tab_ {DoorTab(room)}
 {
+    room->set_editor(this);
     active_tab_ = &save_load_tab_;
 }
 
@@ -42,14 +45,17 @@ void Editor::ShowMainWindow(bool* p_open) {
         return;
     }
 
-    if (ImGui::Button("Save/Load")) {
+    if (ImGui::Button("Save/Load##TAB_SELECT")) {
         active_tab_ = &save_load_tab_;
     } ImGui::SameLine();
-    if (ImGui::Button("Create/Delete Objects")) {
+    if (ImGui::Button("Create/Delete Objects##TAB_SELECT")) {
         active_tab_ = &object_tab_;
     } ImGui::SameLine();
-    if (ImGui::Button("Camera")) {
+    if (ImGui::Button("Camera##TAB_SELECT")) {
         active_tab_ = &camera_tab_;
+    } ImGui::SameLine();
+    if (ImGui::Button("Door##TAB_SELECT")) {
+        active_tab_ = &door_tab_;
     }
 
     active_tab_->draw();
@@ -81,28 +87,29 @@ void Editor::handle_input() {
 }
 
 void SaveLoadTab::draw() {
-    static char buf[32] = "";
+    static char buf[64] = "";
     ImGui::InputText(".map", buf, IM_ARRAYSIZE(buf));
     if (ImGui::Button("Load Map")) {
-        room_->load(buf);
+        mgr_->init_load(buf);
     }
     if (ImGui::Button("Save Map")) {
-        room_->save(buf, false);
+        mgr_->save(buf, false);
     }
     if (ImGui::Button("Save Map (Force Overwrite)")) {
-        room_->save(buf, true);
+        mgr_->save(buf, true);
     }
 }
 
 void ObjectTab::draw() {
-    ImGui::RadioButton("Wall", &solid_obj, (int)ObjCode::Wall);
-    ImGui::RadioButton("PushBlock", &solid_obj, (int)ObjCode::PushBlock);
-    ImGui::RadioButton("SnakeBlock", &solid_obj, (int)ObjCode::SnakeBlock);
+    ImGui::RadioButton("Wall##OBJECT_SELECT", &obj_code, (int)ObjCode::Wall);
+    ImGui::RadioButton("PushBlock##OBJECT_SELECT", &obj_code, (int)ObjCode::PushBlock);
+    ImGui::RadioButton("SnakeBlock##OBJECT_SELECT", &obj_code, (int)ObjCode::SnakeBlock);
+    ImGui::RadioButton("Door##OBJECT_SELECT", &obj_code, (int)ObjCode::Door);
 
     ImGui::Text("Object Properties");
 
-    if (solid_obj == (int)ObjCode::Wall) { }
-    else if (solid_obj == (int)ObjCode::PushBlock) {
+    if (obj_code == (int)ObjCode::Wall) {}
+    else if (obj_code == (int)ObjCode::PushBlock) {
         ImGui::Text("Stickiness");
         ImGui::RadioButton("Not Sticky", &pb_sticky, (int)StickyLevel::None);
         ImGui::RadioButton("Weakly Sticky", &pb_sticky, (int)StickyLevel::Weak);
@@ -110,22 +117,48 @@ void ObjectTab::draw() {
 
         ImGui::Checkbox("Is Player?", &is_car);
     }
-    else if (solid_obj == (int)ObjCode::SnakeBlock) {
+    else if (obj_code == (int)ObjCode::SnakeBlock) {
         ImGui::Text("Number of Ends");
         ImGui::RadioButton("One Ended", &sb_ends, 1);
         ImGui::RadioButton("Two Ended", &sb_ends, 2);
 
         ImGui::Checkbox("Is Player?", &is_car);
     }
+    else if (obj_code == (int)ObjCode::Door) {}
+
 }
 
 void CameraTab::draw() {
+    ImGui::Text("Camera Type");
+
     if (ImGui::Button("Create Camera Rect")) {
         int x = std::min(x1, x2);
         int y = std::min(y1, y2);
         int w = abs(x1 - x2) + 1;
         int h = abs(y1 - y2) + 1;
         camera_->push_context(std::make_unique<FixedCameraContext>(x, y, w, h, priority, radius, x + w/2.0, y + h/2.0));
+    }
+}
+
+void DoorTab::draw() {
+    ImGui::Text("Destination Room");
+    static char buf[64] = "";
+    ImGui::InputText(".map", buf, IM_ARRAYSIZE(buf));
+
+    static int x1 = 0;
+    static int y1 = 0;
+    ImGui::Text("Door Position");
+    ImGui::InputInt("door x", &x1);
+    ImGui::InputInt("door y", &y1);
+
+    static int x2 = 0;
+    static int y2 = 0;
+    ImGui::Text("Destination Position");
+    ImGui::InputInt("dest x", &x2);
+    ImGui::InputInt("dest y", &y2);
+
+    if (ImGui::Button("(try to) Make That Door!!")) {
+        mgr_->make_door(Point{x1,y1}, Point{x2,y2}, std::string(buf));
     }
 }
 
@@ -136,7 +169,7 @@ void ObjectTab::handle_left_click(Point pos) {
     int x = pos.x;
     int y = pos.y;
     std::unique_ptr<GameObject> obj;
-    switch (solid_obj) {
+    switch (obj_code) {
     case (int)ObjCode::Wall :
         obj = std::make_unique<Wall>(x, y);
         break;
@@ -146,14 +179,17 @@ void ObjectTab::handle_left_click(Point pos) {
     case (int)ObjCode::SnakeBlock :
         obj = std::make_unique<SnakeBlock>(x, y, is_car, sb_ends);
         break;
+    case (int)ObjCode::Door :
+        obj = std::make_unique<Door>(x, y);
+        break;
     default:
         return;
     }
-    room_->create_obj(std::move(obj));
+    mgr_->create_obj(std::move(obj));
 }
 
 void ObjectTab::handle_right_click(Point pos) {
-    room_->delete_obj(pos);
+    mgr_->delete_obj(pos);
 }
 
 void CameraTab::handle_left_click(Point pos) {
@@ -166,21 +202,24 @@ void CameraTab::handle_right_click(Point pos) {
     y2 = pos.y;
 }
 
-EditorTab::EditorTab(Room* room): room_ {room} {}
+void DoorTab::handle_left_click(Point) {}
+void DoorTab::handle_right_click(Point) {}
+
+EditorTab::EditorTab(RoomManager* mgr): mgr_ {mgr} {}
 EditorTab::~EditorTab() {}
 
-SaveLoadTab::SaveLoadTab(Room* room): EditorTab(room) {}
-
+SaveLoadTab::SaveLoadTab(RoomManager* mgr): EditorTab(mgr) {}
 SaveLoadTab::~SaveLoadTab() {}
 
-ObjectTab::ObjectTab(Room* room): EditorTab(room),
-solid_obj {(int)ObjCode::NONE}, pb_sticky {(int)StickyLevel::None},
+ObjectTab::ObjectTab(RoomManager* mgr): EditorTab(mgr),
+obj_code {(int)ObjCode::NONE}, pb_sticky {(int)StickyLevel::None},
 is_car {true}, sb_ends {2} {}
-
 ObjectTab::~ObjectTab() {}
 
-CameraTab::CameraTab(Room* room): EditorTab(room), camera_ {room->camera()},
+CameraTab::CameraTab(RoomManager* mgr): EditorTab(mgr), camera_ {mgr->camera()},
 x1 {0}, y1 {0}, x2 {0}, y2 {0},
 radius {6.0}, priority {10} {}
-
 CameraTab::~CameraTab() {}
+
+DoorTab::DoorTab(RoomManager* mgr): EditorTab(mgr) {}
+DoorTab::~DoorTab() {}

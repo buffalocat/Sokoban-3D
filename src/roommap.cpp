@@ -87,13 +87,24 @@ GameObject* RoomMap::view(Point pos, Layer layer) {
     return nullptr;
 }
 
+GameObject* RoomMap::view(Point pos, ObjCode code) {
+    if (valid(pos)) {
+        for (auto& obj : map_[pos.x][pos.y]) {
+            if (obj->obj_code() == code) {
+                return obj.get();
+            }
+        }
+    }
+    return nullptr;
+}
+
 void RoomMap::take(GameObject* object, DeltaFrame* delta_frame) {
     Point pos = object->pos();
     auto &vec = map_[pos.x][pos.y];
     for (auto&& it = vec.begin(); it != vec.end(); ++it) {
         if ((*it).get() == object) {
             (*it)->cleanup(delta_frame);
-            delta_frame->push(std::make_unique<DeletionDelta>(std::move(*it)));
+            delta_frame->push(std::make_unique<DeletionDelta>(std::move(*it), this));
             vec.erase(it);
             return;
         }
@@ -120,7 +131,7 @@ void RoomMap::put(std::unique_ptr<GameObject> object, DeltaFrame* delta_frame) {
     }
     Point pos = object->pos();
     if (valid(pos)) {
-        delta_frame->push(std::make_unique<CreationDelta>(object.get()));
+        delta_frame->push(std::make_unique<CreationDelta>(object.get(), this));
         map_[pos.x][pos.y].push_back(std::move(object));
     } else {
         throw std::runtime_error("Tried to put an object in an invalid location!");

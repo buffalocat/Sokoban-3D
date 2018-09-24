@@ -5,13 +5,17 @@
 #include "shader.h"
 #include "delta.h"
 
-GameObject::GameObject(int x, int y): pos_ {x, y}, wall_ {true} {}
+GameObject::GameObject(int x, int y): pos_ {x, y} {}
 
 GameObject::~GameObject() {}
 
-Layer GameObject::layer() const {
-    return Layer::Solid;
+void GameObject::serialize(std::ofstream& file) {}
+
+bool GameObject::relation_check() {
+    return false;
 }
+
+void GameObject::relation_serialize(std::ofstream& file) {}
 
 Point GameObject::pos() const {
     return pos_;
@@ -21,8 +25,12 @@ Point GameObject::shifted_pos(Point d) const {
     return Point{pos_.x + d.x, pos_.y + d.y};
 }
 
-bool GameObject::wall() const {
-    return wall_;
+void GameObject::reinit() {}
+
+void GameObject::cleanup(DeltaFrame* delta_frame) {}
+
+bool GameObject::wall () {
+    return false;
 }
 
 Wall::Wall(int x, int y): GameObject(x, y) {}
@@ -33,6 +41,14 @@ ObjCode Wall::obj_code() {
     return ObjCode::Wall;
 }
 
+Layer Wall::layer() {
+    return Layer::Solid;
+}
+
+bool Wall::wall() {
+    return true;
+}
+
 void Wall::draw(Shader* shader) {
     Point p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f, p.y));
@@ -41,18 +57,7 @@ void Wall::draw(Shader* shader) {
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 }
 
-void Wall::cleanup(DeltaFrame* delta_frame) {}
-
-void Wall::reinit() {}
-
-void Wall::serialize(std::ofstream& file) {}
-
+// Wall serializes trivially
 GameObject* Wall::deserialize(unsigned char* b) {
     return new Wall(b[0], b[1]);
 }
-
-bool Wall::relation_check() {
-    return false;
-}
-
-void Wall::relation_serialize(std::ofstream& file) {}

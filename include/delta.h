@@ -3,24 +3,28 @@
 
 #include "common.h"
 
+class RoomManager;
+class Room;
 class RoomMap;
 class GameObject;
 class Block;
 class PushBlock;
 class SnakeBlock;
+
 struct Point;
+
 enum class Layer;
 
 class Delta {
 public:
-    virtual void revert(RoomMap*) = 0;
     virtual ~Delta() {};
+    virtual void revert() = 0;
 };
 
 class DeltaFrame {
 public:
     DeltaFrame();
-    void revert(RoomMap*);
+    void revert();
     void push(std::unique_ptr<Delta>);
     bool trivial();
 
@@ -32,7 +36,8 @@ class UndoStack {
 public:
     UndoStack(unsigned int max_depth);
     void push(std::unique_ptr<DeltaFrame>);
-    bool pop(RoomMap*);
+    bool pop();
+    void reset();
 
 private:
     unsigned int max_depth_;
@@ -42,36 +47,39 @@ private:
 
 class CreationDelta: public Delta {
 public:
-    CreationDelta(GameObject* object);
-    void revert(RoomMap*);
+    CreationDelta(GameObject* object, RoomMap* room_map);
+    void revert();
 
 private:
     GameObject* object_;
+    RoomMap* room_map_;
 };
 
 class DeletionDelta: public Delta {
 public:
-    DeletionDelta(std::unique_ptr<GameObject>);
-    void revert(RoomMap*);
+    DeletionDelta(std::unique_ptr<GameObject> object, RoomMap* room_map);
+    void revert();
 
 private:
     std::unique_ptr<GameObject> object_;
+    RoomMap* room_map_;
 };
 
 class MotionDelta: public Delta {
 public:
-    MotionDelta(Block* object, Point p);
-    void revert(RoomMap*);
+    MotionDelta(Block* object, Point p, RoomMap* room_map);
+    void revert();
 
 private:
     Block* object_;
     Point p_; // The previous position
+    RoomMap* room_map_;
 };
 
 class AddLinkDelta: public Delta {
 public:
     AddLinkDelta(Block* a, Block* b);
-    void revert(RoomMap*);
+    void revert();
 
 private:
     Block* a_;
@@ -81,11 +89,23 @@ private:
 class RemoveLinkDelta: public Delta {
 public:
     RemoveLinkDelta(Block* a, Block* b);
-    void revert(RoomMap*);
+    void revert();
 
 private:
     Block* a_;
     Block* b_;
+};
+
+class DoorMoveDelta: public Delta {
+public:
+    DoorMoveDelta(RoomManager* mgr, Room* room, Point pos, Block* player);
+    void revert();
+
+private:
+    RoomManager* mgr_;
+    Room* prev_room_;
+    Point pos_;
+    Block* player_;
 };
 
 #endif // DELTA_H

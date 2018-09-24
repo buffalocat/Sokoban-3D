@@ -3,24 +3,24 @@
 
 #include "common.h"
 
-class Room;
+class RoomManager;
 class GameObject;
 
 class EditorTab {
 public:
-    EditorTab(Room* room);
+    EditorTab(RoomManager* room);
     virtual ~EditorTab() = 0;
     virtual void draw() = 0;
     virtual void handle_left_click(Point) = 0;
     virtual void handle_right_click(Point) = 0;
 
 protected:
-    Room* room_;
+    RoomManager* mgr_;
 };
 
 class SaveLoadTab: public EditorTab {
 public:
-    SaveLoadTab(Room*);
+    SaveLoadTab(RoomManager*);
     ~SaveLoadTab();
     void draw();
     void handle_left_click(Point);
@@ -29,14 +29,14 @@ public:
 
 class ObjectTab: public EditorTab {
 public:
-    ObjectTab(Room*);
+    ObjectTab(RoomManager*);
     ~ObjectTab();
     void draw();
     void handle_left_click(Point);
     void handle_right_click(Point);
 
 private:
-    int solid_obj;
+    int obj_code;
     int pb_sticky;
     bool is_car;
     int sb_ends;
@@ -46,7 +46,7 @@ class Camera;
 
 class CameraTab: public EditorTab {
 public:
-    CameraTab(Room*);
+    CameraTab(RoomManager*);
     ~CameraTab();
     void draw();
     void handle_left_click(Point);
@@ -62,15 +62,24 @@ private:
     int priority;
 };
 
+class DoorTab: public EditorTab {
+public:
+    DoorTab(RoomManager*);
+    ~DoorTab();
+    void draw();
+    void handle_left_click(Point);
+    void handle_right_click(Point);
+};
+
 class Editor {
 public:
-    Editor(GLFWwindow*, Room*);
+    Editor(GLFWwindow*, RoomManager*);
     //Internal state methods
     Point pos();
     void shift_pos(Point d);
     void set_pos(Point p);
     void clamp_pos(int width, int height);
-    void set_room(Room* room);
+    void set_room(RoomManager* room);
 
     bool want_capture_keyboard();
     bool want_capture_mouse();
@@ -88,16 +97,14 @@ public:
 
 private:
     GLFWwindow* window_;
-    Room* room_;
+    RoomManager* room_;
     Point pos_;
 
     // Editor Tabs!
     SaveLoadTab save_load_tab_;
-    //friend class SaveLoadTab;
     ObjectTab object_tab_;
-    //friend class ObjectTab;
     CameraTab camera_tab_;
-    //friend class CameraTab;
+    DoorTab door_tab_;
 
     EditorTab* active_tab_;
 };

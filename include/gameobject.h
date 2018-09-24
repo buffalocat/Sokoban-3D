@@ -13,29 +13,28 @@ class RoomMap;
  */
 class GameObject {
 public:
-    virtual ~GameObject() = 0;
+    virtual ~GameObject();
     virtual ObjCode obj_code() = 0;
-    virtual void serialize(std::ofstream& file) = 0;
-    virtual bool relation_check() = 0;
-    virtual void relation_serialize(std::ofstream& file) = 0;
-    Layer layer() const;
+    virtual Layer layer() = 0;
+    virtual void serialize(std::ofstream& file);
+    virtual bool relation_check();
+    virtual void relation_serialize(std::ofstream& file);
     Point pos() const;
     Point shifted_pos(Point) const;
     virtual void draw(Shader*) = 0;
 
     /// Called when an existing object is "revived" via undo
     // Hence it doesn't need a DeltaFrame
-    virtual void reinit() = 0;
+    virtual void reinit();
     /// Called when an object is destroyed
-    virtual void cleanup(DeltaFrame*) = 0;
+    virtual void cleanup(DeltaFrame*);
 
-    // If not wall(), then downcast to Block is safe
-    bool wall() const;
+    // If layer == Solid && !wall(), then downcast to Block is safe
+    virtual bool wall();
 
 protected:
     GameObject(int x, int y);
     Point pos_;
-    bool wall_;
 };
 
 /** An immovable, static, Solid layer obstacle
@@ -44,15 +43,12 @@ class Wall: public GameObject {
 public:
     Wall(int x, int y);
     ~Wall();
+    Layer layer();
     ObjCode obj_code();
-    void serialize(std::ofstream& file);
+    bool wall();
     static GameObject* deserialize(unsigned char* buffer);
-    bool relation_check();
-    void relation_serialize(std::ofstream& file);
 
     void draw(Shader*);
-    void cleanup(DeltaFrame*);
-    void reinit();
 };
 
 #endif // GAMEOBJECT_H

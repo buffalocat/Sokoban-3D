@@ -1,5 +1,6 @@
 #include "moveprocessor.h"
 #include "block.h"
+#include "delta.h"
 #include "roommap.h"
 
 MoveProcessor::MoveProcessor(RoomMap* room_map, Point dir): map_ {room_map}, dir_ {dir}, comps_ {},
@@ -33,7 +34,8 @@ void MoveProcessor::try_move(DeltaFrame* delta_frame) {
         if (p.second->good()) {
             Block* obj = p.first;
             auto obj_unique = map_->take_quiet(obj);
-            obj->shift_pos(dir_, delta_frame);
+            delta_frame->push(std::make_unique<MotionDelta>(obj, obj->pos(), map_));
+            obj->shift_pos(dir_);
             map_->put_quiet(std::move(obj_unique));
         }
     }

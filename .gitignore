@@ -35,3 +35,6 @@
 *.cscope_file_list
 *.depend
 *.layout
+
+# Private Maps
+*_.map

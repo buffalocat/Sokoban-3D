@@ -219,6 +219,9 @@ void RoomManager::create_obj(std::unique_ptr<GameObject> obj) {
 void RoomManager::delete_obj(Point pos) {
     GameObject* obj = cur_map_->view(pos, Layer::Solid);
     if (obj) {
+        if (obj == player_) {
+            player_ = nullptr;
+        }
         obj->cleanup(nullptr);
         auto sb = dynamic_cast<SnakeBlock*>(obj);
         cur_map_->take_quiet(obj);

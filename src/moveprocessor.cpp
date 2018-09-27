@@ -14,7 +14,7 @@ void MoveProcessor::try_move(DeltaFrame* delta_frame) {
     }
     switch (player_->state()) {
     case RidingState::Free :
-        player_->shift_pos(dir_, map_, delta_frame);
+        player_->shift_pos_auto(dir_, map_, delta_frame);
         break;
     case RidingState::Bound :
         move_bound(delta_frame);
@@ -44,10 +44,9 @@ void MoveProcessor::move_riding(DeltaFrame* delta_frame) {
     for (Component* comp : roots) {
         comp->resolve_contingent();
     }
-    if (!comps_[car]->good()) {
-        return;
+    if (comps_[car]->good()) {
+        player_->shift_pos_auto(dir_, map_, delta_frame);
     }
-    player_->shift_pos(dir_, map_, delta_frame);
     // Reset targets of unmoved snakes, look for snakes to check for link adding later
     std::unordered_set<SnakeBlock*> check_snakes = {};
     std::vector<SnakeBlock*> good_snakes = {};
@@ -64,7 +63,7 @@ void MoveProcessor::move_riding(DeltaFrame* delta_frame) {
     // Standard block movement
     for (auto& p : comps_) {
         if (p.second->good()) {
-            p.first->shift_pos(dir_, map_, delta_frame);
+            p.first->shift_pos_auto(dir_, map_, delta_frame);
         }
     }
     // Remove any links that were broken

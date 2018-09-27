@@ -30,10 +30,9 @@ public:
     RoomMap* room_map();
     Camera* camera();
     std::string name();
-    void serialize(std::ofstream& file);
-    void save();
+    void serialize(std::ofstream& file, bool editor_mode);
 
-    void set_default_player_pos(Point);
+    void set_default_player_pos(Point p);
     Point default_player_pos();
 
 private:
@@ -50,8 +49,10 @@ public:
     RoomManager(GLFWwindow*, Shader* shader);
     bool init_load(std::string map_name);
     void init_make(int w, int h);
-    std::unique_ptr<Room> load(std::string map_name, bool edit_mode, Point start={-1,-1});
-    void save(std::string map_name, bool overwrite);
+    Room* activate(std::string map_name, Point start={-1,-1});
+    Room* load(std::string map_name, Point start={-1,-1});
+    std::unique_ptr<Room> load_from_file(std::string& map_name, std::ifstream& file, Point start={-1,-1});
+    void save(std::string map_name, bool overwrite, bool editor_mode);
 
     void set_editor(Editor* editor);
     void set_cur_room(Room* room);

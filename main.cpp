@@ -10,10 +10,14 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma GCC diagnostic ignored "-Wswitch-default"
 
 #include <dear/imgui.h>
 #include <dear/imgui_impl_glfw.h>
 #include <dear/imgui_impl_opengl3.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 #pragma GCC diagnostic pop
 
@@ -57,11 +61,17 @@ int main(void) {
         return -1;
     }
 
-    float cubeVertices[24];
+    float cubeVertices[50];
     for (int i = 0; i < 8; ++i) {
-        cubeVertices[3*i] = (i & 1) - 0.5f;
-        cubeVertices[3*i+1] = ((i >> 1) & 1) - 0.5f;
-        cubeVertices[3*i+2] = ((i >> 2) & 1) - 0.5f;
+        int a, b, c;
+        a = i & 1;
+        b = (i >> 1) & 1;
+        c = (i >> 2) & 1;
+        cubeVertices[5*i] = a - 0.5f;
+        cubeVertices[5*i+1] = b - 0.5f;
+        cubeVertices[5*i+2] = c - 0.5f;
+        cubeVertices[5*i+3] = (i == 0 || i == 7) ? 1 : 0;
+        cubeVertices[5*i+4] = (a + b + c > 1) ? 1 : 0;
     }
 
     int cubeTriangles[36];
@@ -88,7 +98,7 @@ int main(void) {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*) nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) nullptr);
     glEnableVertexAttribArray(0);
 
     // Element Buffer Object
@@ -107,12 +117,29 @@ int main(void) {
 
     shader.use();
 
+    shader.setVec2("TexOffset", glm::vec2(0,0));
+
+    // Load a texture!
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    int width, height, channels;
+    unsigned char *texture_data = stbi_load("resources\\sticky texture.png", &width, &height, &channels, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data);
+    stbi_image_free(texture_data);
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
     // Init game logic stuff
 
     RoomManager mgr(window, &shader);
+    mgr.init_make(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
     Editor editor(window, &mgr);
     mgr.set_editor(&editor);
-    mgr.init_make(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
 
     glfwSwapInterval(0);
 
@@ -131,7 +158,7 @@ int main(void) {
 
     // It's convenient to keep the demo code in here,
     // for when we want to explore ImGui features
-    bool show_demo_window = true;
+    bool show_demo_window = false;
     bool show_editor_window = true;
 
     while(!glfwWindowShouldClose(window)) {

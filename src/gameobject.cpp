@@ -26,7 +26,7 @@ Point GameObject::shifted_pos(Point d) const {
     return Point{pos_.x + d.x, pos_.y + d.y};
 }
 
-void GameObject::shift_pos(Point d, RoomMap* room_map, DeltaFrame* delta_frame) {
+void GameObject::shift_pos_auto(Point d, RoomMap* room_map, DeltaFrame* delta_frame) {
     auto self_unique = room_map->take_quiet(this);
     if (delta_frame) {
         delta_frame->push(std::make_unique<MotionDelta>(this, pos_, room_map));
@@ -36,21 +36,17 @@ void GameObject::shift_pos(Point d, RoomMap* room_map, DeltaFrame* delta_frame) 
     room_map->put_quiet(std::move(self_unique));
 }
 
-void GameObject::set_pos(Point p, RoomMap* room_map, DeltaFrame* delta_frame) {
+void GameObject::set_pos(Point p) {
+    pos_ = p;
+}
+
+void GameObject::set_pos_auto(Point p, RoomMap* room_map, DeltaFrame* delta_frame) {
     auto self_unique = room_map->take_quiet(this);
     if (delta_frame) {
         delta_frame->push(std::make_unique<MotionDelta>(this, pos_, room_map));
     }
-    pos_.x = p.x;
-    pos_.y = p.y;
+    pos_ = p;
     room_map->put_quiet(std::move(self_unique));
-}
-
-// It is in fact very rare for us to want to move an object without taking and putting,
-// as in the ordinary set_pos().  However, moving through doors is such an occasion.
-void GameObject::set_pos_raw(Point p) {
-    pos_.x = p.x;
-    pos_.y = p.y;
 }
 
 void GameObject::reinit() {}
@@ -107,9 +103,17 @@ RidingState Player::state() {
 
 Block* Player::get_car(RoomMap* room_map) {
     if (state_ != RidingState::Riding) {
+        std::cout << "Player wasn't riding";
         return nullptr;
     } else {
-        return static_cast<Block*>(room_map->view(pos_, Layer::Solid));
+        std::cout << pos_ << std::endl;
+        std::cout << room_map << std::endl;
+        GameObject* car = room_map->view(pos_, Layer::Solid);
+        std::cout << "The car was " << car << std::endl;
+        if (car) {
+            std::cout << "The car had type " << (int)car->obj_code() << std::endl;
+        }
+        return static_cast<Block*>(car);
     }
 }
 

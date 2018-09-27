@@ -95,14 +95,13 @@ void SaveLoadTab::draw() {
     static std::map<std::string, bool> loaded_rooms;
     ImGui::InputText(".map", map_name, IM_ARRAYSIZE(map_name));
     if (ImGui::Button("Load Map")) {
-
         mgr_->init_load(map_name);
     }
     if (ImGui::Button("Save Map")) {
-        mgr_->save(map_name, false);
+        mgr_->save(map_name, false, true);
     }
     if (ImGui::Button("Save Map (Force Overwrite)")) {
-        mgr_->save(map_name, true);
+        mgr_->save(map_name, true, true);
     }
 }
 
@@ -136,6 +135,12 @@ void ObjectTab::draw() {
 
 void CameraTab::draw() {
     ImGui::Text("Camera Type");
+
+    ImGui::Text("Corner Positions");
+    ImGui::InputInt("x1##CAM CORNER", &x1);
+    ImGui::InputInt("y1##CAM CORNER", &y1);
+    ImGui::InputInt("x2##CAM CORNER", &x2);
+    ImGui::InputInt("y2##CAM CORNER", &y2);
 
     if (ImGui::Button("Create Camera Rect")) {
         int x = std::min(x1, x2);

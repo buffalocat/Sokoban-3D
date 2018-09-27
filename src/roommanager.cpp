@@ -95,7 +95,13 @@ void RoomManager::main_loop(bool& editor_mode) {
     auto delta_frame = std::make_unique<DeltaFrame>();
     if (cooldown_ == 0 && glfwGetKey(window_, GLFW_KEY_E) == GLFW_PRESS
         && glfwGetKey(window_, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
-        editor_mode = !editor_mode;
+        if (editor_mode) {
+            editor_mode = false;
+            cur_camera_->set_current_pos(player_->pos());
+        } else {
+            editor_mode = true;
+            cur_camera_->set_current_pos(editor_->pos());
+        }
         undo_stack_.reset();
         cooldown_ = MAX_COOLDOWN;
     }
@@ -181,7 +187,7 @@ void RoomManager::draw(bool editor_mode) {
     FPoint target_pos = cur_camera_->get_pos();
 
     // NOTE: These belong in the camera class later
-    float cam_incline = 0.1;
+    float cam_incline = 0.4;
     float cam_rotation = 0.0;
 
     float cam_x = sin(cam_incline) * sin(cam_rotation) * cam_radius;
@@ -276,7 +282,7 @@ bool RoomManager::valid(Point pos) {
     return cur_map_->valid(pos);
 }
 
-void Room::serialize(std::ofstream& file) {
+void Room::serialize(std::ofstream& file, bool editor_mode) {
     // Specify failure conditions first!
     for (Point p : doors_) {
         if (map_->view(p, Layer::Solid)) {
@@ -295,7 +301,7 @@ void Room::serialize(std::ofstream& file) {
     file << static_cast<unsigned char>(default_player_pos_.x);
     file << static_cast<unsigned char>(default_player_pos_.y);
 
-    map_->serialize(file);
+    map_->serialize(file, editor_mode);
 
     camera_->serialize(file);
 
@@ -306,6 +312,7 @@ const char* BASE_MAP_DIRECTORY = "maps\\";
 
 //const char* TEMP_MAP_DIRECTORY = "maps\\temp\\";
 
+/*
 void Room::save() {
     std::string file_name = BASE_MAP_DIRECTORY + name_ + ".map";
     std::ofstream file;
@@ -313,32 +320,74 @@ void Room::save() {
     serialize(file);
     file.close();
 }
+*/
 
-void RoomManager::save(std::string map_name, bool overwrite) {
+void RoomManager::save(std::string map_name, bool overwrite, bool editor_mode) {
     std::string file_name = BASE_MAP_DIRECTORY + map_name + ".map";
     std::ofstream file;
     if (access((file_name).c_str(), F_OK) != -1 && !overwrite) {
         std::cout << "File \"" << file_name << "\" already exists! Save failed." << std::endl;
         return;
     }
+    // In editor mode, just move the player around to update its default position
+    // This makes it easy to save/reload consistently without "placing" a player object
+    if (editor_mode) {
+        cur_room_->set_default_player_pos(player_->pos());
+    }
     file.open(file_name, std::ios::out | std::ios::binary);
-    cur_room_->serialize(file);
+    cur_room_->serialize(file, editor_mode);
     file.close();
     std::cout <<  file_name << " saved." << std::endl;
 }
 
-std::unique_ptr<Room> RoomManager::load(std::string map_name, bool edit_mode, Point start) {
+/** Load cached copy of room if possible, otherwise load from file
+  */
+Room* RoomManager::activate(std::string map_name, Point start) {
+    Room* room {};
+    if (rooms_.count(map_name)) {
+        room = rooms_[map_name].get();
+        // Check if there's anything covering the door!
+        if (room->room_map()->view(start, Layer::Solid)) {
+            return nullptr;
+        }
+        return room;
+    }
+    if (!room) {
+        room = load(map_name, start);
+    }
+    return room;
+}
+
+/** Load room fresh from file, overwriting cache
+  */
+Room* RoomManager::load(std::string map_name, Point start) {
+    // Check validity
     if (map_name.size() == 0) {
         std::cout << "Tried to load map file with empty name! Load failed." << std::endl;
         return nullptr;
     }
+    Room* room;
+    // Load the room from the hard drive
     std::string file_name = BASE_MAP_DIRECTORY + map_name + ".map";
     std::ifstream file;
+    //NOTE: In real save file, check a few places here
     if (access((file_name).c_str(), F_OK) == -1) {
         std::cout << "File \"" << file_name << "\" doesn't exist! Load failed." << std::endl;
         return nullptr;
     }
     file.open(file_name, std::ios::in | std::ios::binary);
+    std::unique_ptr<Room> loaded_room = load_from_file(map_name, file, start);
+    file.close();
+    room = loaded_room.get();
+    // We don't want to save loaded_room if it's actually empty!
+    if (!room) {
+        return nullptr;
+    }
+    rooms_[map_name] = std::move(loaded_room);
+    return room;
+}
+
+std::unique_ptr<Room> RoomManager::load_from_file(std::string& map_name, std::ifstream& file, Point start) {
     unsigned char b[8];
     bool reading_file = true;
     std::unique_ptr<RoomMap> room_map_unique;
@@ -387,29 +436,27 @@ std::unique_ptr<Room> RoomManager::load(std::string map_name, bool edit_mode, Po
             break;
         }
     }
-    file.close();
     return room;
 }
 
 bool RoomManager::init_load(std::string map_name) {
-    std::unique_ptr<Room> room = load(map_name, true);
+    Player* prev_player = player_;
+    player_ = nullptr;
+    Room* room = load(map_name);
     if (!room) {
+        player_ = prev_player;
         return false;
     }
-    //rooms_.clear();
-    set_cur_room(room.get());
-
-    Point p;
+    set_cur_room(room);
     if (!player_) {
-        p = cur_room_->default_player_pos();
-        auto player_unique = std::make_unique<Player>(p.x, p.y, RidingState::Riding);
+        //Place the default player, riding if possible
+        Point p = cur_room_->default_player_pos();
+        Block* car = dynamic_cast<Block*>(cur_map_->view(p, Layer::Solid));
+        RidingState player_state = (car && car->is_car()) ? RidingState::Riding : RidingState::Free;
+        auto player_unique = std::make_unique<Player>(p.x, p.y, player_state);
         player_ = player_unique.get();
-    } else {
-        p = player_->pos();
+        cur_map_->put_quiet(std::move(player_unique));
     }
-    Block* car = dynamic_cast<Block*>(cur_map_->view(p, Layer::Solid));
-    RidingState player_state = (car && car->is_car()) ? RidingState::Riding : RidingState::Free;
-    rooms_[room->name()] = std::move(room);
     cur_map_->set_initial_state();
     return true;
 }
@@ -431,22 +478,7 @@ void RoomManager::init_make(int w, int h) {
 }
 
 void RoomManager::use_door(MapLocation* dest, DeltaFrame* delta_frame) {
-    Room* room;
-    // Use the cached version if available (this is NECESSARY for "identity" reasons)
-    if (rooms_.count(dest->map_name)) {
-        room = rooms_[dest->map_name].get();
-        // Check if there's anything covering the door!
-        if (room->room_map()->view(dest->pos, Layer::Solid)) {
-            return;
-        }
-    } else {
-        std::unique_ptr<Room> loaded_room = load(dest->map_name, false, dest->pos);
-        room = loaded_room.get();
-        if (!room) {
-            return;
-        }
-        rooms_[dest->map_name] = std::move(loaded_room);
-    }
+    Room* room = load(dest->map_name, dest->pos);
     // Clean up the player however necessary BEFORE moving through the door
     Block* car = player_->get_car(cur_map_);
     if (car) {
@@ -454,11 +486,11 @@ void RoomManager::use_door(MapLocation* dest, DeltaFrame* delta_frame) {
     }
     delta_frame->push(std::make_unique<DoorMoveDelta>(this, cur_room_, player_->pos()));
     auto player_unique = cur_map_->take_quiet(player_);
-    player_->set_pos_raw(dest->pos);
+    player_->set_pos(dest->pos);
     if (car) {
         auto car_unique = cur_map_->take_quiet(car);
         set_cur_room(room);
-        car->set_pos_raw(dest->pos);
+        car->set_pos(dest->pos);
         cur_map_->put_quiet(std::move(car_unique));
     } else {
         set_cur_room(room);
@@ -483,9 +515,9 @@ const std::unordered_map<ObjCode, unsigned int, ObjCodeHash> BYTES_PER_OBJECT = 
 
 const std::unordered_map<CameraCode, unsigned int, CameraCodeHash> BYTES_PER_CAMERA = {
     {CameraCode::NONE, 0},
-    {CameraCode::Free, 7},
-    {CameraCode::Fixed, 11},
-    {CameraCode::Clamped, 9},
+    {CameraCode::Free, 9},
+    {CameraCode::Fixed, 13},
+    {CameraCode::Clamped, 11},
     {CameraCode::Null, 5},
 };
 

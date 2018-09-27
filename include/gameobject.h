@@ -21,9 +21,9 @@ public:
     virtual void relation_serialize(std::ofstream& file);
     Point pos() const;
     Point shifted_pos(Point d) const;
-    void set_pos(Point p, RoomMap* room_map, DeltaFrame* delta_frame);
-    void set_pos_raw(Point p);
-    void shift_pos(Point d, RoomMap* room_map, DeltaFrame* delta_frame);
+    void set_pos_auto(Point p, RoomMap* room_map, DeltaFrame* delta_frame);
+    void set_pos(Point p);
+    void shift_pos_auto(Point d, RoomMap* room_map, DeltaFrame* delta_frame);
     virtual void draw(Shader*) = 0;
 
     /// Called when an existing object is "revived" via undo

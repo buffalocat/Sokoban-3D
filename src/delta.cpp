@@ -64,12 +64,10 @@ void CreationDelta::revert() {
     room_map_->take_quiet(object_);
 }
 
-MotionDelta::MotionDelta(GameObject* object, Point p, RoomMap* room_map): object_ {object}, p_ {p}, room_map_ {room_map} {
-    std::cout << "Made a MotionDelta for a " << static_cast<int>(object->obj_code()) << std::endl;
-}
+MotionDelta::MotionDelta(GameObject* object, Point p, RoomMap* room_map): object_ {object}, p_ {p}, room_map_ {room_map} {}
 
 void MotionDelta::revert() {
-    object_->set_pos(p_, room_map_, nullptr);
+    object_->set_pos_auto(p_, room_map_, nullptr);
 }
 
 AddLinkDelta::AddLinkDelta(Block* a, Block* b): a_ {a}, b_ {b} {}
@@ -95,11 +93,11 @@ void DoorMoveDelta::revert() {
     if (car) {
         auto car_unique = room_map->take_quiet(car);
         mgr_->set_cur_room(prev_room_);
-        car->set_pos_raw(pos_);
+        car->set_pos(pos_);
         room_map->put_quiet(std::move(car_unique));
     } else {
         mgr_->set_cur_room(prev_room_);
     }
-    player->set_pos_raw(pos_);
+    player->set_pos(pos_);
     room_map->put_quiet(std::move(player_unique));
 }

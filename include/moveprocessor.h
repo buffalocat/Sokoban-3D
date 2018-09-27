@@ -3,6 +3,7 @@
 
 #include "common.h"
 
+class Player;
 class Block;
 class RoomMap;
 class DeltaFrame;
@@ -45,8 +46,10 @@ private:
 
 class MoveProcessor {
 public:
-    MoveProcessor(RoomMap*, Point);
+    MoveProcessor(Player*, RoomMap*, Point d);
     void try_move(DeltaFrame*);
+    void move_bound(DeltaFrame*);
+    void move_riding(DeltaFrame*);
     Component* move_component(Block* block, bool recheck);
     void try_push(Component*, Point);
     void find_strong_component(Block*);
@@ -54,6 +57,7 @@ public:
     void insert_touched_snake(SnakeBlock*);
 
 private:
+    Player* player_;
     RoomMap* map_;
     Point dir_;
     std::unordered_map<Block*, std::shared_ptr<Component>> comps_;

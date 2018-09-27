@@ -51,6 +51,7 @@ void FreeCameraContext::serialize(std::ofstream& file) {
     file << (unsigned char)CameraCode::Free;
     CameraContext::serialize(file);
     float_ser(file, radius_);
+    float_ser(file, 0.0f);
 }
 
 CameraContext* FreeCameraContext::deserialize(unsigned char* b) {
@@ -75,6 +76,7 @@ void FixedCameraContext::serialize(std::ofstream& file) {
     file << (unsigned char)CameraCode::Fixed;
     CameraContext::serialize(file);
     float_ser(file, radius_);
+    float_ser(file, 0.0f);
     float_ser(file, cx_);
     float_ser(file, cy_);
 }
@@ -105,6 +107,7 @@ void ClampedCameraContext::serialize(std::ofstream& file) {
     file << (unsigned char)CameraCode::Clamped;
     CameraContext::serialize(file);
     float_ser(file, radius_);
+    float_ser(file, 0.0f);
     file << (unsigned char) xpad_;
     file << (unsigned char) ypad_;
 }

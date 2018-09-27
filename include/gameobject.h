@@ -20,7 +20,10 @@ public:
     virtual bool relation_check();
     virtual void relation_serialize(std::ofstream& file);
     Point pos() const;
-    Point shifted_pos(Point) const;
+    Point shifted_pos(Point d) const;
+    void set_pos_auto(Point p, RoomMap* room_map, DeltaFrame* delta_frame);
+    void set_pos(Point p);
+    void shift_pos_auto(Point d, RoomMap* room_map, DeltaFrame* delta_frame);
     virtual void draw(Shader*) = 0;
 
     /// Called when an existing object is "revived" via undo
@@ -51,4 +54,24 @@ public:
     void draw(Shader*);
 };
 
+// The Player object behaves differently from all other objects with respect to save/load.
+// Every map should have one Player position designated, but this is overridden if
+// the map is entered via a door, in which case that door's starting position is used.
+// Thus, we don't actually serialize the player to the map as an object - just a position.
+class Player: public GameObject {
+public:
+    Player(int x, int y, RidingState state);
+    ~Player();
+    ObjCode obj_code();
+    Layer layer();
+    void serialize(std::ofstream& file);
+    static GameObject* deserialize(unsigned char* buffer);
+    RidingState state();
+    Block* get_car(RoomMap* room_map);
+
+    void draw(Shader*);
+
+private:
+    RidingState state_;
+};
 #endif // GAMEOBJECT_H

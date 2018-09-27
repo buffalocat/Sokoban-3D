@@ -5,18 +5,20 @@
 
 #pragma GCC diagnostic pop
 
+#include <map>
+
 #include "editor.h"
-#include "room.h"
+#include "roommanager.h"
 #include "block.h"
 #include "door.h"
 
-Editor::Editor(GLFWwindow* window, RoomManager* room): window_ {window}, room_ {room}, pos_ {Point{0,0}},
-save_load_tab_ {SaveLoadTab(room)},
-object_tab_ {ObjectTab(room)},
-camera_tab_ {CameraTab(room)},
-door_tab_ {DoorTab(room)}
+Editor::Editor(GLFWwindow* window, RoomManager* mgr): window_ {window}, mgr_ {mgr}, pos_ {Point{0,0}},
+save_load_tab_ {SaveLoadTab(mgr)},
+object_tab_ {ObjectTab(mgr)},
+camera_tab_ {CameraTab(mgr)},
+door_tab_ {DoorTab(mgr)}
 {
-    room->set_editor(this);
+    mgr->set_editor(this);
     active_tab_ = &save_load_tab_;
 }
 
@@ -40,7 +42,7 @@ void Editor::clamp_pos(int width, int height) {
 }
 
 void Editor::ShowMainWindow(bool* p_open) {
-    if (!ImGui::Begin("My Editor Window", p_open, 0)) {
+    if (!ImGui::Begin("My Editor Window", p_open, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::End();
         return;
     }
@@ -58,7 +60,9 @@ void Editor::ShowMainWindow(bool* p_open) {
         active_tab_ = &door_tab_;
     }
 
+    ImGui::BeginChild("active tab pane", ImVec2(400, 600), true);
     active_tab_->draw();
+    ImGui::EndChildFrame();
 
     ImGui::End();
 }
@@ -75,8 +79,8 @@ void Editor::handle_input() {
     if (want_capture_mouse()) {
         return;
     }
-    Point mouse_pos = room_->get_pos_from_mouse();
-    if (!room_->valid(mouse_pos)) {
+    Point mouse_pos = mgr_->get_pos_from_mouse();
+    if (!mgr_->valid(mouse_pos)) {
         return;
     }
     if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
@@ -87,16 +91,17 @@ void Editor::handle_input() {
 }
 
 void SaveLoadTab::draw() {
-    static char buf[64] = "";
-    ImGui::InputText(".map", buf, IM_ARRAYSIZE(buf));
+    static char map_name[64] = "";
+    static std::map<std::string, bool> loaded_rooms;
+    ImGui::InputText(".map", map_name, IM_ARRAYSIZE(map_name));
     if (ImGui::Button("Load Map")) {
-        mgr_->init_load(buf);
+        mgr_->init_load(map_name);
     }
     if (ImGui::Button("Save Map")) {
-        mgr_->save(buf, false);
+        mgr_->save(map_name, false, true);
     }
     if (ImGui::Button("Save Map (Force Overwrite)")) {
-        mgr_->save(buf, true);
+        mgr_->save(map_name, true, true);
     }
 }
 
@@ -130,6 +135,12 @@ void ObjectTab::draw() {
 
 void CameraTab::draw() {
     ImGui::Text("Camera Type");
+
+    ImGui::Text("Corner Positions");
+    ImGui::InputInt("x1##CAM CORNER", &x1);
+    ImGui::InputInt("y1##CAM CORNER", &y1);
+    ImGui::InputInt("x2##CAM CORNER", &x2);
+    ImGui::InputInt("y2##CAM CORNER", &y2);
 
     if (ImGui::Button("Create Camera Rect")) {
         int x = std::min(x1, x2);

@@ -64,7 +64,12 @@ enum class Layer {
     Floor = 1,
     Player = 2,
     Solid = 3,
-    COUNT = 4,
+};
+
+enum class RidingState {
+    Free,
+    Bound,
+    Riding,
 };
 
 enum class ObjCode {
@@ -73,6 +78,8 @@ enum class ObjCode {
     PushBlock = 2,
     SnakeBlock = 3,
     Door = 4,
+    Player = 5,
+    PlayerWall = 6,
 };
 
 enum class CameraCode {
@@ -99,6 +106,7 @@ const glm::vec4 BLUE = glm::vec4(0.0f, 0.3f, 0.8f, 1.0f);
 const glm::vec4 RED = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
 const glm::vec4 DARK_RED = glm::vec4(0.6f, 0.0f, 0.1f, 1.0f);
 const glm::vec4 BLACK = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+const glm::vec4 LIGHT_GREY = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
 const glm::vec4 ORANGE = glm::vec4(1.0f, 0.7f, 0.3f, 1.0f);
 const glm::vec4 YELLOW = glm::vec4(0.7f, 0.7f, 0.3f, 1.0f);
 
@@ -131,13 +139,12 @@ const int FAST_MAP_MOVE = 10;
 
 enum State {
     SmallDims = 1, // Gets width and height as 1 byte integers
-    BigDims = 2, // Gets width and height as 2 byte integers
+    PlayerDefault = 2, // Mark the position to start the player at when loading from this map (only useful for testing, or a select few rooms)
     Objects = 3, // Read in all map objects
     CameraRect = 4, // Get a camera context rectangle
     SnakeLink = 5, // Link two snakes (1 = Right, 2 = Down)
     DoorDest = 6, // Give a door a destination Map + Pos
-    NoPlayer = 7, // Flag at the beginning of .map; the player must be coming from outside
-    BlockedDoor = 8, // Coords of blocked doors in map; the player can't come here
+    BlockedDoor = 7, // Coords of blocked doors in map; the player can't come here
     End = 255,
 };
 

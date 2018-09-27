@@ -52,13 +52,16 @@ Block* RoomMap::cycle_movers() {
 }
 
 // Assuming not big_map
-void RoomMap::serialize(std::ofstream& file) const {
+void RoomMap::serialize(std::ofstream& file, bool editor_mode) const {
     std::vector<GameObject*> rel_check;
     // Serialize raw object data
     file << static_cast<unsigned char>(State::Objects);
     for (int x = 0; x != width_; ++x) {
         for (int y = 0; y != height_; ++y) {
             for (auto& object : map_[x][y]) {
+                if (object->obj_code() == ObjCode::Player) {
+                    continue;
+                }
                 file << static_cast<unsigned char>(object->obj_code());
                 file << static_cast<unsigned char>(x);
                 file << static_cast<unsigned char>(y);
@@ -152,7 +155,7 @@ void RoomMap::put_quiet(std::unique_ptr<GameObject> object) {
 }
 
 void RoomMap::add_mover(Block* block) {
-    if (block->car()) {
+    if (block->is_car()) {
         movers_.push_back(block);
     }
 }
@@ -177,6 +180,16 @@ void RoomMap::set_initial_state() {
             if (pb) {
                 add_mover(pb);
                 pb->check_add_local_links(this, nullptr);
+            }
+        }
+    }
+}
+
+void RoomMap::print_contents() {
+    for (int x = 0; x != width_; ++x) {
+        for (int y = 0; y != height_; ++y) {
+            for (auto& obj : map_[x][y]) {
+                std::cout << "Object type " << static_cast<int>(obj->obj_code()) << " at " << x << "," << y << " thinks it's at " << obj->pos() << std::endl;
             }
         }
     }

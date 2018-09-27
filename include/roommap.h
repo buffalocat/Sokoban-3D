@@ -23,7 +23,7 @@ public:
     Block* cycle_movers();
     void add_mover(Block*);
 
-    void serialize(std::ofstream& file) const;
+    void serialize(std::ofstream& file, bool editor_mode) const;
 
     GameObject* view(Point, Layer);
     GameObject* view(Point, ObjCode);
@@ -36,7 +36,7 @@ public:
 
     void set_initial_state();
 
-    void print_snake_info();
+    void print_contents();
 
 private:
     int width_;

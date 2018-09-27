@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "gameobject.h"
+#include "block.h"
 #include "roommap.h"
 #include "shader.h"
 #include "delta.h"
@@ -23,6 +24,29 @@ Point GameObject::pos() const {
 
 Point GameObject::shifted_pos(Point d) const {
     return Point{pos_.x + d.x, pos_.y + d.y};
+}
+
+void GameObject::shift_pos_auto(Point d, RoomMap* room_map, DeltaFrame* delta_frame) {
+    auto self_unique = room_map->take_quiet(this);
+    if (delta_frame) {
+        delta_frame->push(std::make_unique<MotionDelta>(this, pos_, room_map));
+    }
+    pos_.x += d.x;
+    pos_.y += d.y;
+    room_map->put_quiet(std::move(self_unique));
+}
+
+void GameObject::set_pos(Point p) {
+    pos_ = p;
+}
+
+void GameObject::set_pos_auto(Point p, RoomMap* room_map, DeltaFrame* delta_frame) {
+    auto self_unique = room_map->take_quiet(this);
+    if (delta_frame) {
+        delta_frame->push(std::make_unique<MotionDelta>(this, pos_, room_map));
+    }
+    pos_ = p;
+    room_map->put_quiet(std::move(self_unique));
 }
 
 void GameObject::reinit() {}
@@ -57,7 +81,55 @@ void Wall::draw(Shader* shader) {
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 }
 
-// Wall serializes trivially
 GameObject* Wall::deserialize(unsigned char* b) {
     return new Wall(b[0], b[1]);
+}
+
+Player::Player(int x, int y, RidingState state): GameObject(x, y), state_ {state} {}
+
+Player::~Player() {}
+
+ObjCode Player::obj_code() {
+    return ObjCode::Player;
+}
+
+Layer Player::layer() {
+    return Layer::Player;
+}
+
+RidingState Player::state() {
+    return state_;
+}
+
+Block* Player::get_car(RoomMap* room_map) {
+    if (state_ != RidingState::Riding) {
+        std::cout << "Player wasn't riding";
+        return nullptr;
+    } else {
+        std::cout << pos_ << std::endl;
+        std::cout << room_map << std::endl;
+        GameObject* car = room_map->view(pos_, Layer::Solid);
+        std::cout << "The car was " << car << std::endl;
+        if (car) {
+            std::cout << "The car had type " << (int)car->obj_code() << std::endl;
+        }
+        return static_cast<Block*>(car);
+    }
+}
+
+void Player::draw(Shader* shader) {
+    Point p = pos();
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.0f, p.y));
+    model = glm::scale(model, glm::vec3(0.5f, 0.3f, 0.5f));
+    shader->setMat4("model", model);
+    shader->setVec4("color", PINK);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+}
+
+void Player::serialize(std::ofstream& file) {
+    file << static_cast<unsigned char>(state_);
+}
+
+GameObject* Player::deserialize(unsigned char* b) {
+    return new Player(b[0], b[1], static_cast<RidingState>(b[2]));
 }

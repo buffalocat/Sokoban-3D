@@ -152,7 +152,7 @@ void RoomMap::put_quiet(std::unique_ptr<GameObject> object) {
 }
 
 void RoomMap::add_mover(Block* block) {
-    if (block->car()) {
+    if (block->is_car()) {
         movers_.push_back(block);
     }
 }

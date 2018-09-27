@@ -15,17 +15,15 @@ public:
     static BlockSet EMPTY_BLOCK_SET;
 
     Block(int x, int y);
-    Block(int x, int y, bool car);
+    Block(int x, int y, bool is_car);
     virtual ~Block() = 0;
     Layer layer();
-    bool car();
-    void set_car(bool car);
+    bool is_car();
+    void set_car(bool is_car);
     void draw(Shader*);
     virtual bool push_recheck(MoveProcessor*) = 0;
     virtual const BlockSet& get_strong_links() = 0;
     virtual const BlockSet& get_weak_links() = 0;
-    void set_pos(Point p);
-    void shift_pos(Point d);
     void add_link(Block*, DeltaFrame*);
     void remove_link(Block*, DeltaFrame*);
     void remove_all_links(DeltaFrame*);
@@ -51,7 +49,7 @@ enum class StickyLevel {
 class PushBlock: public Block {
 public:
     PushBlock(int x, int y);
-    PushBlock(int x, int y, bool car, StickyLevel sticky);
+    PushBlock(int x, int y, bool is_car, StickyLevel sticky);
     ~PushBlock();
     ObjCode obj_code();
     void serialize(std::ofstream& file);
@@ -76,7 +74,7 @@ private:
 class SnakeBlock: public Block {
 public:
     SnakeBlock(int x, int y);
-    SnakeBlock(int x, int y, bool car, unsigned int ends);
+    SnakeBlock(int x, int y, bool is_car, unsigned int ends);
     ~SnakeBlock();
     ObjCode obj_code();
     void serialize(std::ofstream& file);

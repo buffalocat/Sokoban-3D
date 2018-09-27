@@ -33,29 +33,35 @@ public:
     void serialize(std::ofstream& file);
     void save();
 
+    void set_default_player_pos(Point);
+    Point default_player_pos();
+
 private:
     std::string name_;
     std::unique_ptr<RoomMap> map_;
     std::unique_ptr<Camera> camera_;
     // For writing "shut" doors to the map before anything else!
     std::vector<Point> doors_;
+    Point default_player_pos_;
 };
 
 class RoomManager {
 public:
     RoomManager(GLFWwindow*, Shader* shader);
-    void init_load(std::string map_name);
+    bool init_load(std::string map_name);
     void init_make(int w, int h);
     std::unique_ptr<Room> load(std::string map_name, bool edit_mode, Point start={-1,-1});
     void save(std::string map_name, bool overwrite);
 
     void set_editor(Editor* editor);
     void set_cur_room(Room* room);
+    void set_player(Player* player);
 
     void use_door(MapLocation*, DeltaFrame*);
 
     RoomMap* room_map();
     Camera* camera();
+    Player* player();
 
     void main_loop(bool& editor_mode);
     void handle_input(DeltaFrame*);
@@ -79,7 +85,7 @@ private:
     UndoStack undo_stack_;
 
     int cooldown_;
-    Block* player_;
+    Player* player_;
 
     std::unordered_map<std::string, std::unique_ptr<Room>> rooms_;
     Room* cur_room_;
@@ -95,7 +101,7 @@ private:
 
 // These aren't methods - we don't even want to *accidentally* access the
 // "old" map or camera while initializing the new ones!
-void read_objects(std::ifstream& file, RoomMap*);
+void read_objects(std::ifstream& file, RoomMap*, RoomManager*);
 void read_camera_rects(std::ifstream& file, Camera*);
 void read_snake_link(std::ifstream& file, RoomMap*);
 void read_door_dest(std::ifstream& file, RoomMap*);

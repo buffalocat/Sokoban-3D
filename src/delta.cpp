@@ -2,7 +2,7 @@
 #include "gameobject.h"
 #include "roommap.h"
 #include "block.h"
-#include "room.h"
+#include "roommanager.h"
 
 #include <iostream>
 
@@ -64,12 +64,12 @@ void CreationDelta::revert() {
     room_map_->take_quiet(object_);
 }
 
-MotionDelta::MotionDelta(Block* object, Point p, RoomMap* room_map): object_ {object}, p_ {p}, room_map_ {room_map} {}
+MotionDelta::MotionDelta(GameObject* object, Point p, RoomMap* room_map): object_ {object}, p_ {p}, room_map_ {room_map} {
+    std::cout << "Made a MotionDelta for a " << static_cast<int>(object->obj_code()) << std::endl;
+}
 
 void MotionDelta::revert() {
-    auto object_unique = room_map_->take_quiet(object_);
-    object_->set_pos(p_);
-    room_map_->put_quiet(std::move(object_unique));
+    object_->set_pos(p_, room_map_, nullptr);
 }
 
 AddLinkDelta::AddLinkDelta(Block* a, Block* b): a_ {a}, b_ {b} {}
@@ -84,12 +84,22 @@ void RemoveLinkDelta::revert() {
     a_->add_link(b_, nullptr);
 }
 
-DoorMoveDelta::DoorMoveDelta(RoomManager* mgr, Room* prev_room, Point pos, Block* player):
-    mgr_ {mgr}, prev_room_ {prev_room}, pos_ {pos}, player_ {player} {}
+DoorMoveDelta::DoorMoveDelta(RoomManager* mgr, Room* prev_room, Point pos):
+    mgr_ {mgr}, prev_room_ {prev_room}, pos_ {pos} {}
 
 void DoorMoveDelta::revert() {
-    auto player_unique = mgr_->room_map()->take_quiet(player_);
-    mgr_->set_cur_room(prev_room_);
-    player_->set_pos(pos_);
-    mgr_->room_map()->put_quiet(std::move(player_unique));
+    RoomMap* room_map = mgr_->room_map();
+    Player* player = mgr_->player();
+    Block* car = player->get_car(room_map);
+    auto player_unique = room_map->take_quiet(player);
+    if (car) {
+        auto car_unique = room_map->take_quiet(car);
+        mgr_->set_cur_room(prev_room_);
+        car->set_pos_raw(pos_);
+        room_map->put_quiet(std::move(car_unique));
+    } else {
+        mgr_->set_cur_room(prev_room_);
+    }
+    player->set_pos_raw(pos_);
+    room_map->put_quiet(std::move(player_unique));
 }

@@ -67,11 +67,11 @@ private:
 
 class MotionDelta: public Delta {
 public:
-    MotionDelta(Block* object, Point p, RoomMap* room_map);
+    MotionDelta(GameObject* object, Point p, RoomMap* room_map);
     void revert();
 
 private:
-    Block* object_;
+    GameObject* object_;
     Point p_; // The previous position
     RoomMap* room_map_;
 };
@@ -98,14 +98,13 @@ private:
 
 class DoorMoveDelta: public Delta {
 public:
-    DoorMoveDelta(RoomManager* mgr, Room* room, Point pos, Block* player);
+    DoorMoveDelta(RoomManager* mgr, Room* room, Point pos);
     void revert();
 
 private:
     RoomManager* mgr_;
     Room* prev_room_;
     Point pos_;
-    Block* player_;
 };
 
 #endif // DELTA_H

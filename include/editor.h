@@ -97,7 +97,7 @@ public:
 
 private:
     GLFWwindow* window_;
-    RoomManager* room_;
+    RoomManager* mgr_;
     Point pos_;
 
     // Editor Tabs!

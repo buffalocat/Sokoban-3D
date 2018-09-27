@@ -10,7 +10,7 @@
 
 #pragma GCC diagnostic pop
 
-#include "room.h"
+#include "roommanager.h"
 
 #include "editor.h"
 #include "camera.h"
@@ -24,7 +24,8 @@ Room::Room(std::string name, std::unique_ptr<RoomMap> room_map, std::unique_ptr<
     name_ {name},
     map_ {std::move(room_map)},
     camera_ {std::move(camera)},
-    doors_ {} {}
+    doors_ {},
+    default_player_pos_ {Point{0,0}} {}
 
 Room::Room(int w, int h): name_ {""}, map_ {}, camera_ {}, doors_ {} {
     map_ = std::make_unique<RoomMap>(w, h);
@@ -41,6 +42,14 @@ Camera* Room::camera() {
 
 std::string Room::name() {
     return name_;
+}
+
+void Room::set_default_player_pos(Point p) {
+    default_player_pos_ = p;
+}
+
+Point Room::default_player_pos() {
+    return default_player_pos_;
 }
 
 RoomManager::RoomManager(GLFWwindow* window, Shader* shader):
@@ -73,6 +82,14 @@ Camera* RoomManager::camera() {
     return cur_camera_;
 }
 
+Player* RoomManager::player() {
+    return player_;
+}
+
+void RoomManager::set_player(Player* player) {
+    player_ = player;
+}
+
 // This is essentially the whole game loop
 void RoomManager::main_loop(bool& editor_mode) {
     auto delta_frame = std::make_unique<DeltaFrame>();
@@ -96,14 +113,14 @@ void RoomManager::handle_input(DeltaFrame* delta_frame) {
     if (glfwGetKey(window_, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window_, true);
     }
-    if (cooldown_ == 0 && player_) {
+    if (cooldown_ == 0) {
         for (auto p : MOVEMENT_KEYS) {
             // For starters, we'll use a naive input processing method.
             // In particular, the precedence of keys is arbitrary
             // and there is no buffering.
             if (glfwGetKey(window_, p.first) == GLFW_PRESS) {
                 //StartCounter();
-                MoveProcessor(cur_map_, p.second).try_move(delta_frame);
+                MoveProcessor(player_, cur_map_, p.second).try_move(delta_frame);
                 Door* door = static_cast<Door*>(cur_map_->view(player_->pos(), ObjCode::Door));
                 if (door && door->dest()) {
                     use_door(door->dest(), delta_frame);
@@ -260,10 +277,7 @@ bool RoomManager::valid(Point pos) {
 }
 
 void Room::serialize(std::ofstream& file) {
-    // Write potential load failure conditions first
-    if (!map_->get_mover()) {
-        file << static_cast<unsigned char>(State::NoPlayer);
-    }
+    // Specify failure conditions first!
     for (Point p : doors_) {
         if (map_->view(p, Layer::Solid)) {
             file << static_cast<unsigned char>(State::BlockedDoor);
@@ -271,11 +285,15 @@ void Room::serialize(std::ofstream& file) {
             file << static_cast<unsigned char>(p.y);
         }
     }
-
-    // Ordinary Map Data past here
+    // Map initialization
     file << static_cast<unsigned char>(State::SmallDims);
     file << static_cast<unsigned char>(map_->width());
     file << static_cast<unsigned char>(map_->height());
+
+    // All other map data
+    file << static_cast<unsigned char>(State::PlayerDefault);
+    file << static_cast<unsigned char>(default_player_pos_.x);
+    file << static_cast<unsigned char>(default_player_pos_.y);
 
     map_->serialize(file);
 
@@ -332,14 +350,6 @@ std::unique_ptr<Room> RoomManager::load(std::string map_name, bool edit_mode, Po
         file.read((char *)b, 1);
         //NOTE: We can simplify this switch with macros if we use camelCase for these methods...?
         switch (static_cast<State>(b[0])) {
-        // Failure flags will always come first in the .map
-        // If there's no player, and we didn't bring one, and we're actually playing, load fails
-        case State::NoPlayer :
-            if (start.x == -1 && !edit_mode) {
-                std::cout << "No player in the map! Load failed." << std::endl;
-                return nullptr;
-            }
-            break;
         case State::BlockedDoor :
             file.read((char *)b, 2);
             if (b[0] == start.x && b[1] == start.y) {
@@ -353,11 +363,12 @@ std::unique_ptr<Room> RoomManager::load(std::string map_name, bool edit_mode, Po
             camera = camera_unique.get();
             room = std::make_unique<Room>(map_name, std::move(room_map_unique), std::move(camera_unique));
             break;
-        case State::BigDims :
-            // This will be used later, maybe
+        case State::PlayerDefault :
+            file.read((char *)b, 2);
+            room->set_default_player_pos(Point{b[0], b[1]});
             break;
         case State::Objects :
-            read_objects(file, room_map);
+            read_objects(file, room_map, this);
             break;
         case State::CameraRect :
             read_camera_rects(file, camera);
@@ -372,34 +383,35 @@ std::unique_ptr<Room> RoomManager::load(std::string map_name, bool edit_mode, Po
             reading_file = false;
             break;
         default :
-            std::cout << "Read a bad State:: code!!" << std::endl;
-            reading_file = false;
+            throw std::runtime_error("Unknown State code encountered in .map file (it's probably corrupt/an old version)");
             break;
         }
     }
     file.close();
-    // Undoing loses meaning if we didn't get here via a door move (or something similar)
-    if (start.x == -1) {
-        undo_stack_.reset();
-    }
     return room;
 }
 
-void RoomManager::init_load(std::string map_name) {
+bool RoomManager::init_load(std::string map_name) {
     std::unique_ptr<Room> room = load(map_name, true);
     if (!room) {
-        return;
+        return false;
     }
     //rooms_.clear();
     set_cur_room(room.get());
+
+    Point p;
+    if (!player_) {
+        p = cur_room_->default_player_pos();
+        auto player_unique = std::make_unique<Player>(p.x, p.y, RidingState::Riding);
+        player_ = player_unique.get();
+    } else {
+        p = player_->pos();
+    }
+    Block* car = dynamic_cast<Block*>(cur_map_->view(p, Layer::Solid));
+    RidingState player_state = (car && car->is_car()) ? RidingState::Riding : RidingState::Free;
     rooms_[room->name()] = std::move(room);
     cur_map_->set_initial_state();
-    player_ = cur_map_->get_mover();
-    if (player_) {
-        cur_camera_->set_current_pos(player_->pos());
-    } else {
-        cur_camera_->set_current_pos(Point{0,0});
-    }
+    return true;
 }
 
 void RoomManager::init_make(int w, int h) {
@@ -408,7 +420,10 @@ void RoomManager::init_make(int w, int h) {
     undo_stack_.reset();
     set_cur_room(room.get());
     rooms_[room->name()] = std::move(room);
-    auto player_unique = std::make_unique<PushBlock>(0,0,true,StickyLevel::None);
+    // By default, make a player in a car at the top left corner
+    cur_room_->set_default_player_pos(Point{0,0});
+    cur_map_->put_quiet(std::make_unique<PushBlock>(0,0,true,StickyLevel::None));
+    auto player_unique = std::make_unique<Player>(0,0,RidingState::Riding);
     player_ = player_unique.get();
     cur_map_->put_quiet(std::move(player_unique));
     cur_map_->set_initial_state();
@@ -433,15 +448,25 @@ void RoomManager::use_door(MapLocation* dest, DeltaFrame* delta_frame) {
         rooms_[dest->map_name] = std::move(loaded_room);
     }
     // Clean up the player however necessary BEFORE moving through the door
-    player_->remove_all_links(delta_frame);
-    delta_frame->push(std::make_unique<DoorMoveDelta>(this, cur_room_, player_->pos(), player_));
+    Block* car = player_->get_car(cur_map_);
+    if (car) {
+        car->remove_all_links(delta_frame);
+    }
+    delta_frame->push(std::make_unique<DoorMoveDelta>(this, cur_room_, player_->pos()));
     auto player_unique = cur_map_->take_quiet(player_);
-    player_->set_pos(dest->pos);
-    // I'm not exactly sure what we want to do with saving, but this isn't it
-    //cur_room_->save();
-    set_cur_room(room);
+    player_->set_pos_raw(dest->pos);
+    if (car) {
+        auto car_unique = cur_map_->take_quiet(car);
+        set_cur_room(room);
+        car->set_pos_raw(dest->pos);
+        cur_map_->put_quiet(std::move(car_unique));
+    } else {
+        set_cur_room(room);
+    }
     cur_map_->put_quiet(std::move(player_unique));
-    player_->check_add_local_links(cur_map_, delta_frame);
+    if (car) {
+        car->check_add_local_links(cur_map_, delta_frame);
+    }
     cur_map_->set_initial_state();
     cur_camera_->set_current_pos(player_->pos());
 }
@@ -452,6 +477,8 @@ const std::unordered_map<ObjCode, unsigned int, ObjCodeHash> BYTES_PER_OBJECT = 
     {ObjCode::PushBlock, 3},
     {ObjCode::SnakeBlock, 3},
     {ObjCode::Door, 2},
+    {ObjCode::Player, 3},
+    {ObjCode::PlayerWall, 2},
 };
 
 const std::unordered_map<CameraCode, unsigned int, CameraCodeHash> BYTES_PER_CAMERA = {
@@ -467,7 +494,7 @@ case ObjCode::CLASS :\
     room_map->put_quiet(std::unique_ptr<GameObject>(CLASS::deserialize(b)));\
     break;
 
-void read_objects(std::ifstream& file, RoomMap* room_map) {
+void read_objects(std::ifstream& file, RoomMap* room_map, RoomManager* mgr) {
     unsigned char b[8];
     while (true) {
         file.read(reinterpret_cast<char *>(b), 1);
@@ -478,9 +505,19 @@ void read_objects(std::ifstream& file, RoomMap* room_map) {
         CASE_OBJCODE(PushBlock)
         CASE_OBJCODE(SnakeBlock)
         CASE_OBJCODE(Door)
+        case ObjCode::Player :
+            {
+                auto player_unique = std::unique_ptr<GameObject>(Player::deserialize(b));
+                mgr->set_player(static_cast<Player*>(player_unique.get()));
+                room_map->put_quiet(std::move(player_unique));
+                break;
+            }
+        //CASE_OBJCODE(PlayerWall)
         case ObjCode::NONE :
-        default :
             return;
+        default :
+            throw std::runtime_error("Unknown Object code encountered in .map file (it's probably corrupt/an old version)");
+            break;
         }
     }
 }
@@ -504,7 +541,9 @@ void read_camera_rects(std::ifstream& file, Camera* camera) {
         CASE_CAMCODE(Clamped)
         CASE_CAMCODE(Null)
         case CameraCode::NONE :
+            return;
         default :
+            throw std::runtime_error("Unknown Camera code encountered in .map file (it's probably corrupt/an old version)");
             return;
         }
     }

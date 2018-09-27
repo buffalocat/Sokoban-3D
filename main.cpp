@@ -17,7 +17,7 @@
 
 #pragma GCC diagnostic pop
 
-#include "room.h"
+#include "roommanager.h"
 #include "shader.h"
 #include "editor.h"
 
@@ -131,7 +131,7 @@ int main(void) {
 
     // It's convenient to keep the demo code in here,
     // for when we want to explore ImGui features
-    bool show_demo_window = false;
+    bool show_demo_window = true;
     bool show_editor_window = true;
 
     while(!glfwWindowShouldClose(window)) {

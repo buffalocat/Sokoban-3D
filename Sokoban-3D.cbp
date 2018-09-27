@@ -76,10 +76,11 @@
 		<Unit filename="include/dear/imgui_impl_opengl3.cpp" />
 		<Unit filename="include/dear/imgui_widgets.cpp" />
 		<Unit filename="include/delta.h" />
+		<Unit filename="include/door.h" />
 		<Unit filename="include/editor.h" />
 		<Unit filename="include/gameobject.h" />
 		<Unit filename="include/moveprocessor.h" />
-		<Unit filename="include/room.h" />
+		<Unit filename="include/roommanager.h" />
 		<Unit filename="include/roommap.h" />
 		<Unit filename="include/shader.h" />
 		<Unit filename="main.cpp" />
@@ -89,10 +90,11 @@
 		<Unit filename="src/camera.cpp" />
 		<Unit filename="src/common.cpp" />
 		<Unit filename="src/delta.cpp" />
+		<Unit filename="src/door.cpp" />
 		<Unit filename="src/editor.cpp" />
 		<Unit filename="src/gameobject.cpp" />
 		<Unit filename="src/moveprocessor.cpp" />
-		<Unit filename="src/room.cpp" />
+		<Unit filename="src/roommanager.cpp" />
 		<Unit filename="src/roommap.cpp" />
 		<Unit filename="src/shader.cpp" />
 		<Extensions>

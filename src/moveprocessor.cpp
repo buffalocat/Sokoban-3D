@@ -3,19 +3,51 @@
 #include "delta.h"
 #include "roommap.h"
 
-MoveProcessor::MoveProcessor(RoomMap* room_map, Point dir): map_ {room_map}, dir_ {dir}, comps_ {},
+MoveProcessor::MoveProcessor(Player* player, RoomMap* room_map, Point dir):
+player_ {player}, map_ {room_map}, dir_ {dir}, comps_ {},
 maybe_broken_weak_ {}, touched_snakes_ {} {}
 
 void MoveProcessor::try_move(DeltaFrame* delta_frame) {
+    // Any Player-layer object will stop the player from moving
+    if (map_->view(player_->shifted_pos(dir_), Layer::Player)) {
+        return;
+    }
+    switch (player_->state()) {
+    case RidingState::Free :
+        player_->shift_pos(dir_, map_, delta_frame);
+        break;
+    case RidingState::Bound :
+        move_bound(delta_frame);
+        break;
+    case RidingState::Riding :
+        move_riding(delta_frame);
+        break;
+    default:
+        break;
+    }
+}
+
+void MoveProcessor::move_bound(DeltaFrame* delta_frame) {}
+
+void MoveProcessor::move_riding(DeltaFrame* delta_frame) {
     std::vector<Component*> roots {};
-    //NOTE: More checks will happen when Player is a separate layer in practice.
+    // NOTE: for now we'll effectively assume that car is a PushBlock, not a SnakeBlock
+    Block* car = static_cast<Block*>(map_->view(player_->pos(), Layer::Solid));
+    roots.push_back(move_component(car, false));
+    // When the player can have "clones", we'll have to add more roots
+    // They may also have DIFFERENT (rotated/reflected) directions!!
+    /*
     for (Block* block : map_->movers()) {
-        // NOTE: Later there should be special code for when block is a SnakeBlock*!
         roots.push_back(move_component(block, false));
     }
+    */
     for (Component* comp : roots) {
         comp->resolve_contingent();
     }
+    if (!comps_[car]->good()) {
+        return;
+    }
+    player_->shift_pos(dir_, map_, delta_frame);
     // Reset targets of unmoved snakes, look for snakes to check for link adding later
     std::unordered_set<SnakeBlock*> check_snakes = {};
     std::vector<SnakeBlock*> good_snakes = {};
@@ -32,11 +64,7 @@ void MoveProcessor::try_move(DeltaFrame* delta_frame) {
     // Standard block movement
     for (auto& p : comps_) {
         if (p.second->good()) {
-            Block* obj = p.first;
-            auto obj_unique = map_->take_quiet(obj);
-            delta_frame->push(std::make_unique<MotionDelta>(obj, obj->pos(), map_));
-            obj->shift_pos(dir_);
-            map_->put_quiet(std::move(obj_unique));
+            p.first->shift_pos(dir_, map_, delta_frame);
         }
     }
     // Remove any links that were broken

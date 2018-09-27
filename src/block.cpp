@@ -9,7 +9,7 @@ BlockSet Block::EMPTY_BLOCK_SET {};
 // Push is the "default" BlockType
 Block::Block(int x, int y): GameObject(x, y), car_ {false}, links_ {} {}
 
-Block::Block(int x, int y, bool car): GameObject(x, y), car_ {car}, links_ {} {}
+Block::Block(int x, int y, bool is_car): GameObject(x, y), car_ {is_car}, links_ {} {}
 
 Block::~Block() {}
 
@@ -17,12 +17,12 @@ Layer Block::layer() {
     return Layer::Solid;
 }
 
-bool Block::car() {
+bool Block::is_car() {
     return car_;
 }
 
-void Block::set_car(bool car) {
-    car_ = car;
+void Block::set_car(bool is_car) {
+    car_ = is_car;
 }
 
 void Block::draw(Shader* shader) {
@@ -30,9 +30,9 @@ void Block::draw(Shader* shader) {
     glm::mat4 model;
     if (car_) {
         model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.0f, p.y));
-        model = glm::scale(model, glm::vec3(0.5f, 0.2f, 0.5f));
+        model = glm::scale(model, glm::vec3(0.7f, 0.1f, 0.7f));
         shader->setMat4("model", model);
-        shader->setVec4("color", PINK);
+        shader->setVec4("color", LIGHT_GREY);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
     }
     // Debugging mode!! Maybe this will be toggle-able later?
@@ -46,16 +46,6 @@ void Block::draw(Shader* shader) {
         shader->setMat4("model", model);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
     }
-}
-
-void Block::shift_pos(Point d) {
-    pos_.x += d.x;
-    pos_.y += d.y;
-}
-
-void Block::set_pos(Point p) {
-    pos_.x = p.x;
-    pos_.y = p.y;
 }
 
 void Block::add_link(Block* link, DeltaFrame* delta_frame) {
@@ -104,7 +94,9 @@ void Block::reinit() {
 void Block::check_remove_local_links(RoomMap* room_map, DeltaFrame* delta_frame) {
     Point p, q;
     p = pos();
+    std::cout << "This block is a " << (int)obj_code() << " at " << p << std::endl;
     for (auto& link : links_) {
+        std::cout << "This block is a " << (int)link->obj_code() << " at " << link->pos() << std::endl;
         q = link->pos();
         if (abs(p.x - q.x) + abs(p.y - q.y) >= 2) {
             remove_link(link, delta_frame);
@@ -113,7 +105,7 @@ void Block::check_remove_local_links(RoomMap* room_map, DeltaFrame* delta_frame)
 }
 
 PushBlock::PushBlock(int x, int y): Block(x, y, false), sticky_ {StickyLevel::None} {}
-PushBlock::PushBlock(int x, int y, bool car, StickyLevel sticky): Block(x, y, car), sticky_ {sticky} {}
+PushBlock::PushBlock(int x, int y, bool is_car, StickyLevel sticky): Block(x, y, is_car), sticky_ {sticky} {}
 
 PushBlock::~PushBlock() {}
 
@@ -169,9 +161,9 @@ void PushBlock::serialize(std::ofstream& file) {
 }
 
 GameObject* PushBlock::deserialize(unsigned char* b) {
-    bool car = (b[2] >> 7) == 1;
+    bool is_car = (b[2] >> 7) == 1;
     StickyLevel sticky = static_cast<StickyLevel>(b[2] & 3);
-    return new PushBlock(b[0], b[1], car, sticky);
+    return new PushBlock(b[0], b[1], is_car, sticky);
 }
 
 bool PushBlock::relation_check() {
@@ -196,7 +188,7 @@ void PushBlock::check_add_local_links(RoomMap* room_map, DeltaFrame* delta_frame
 }
 
 SnakeBlock::SnakeBlock(int x, int y): Block(x, y), ends_ {2}, distance_ {-1}, target_ {nullptr} {}
-SnakeBlock::SnakeBlock(int x, int y, bool car, unsigned int ends): Block(x, y, car), ends_ {(ends == 1 || ends == 2) ? ends : 2}, distance_ {-1}, target_ {nullptr} {}
+SnakeBlock::SnakeBlock(int x, int y, bool is_car, unsigned int ends): Block(x, y, is_car), ends_ {(ends == 1 || ends == 2) ? ends : 2}, distance_ {-1}, target_ {nullptr} {}
 
 SnakeBlock::~SnakeBlock() {}
 
@@ -263,9 +255,9 @@ void SnakeBlock::serialize(std::ofstream& file) {
 }
 
 GameObject* SnakeBlock::deserialize(unsigned char* b) {
-    bool car = (b[2] >> 7) == 1;
+    bool is_car = (b[2] >> 7) == 1;
     int ends = (b[2] & 1) + 1;
-    return new SnakeBlock(b[0], b[1], car, ends);
+    return new SnakeBlock(b[0], b[1], is_car, ends);
 }
 
 bool SnakeBlock::relation_check() {
@@ -436,9 +428,23 @@ void SnakeBlock::pull_aux(RoomMap* room_map, DeltaFrame* delta_frame, std::unord
             }
         }
         delta_frame->push(std::make_unique<MotionDelta>(cur, cur->pos(), room_map));
-        cur->set_pos(next_pos);
+        cur->set_pos_raw(next_pos);
         cur->reset_target();
         room_map->put_quiet(std::move(obj_unique));
+        /*
+        next_pos = next->pos();
+        // When we are sufficiently close to a push, it's possible that the thing
+        // we're aiming for has already moved!  In this case, be sure to aim at
+        // its previous position instead.
+        if (cur->distance() <= 2) {
+            cur_pos = cur->pos();
+            if (abs(next_pos.x - cur_pos.x) + abs(next_pos.y - cur_pos.y) != 1) {
+                next_pos = Point{next_pos.x - dir.x, next_pos.y - dir.y};
+            }
+        }
+        cur->set_pos(next_pos, room_map, delta_frame);
+        cur->reset_target();
+        */
         cur = next;
         next = cur->target_;
     }

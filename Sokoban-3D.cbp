@@ -83,6 +83,7 @@
 		<Unit filename="include/roommanager.h" />
 		<Unit filename="include/roommap.h" />
 		<Unit filename="include/shader.h" />
+		<Unit filename="include/stb_image.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="shaders/shader.fs" />
 		<Unit filename="shaders/shader.vs" />

@@ -32,7 +32,6 @@
 *.app
 
 # Code::Blocks Project config files
-*.cscope_file_list
 *.depend
 *.layout
 

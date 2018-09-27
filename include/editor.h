@@ -36,7 +36,10 @@ public:
     void handle_right_click(Point);
 
 private:
+    int layer;
     int obj_code;
+
+    int color;
     int pb_sticky;
     bool is_car;
     int sb_ends;

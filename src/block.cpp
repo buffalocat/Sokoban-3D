@@ -7,9 +7,9 @@
 BlockSet Block::EMPTY_BLOCK_SET {};
 
 // Push is the "default" BlockType
-Block::Block(int x, int y): GameObject(x, y), car_ {false}, links_ {} {}
+Block::Block(int x, int y): GameObject(x, y), color_ {0}, car_ {false}, links_ {} {}
 
-Block::Block(int x, int y, bool is_car): GameObject(x, y), car_ {is_car}, links_ {} {}
+Block::Block(int x, int y, unsigned char color, bool is_car): GameObject(x, y), color_ {color}, car_ {is_car}, links_ {} {}
 
 Block::~Block() {}
 
@@ -32,11 +32,11 @@ void Block::draw(Shader* shader) {
         model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.0f, p.y));
         model = glm::scale(model, glm::vec3(0.7f, 0.1f, 0.7f));
         shader->setMat4("model", model);
-        shader->setVec4("color", LIGHT_GREY);
+        shader->setVec4("color", COLORS[LIGHT_GREY]);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
     }
     // Debugging mode!! Maybe this will be toggle-able later?
-    shader->setVec4("color", BLACK);
+    shader->setVec4("color", COLORS[BLACK]);
     for (auto link : links_) {
         Point q = link->pos();
         Point d {q.x - p.x, q.y - p.y};
@@ -94,9 +94,7 @@ void Block::reinit() {
 void Block::check_remove_local_links(RoomMap* room_map, DeltaFrame* delta_frame) {
     Point p, q;
     p = pos();
-    std::cout << "This block is a " << (int)obj_code() << " at " << p << std::endl;
     for (auto& link : links_) {
-        std::cout << "This block is a " << (int)link->obj_code() << " at " << link->pos() << std::endl;
         q = link->pos();
         if (abs(p.x - q.x) + abs(p.y - q.y) >= 2) {
             remove_link(link, delta_frame);
@@ -104,8 +102,8 @@ void Block::check_remove_local_links(RoomMap* room_map, DeltaFrame* delta_frame)
     }
 }
 
-PushBlock::PushBlock(int x, int y): Block(x, y, false), sticky_ {StickyLevel::None} {}
-PushBlock::PushBlock(int x, int y, bool is_car, StickyLevel sticky): Block(x, y, is_car), sticky_ {sticky} {}
+PushBlock::PushBlock(int x, int y): Block(x, y, 0, false), sticky_ {StickyLevel::None} {}
+PushBlock::PushBlock(int x, int y, unsigned char color, bool is_car, StickyLevel sticky): Block(x, y, color, is_car), sticky_ {sticky} {}
 
 PushBlock::~PushBlock() {}
 
@@ -121,14 +119,11 @@ void PushBlock::draw(Shader* shader) {
     Point p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f, p.y));
     shader->setMat4("model", model);
+    shader->setVec4("color", COLORS[color_]);
     if (sticky_ == StickyLevel::None) {
-        shader->setVec4("color", GREEN);
-    } else if (sticky_ == StickyLevel::Strong) {
         shader->setVec2("TexOffset", glm::vec2(2,0));
-        shader->setVec4("color", ORANGE);
     } else if (sticky_ == StickyLevel::Weak) {
         shader->setVec2("TexOffset", glm::vec2(1,0));
-        shader->setVec4("color", RED);
     }
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
     shader->setVec2("TexOffset", glm::vec2(0,0));
@@ -156,6 +151,7 @@ const BlockSet& PushBlock::get_weak_links() {
 }
 
 void PushBlock::serialize(std::ofstream& file) {
+    file << color_;
     unsigned char ser = static_cast<unsigned char>(sticky_); // StickyLevel stored in first two bits
     if (car_) {
         ser |= 1 << 7; // car stored in 8th bit
@@ -164,9 +160,9 @@ void PushBlock::serialize(std::ofstream& file) {
 }
 
 GameObject* PushBlock::deserialize(unsigned char* b) {
-    bool is_car = (b[2] >> 7) == 1;
-    StickyLevel sticky = static_cast<StickyLevel>(b[2] & 3);
-    return new PushBlock(b[0], b[1], is_car, sticky);
+    bool is_car = (b[3] >> 7) == 1;
+    StickyLevel sticky = static_cast<StickyLevel>(b[3] & 3);
+    return new PushBlock(b[0], b[1], b[2], is_car, sticky);
 }
 
 bool PushBlock::relation_check() {
@@ -184,14 +180,14 @@ void PushBlock::check_add_local_links(RoomMap* room_map, DeltaFrame* delta_frame
         return;
     for (auto& d : DIRECTIONS) {
         auto block = dynamic_cast<PushBlock*>(room_map->view(shifted_pos(d), Layer::Solid));
-        if (block && sticky_ == block->sticky_) {
+        if (block && sticky_ == block->sticky_ && color_ == block->color_) {
             add_link(block, delta_frame);
         }
     }
 }
 
 SnakeBlock::SnakeBlock(int x, int y): Block(x, y), ends_ {2}, distance_ {-1}, target_ {nullptr} {}
-SnakeBlock::SnakeBlock(int x, int y, bool is_car, unsigned int ends): Block(x, y, is_car), ends_ {(ends == 1 || ends == 2) ? ends : 2}, distance_ {-1}, target_ {nullptr} {}
+SnakeBlock::SnakeBlock(int x, int y, unsigned char color, bool is_car, unsigned int ends): Block(x, y, color, is_car), ends_ {(ends == 1 || ends == 2) ? ends : 2}, distance_ {-1}, target_ {nullptr} {}
 
 SnakeBlock::~SnakeBlock() {}
 
@@ -230,16 +226,17 @@ void SnakeBlock::draw(Shader* shader) {
     model = glm::scale(model, glm::vec3(0.7071f, 1, 0.7071f));
     model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0, 1, 0));
     shader->setMat4("model", model);
+    shader->setVec4("color", COLORS[color_]);
     if (ends_ == 1) {
-        shader->setVec4("color", PURPLE);
-    } else {
-        shader->setVec4("color", DARK_PURPLE);
+        shader->setVec2("TexOffset", glm::vec2(2,0));
     }
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    shader->setVec2("TexOffset", glm::vec2(0,0));
     Block::draw(shader);
 }
 
 void SnakeBlock::serialize(std::ofstream& file) {
+    file << color_;
     unsigned char ser = ends_ - 1; // ends - 1 in 1st bit
     Point p, q;
     p = pos_;
@@ -258,9 +255,9 @@ void SnakeBlock::serialize(std::ofstream& file) {
 }
 
 GameObject* SnakeBlock::deserialize(unsigned char* b) {
-    bool is_car = (b[2] >> 7) == 1;
-    int ends = (b[2] & 1) + 1;
-    return new SnakeBlock(b[0], b[1], is_car, ends);
+    bool is_car = (b[3] >> 7) == 1;
+    int ends = (b[3] & 1) + 1;
+    return new SnakeBlock(b[0], b[1], b[2], is_car, ends);
 }
 
 bool SnakeBlock::relation_check() {
@@ -311,7 +308,7 @@ void SnakeBlock::check_add_local_links(RoomMap* room_map, DeltaFrame* delta_fram
     }
     for (auto& d : DIRECTIONS) {
         auto snake = dynamic_cast<SnakeBlock*>(room_map->view(shifted_pos(d), Layer::Solid));
-        if (snake && snake->available() && !snake->confused(room_map)) {
+        if (snake && color_ == snake->color_ && snake->available() && !snake->confused(room_map)) {
             add_link(snake, delta_frame);
         }
     }
@@ -381,14 +378,14 @@ void SnakeBlock::pull(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered
                 Point pos = cur->pos();
                 room_map->take(cur, delta_frame);
 
-                auto a_unique = std::make_unique<SnakeBlock>(pos.x, pos.y, false, 1);
+                auto a_unique = std::make_unique<SnakeBlock>(pos.x, pos.y, color_, false, 1);
                 auto a = a_unique.get();
                 room_map->put(std::move(a_unique), delta_frame);
                 a->target_ = prev;
                 a->add_link(prev, delta_frame);
                 a->pull_aux(room_map, delta_frame, check_snakes, dir);
 
-                auto b_unique = std::make_unique<SnakeBlock>(pos.x, pos.y, false, 1);
+                auto b_unique = std::make_unique<SnakeBlock>(pos.x, pos.y, color_, false, 1);
                 auto b = b_unique.get();
                 room_map->put(std::move(b_unique), delta_frame);
                 b->target_ = cur->target_;

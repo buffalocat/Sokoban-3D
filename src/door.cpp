@@ -49,9 +49,9 @@ void Door::draw(Shader* shader) {
     model = glm::scale(model, glm::vec3(1, 0.1, 1));
     shader->setMat4("model", model);
     if (dest_) {
-        shader->setVec4("color", BLUE);
+        shader->setVec4("color", COLORS[BLUE]);
     } else {
-        shader->setVec4("color", DARK_RED);
+        shader->setVec4("color", COLORS[DARK_RED]);
     }
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 }

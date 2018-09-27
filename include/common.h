@@ -98,17 +98,33 @@ struct CameraCodeHash {
     std::size_t operator()(const CameraCode& c) const;
 };
 
-const glm::vec4 GREEN = glm::vec4(0.6f, 0.9f, 0.7f, 1.0f);
-const glm::vec4 PINK = glm::vec4(0.9f, 0.6f, 0.7f, 1.0f);
-const glm::vec4 PURPLE = glm::vec4(0.7f, 0.5f, 0.9f, 1.0f);
-const glm::vec4 DARK_PURPLE = glm::vec4(0.3f, 0.2f, 0.6f, 1.0f);
-const glm::vec4 BLUE = glm::vec4(0.0f, 0.3f, 0.8f, 1.0f);
-const glm::vec4 RED = glm::vec4(1.0f, 0.5f, 0.5f, 1.0f);
-const glm::vec4 DARK_RED = glm::vec4(0.6f, 0.0f, 0.1f, 1.0f);
-const glm::vec4 BLACK = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-const glm::vec4 LIGHT_GREY = glm::vec4(0.7f, 0.7f, 0.7f, 1.0f);
-const glm::vec4 ORANGE = glm::vec4(1.0f, 0.7f, 0.3f, 1.0f);
-const glm::vec4 YELLOW = glm::vec4(0.7f, 0.7f, 0.3f, 1.0f);
+enum {
+    GREEN = 0,
+    PINK = 1,
+    PURPLE = 2,
+    DARK_PURPLE = 3,
+    BLUE = 4,
+    RED = 5,
+    DARK_RED = 6,
+    BLACK = 7,
+    LIGHT_GREY = 8,
+    ORANGE = 9,
+    YELLOW = 10,
+};
+
+const glm::vec4 COLORS[] = {
+    glm::vec4(0.6f, 0.9f, 0.7f, 1.0f),
+    glm::vec4(0.9f, 0.6f, 0.7f, 1.0f),
+    glm::vec4(0.7f, 0.5f, 0.9f, 1.0f),
+    glm::vec4(0.3f, 0.2f, 0.6f, 1.0f),
+    glm::vec4(0.0f, 0.3f, 0.8f, 1.0f),
+    glm::vec4(1.0f, 0.5f, 0.5f, 1.0f),
+    glm::vec4(0.6f, 0.0f, 0.1f, 1.0f),
+    glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
+    glm::vec4(0.7f, 0.7f, 0.7f, 1.0f),
+    glm::vec4(1.0f, 0.7f, 0.3f, 1.0f),
+    glm::vec4(0.7f, 0.7f, 0.3f, 1.0f),
+};
 
 // NOTE: the order matters here, for serialization reasons!
 const Point DIRECTIONS[4] = {Point{-1,0}, Point{0,-1}, Point{1,0}, Point{0,1}};

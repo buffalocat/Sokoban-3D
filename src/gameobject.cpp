@@ -77,7 +77,7 @@ void Wall::draw(Shader* shader) {
     Point p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f, p.y));
     shader->setMat4("model", model);
-    shader->setVec4("color", BLACK);
+    shader->setVec4("color", COLORS[BLACK]);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 }
 
@@ -122,7 +122,7 @@ void Player::draw(Shader* shader) {
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.0f, p.y));
     model = glm::scale(model, glm::vec3(0.5f, 0.3f, 0.5f));
     shader->setMat4("model", model);
-    shader->setVec4("color", PINK);
+    shader->setVec4("color", COLORS[PINK]);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 }
 

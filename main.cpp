@@ -116,7 +116,6 @@ int main(void) {
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     shader.use();
-
     shader.setVec2("TexOffset", glm::vec2(0,0));
 
     // Load a texture!
@@ -137,7 +136,7 @@ int main(void) {
     // Init game logic stuff
 
     RoomManager mgr(window, &shader);
-    mgr.init_make(DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
+    mgr.init_make("_default", DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
     Editor editor(window, &mgr);
     mgr.set_editor(&editor);
 

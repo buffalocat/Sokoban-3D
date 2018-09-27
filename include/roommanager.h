@@ -48,7 +48,7 @@ class RoomManager {
 public:
     RoomManager(GLFWwindow*, Shader* shader);
     bool init_load(std::string map_name);
-    void init_make(int w, int h);
+    void init_make(std::string map_name, int w, int h);
     Room* activate(std::string map_name, Point start={-1,-1});
     Room* load(std::string map_name, Point start={-1,-1});
     std::unique_ptr<Room> load_from_file(std::string& map_name, std::ifstream& file, Point start={-1,-1});
@@ -71,8 +71,8 @@ public:
     void handle_input_editor_mode();
     void draw_editor_mode();
 
-    void create_obj(std::unique_ptr<GameObject>);
-    void delete_obj(Point);
+    void create_obj(Layer layer, std::unique_ptr<GameObject>);
+    void delete_obj(Point, Layer layer);
 
     void make_door(Point pos, Point dest, std::string room_name);
 

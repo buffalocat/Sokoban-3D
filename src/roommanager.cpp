@@ -218,7 +218,7 @@ void RoomManager::draw(bool editor_mode) {
     model = glm::translate(model, glm::vec3(0.5, -0.1, 0.5));
     shader_->setMat4("model", model);
 
-    shader_->setVec4("color", YELLOW);
+    shader_->setVec4("color", COLORS[YELLOW]);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 }
 
@@ -229,8 +229,8 @@ void RoomManager::draw_editor_mode() {
 }
 
 //NOTE: obj guaranteed to be valid
-void RoomManager::create_obj(std::unique_ptr<GameObject> obj) {
-    if (!cur_map_->view(obj->pos(), Layer::Solid)) {
+void RoomManager::create_obj(Layer layer, std::unique_ptr<GameObject> obj) {
+    if (!cur_map_->view(obj->pos(), layer)) {
         Block* block = dynamic_cast<Block*>(obj.get());
         cur_map_->put_quiet(std::move(obj));
         if (block) {
@@ -239,8 +239,8 @@ void RoomManager::create_obj(std::unique_ptr<GameObject> obj) {
     }
 }
 
-void RoomManager::delete_obj(Point pos) {
-    GameObject* obj = cur_map_->view(pos, Layer::Solid);
+void RoomManager::delete_obj(Point pos, Layer layer) {
+    GameObject* obj = cur_map_->view(pos, layer);
     if (obj) {
         if (obj == player_) {
             player_ = nullptr;
@@ -461,7 +461,17 @@ bool RoomManager::init_load(std::string map_name) {
     return true;
 }
 
-void RoomManager::init_make(int w, int h) {
+void RoomManager::init_make(std::string map_name, int w, int h) {
+    if (map_name.size() == 0) {
+        std::cout << "Tried to create map file with empty name! Creation Failed." << std::endl;
+        return;
+    }
+    if (rooms_.count(map_name)) {
+        std::cout << "You've already loaded a room with that name! Creation Failed." << std::endl;
+        return;
+    }
+    w = std::max(1, std::min(256, w));
+    h = std::max(1, std::min(256, h));
     std::unique_ptr<Room> room = std::make_unique<Room>(w, h);
     //rooms_.clear();
     undo_stack_.reset();
@@ -469,7 +479,7 @@ void RoomManager::init_make(int w, int h) {
     rooms_[room->name()] = std::move(room);
     // By default, make a player in a car at the top left corner
     cur_room_->set_default_player_pos(Point{0,0});
-    cur_map_->put_quiet(std::make_unique<PushBlock>(0,0,true,StickyLevel::None));
+    cur_map_->put_quiet(std::make_unique<PushBlock>(0,0,0,true,StickyLevel::None));
     auto player_unique = std::make_unique<Player>(0,0,RidingState::Riding);
     player_ = player_unique.get();
     cur_map_->put_quiet(std::move(player_unique));
@@ -506,8 +516,8 @@ void RoomManager::use_door(MapLocation* dest, DeltaFrame* delta_frame) {
 const std::unordered_map<ObjCode, unsigned int, ObjCodeHash> BYTES_PER_OBJECT = {
     {ObjCode::NONE, 0},
     {ObjCode::Wall, 2},
-    {ObjCode::PushBlock, 3},
-    {ObjCode::SnakeBlock, 3},
+    {ObjCode::PushBlock, 4},
+    {ObjCode::SnakeBlock, 4},
     {ObjCode::Door, 2},
     {ObjCode::Player, 3},
     {ObjCode::PlayerWall, 2},

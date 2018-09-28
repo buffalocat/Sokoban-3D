@@ -322,7 +322,7 @@ bool SnakeBlock::confused(RoomMap* room_map) {
     unsigned int available_count = 0;
     for (auto& d : DIRECTIONS) {
         auto snake = dynamic_cast<SnakeBlock*>(room_map->view(shifted_pos(d), Layer::Solid));
-        if (snake && (snake->available() || links_.count(snake))) {
+        if (snake && color_ == snake->color_ && (snake->available() || links_.count(snake))) {
             ++available_count;
         }
     }
@@ -338,14 +338,14 @@ void SnakeBlock::collect_unlinked_neighbors(RoomMap* room_map, std::unordered_se
     }
 }
 
-// NOTE: pull and pull_aux are fairly complicated and share quite a lot of information
-// Maybe refactor to a method object later?
-void SnakeBlock::pull(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered_set<SnakeBlock*>& check_snakes, Point dir) {
-    SnakeBlock *prev, *cur;
-    cur = this;
+SnakePuller::SnakePuller(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered_set<SnakeBlock*>& check, Point dir):
+room_map_ {room_map}, delta_frame_ {delta_frame}, check_ {check}, dir_ {dir} {}
+
+void SnakePuller::prepare_pull(SnakeBlock* cur) {
+    SnakeBlock *prev;
     // The previous snake block is the adjacent one which was pushed.
     // There is at least one such block, and maybe two (but that's fine).
-    for (auto& link : links_) {
+    for (auto& link : cur->links_) {
         if (static_cast<SnakeBlock*>(link)->distance_ == 0) {
             prev = static_cast<SnakeBlock*>(link);
         }
@@ -354,8 +354,8 @@ void SnakeBlock::pull(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered
     while (true) {
         // If we reach the end of the snake, we can pull it
         if (cur->links_.size() == 1) {
-            check_snakes.insert(cur);
-            cur->pull_aux(room_map, delta_frame, check_snakes, dir);
+            check_.insert(cur);
+            pull(cur);
             break;
         }
         // Progress down the snake
@@ -376,21 +376,21 @@ void SnakeBlock::pull(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered
             // The chain was odd length; split the middle block!
             else if (d == cur->distance_) {
                 Point pos = cur->pos();
-                room_map->take(cur, delta_frame);
+                room_map_->take(cur, delta_frame_);
 
-                auto a_unique = std::make_unique<SnakeBlock>(pos.x, pos.y, color_, false, 1);
+                auto a_unique = std::make_unique<SnakeBlock>(pos.x, pos.y, cur->color_, false, 1);
                 auto a = a_unique.get();
-                room_map->put(std::move(a_unique), delta_frame);
+                room_map_->put(std::move(a_unique), delta_frame_);
                 a->target_ = prev;
-                a->add_link(prev, delta_frame);
-                a->pull_aux(room_map, delta_frame, check_snakes, dir);
+                a->add_link(prev, delta_frame_);
+                pull(a);
 
-                auto b_unique = std::make_unique<SnakeBlock>(pos.x, pos.y, color_, false, 1);
+                auto b_unique = std::make_unique<SnakeBlock>(pos.x, pos.y, cur->color_, false, 1);
                 auto b = b_unique.get();
-                room_map->put(std::move(b_unique), delta_frame);
+                room_map_->put(std::move(b_unique), delta_frame_);
                 b->target_ = cur->target_;
-                b->add_link(cur->target_, delta_frame);
-                b->pull_aux(room_map, delta_frame, check_snakes, dir);
+                b->add_link(cur->target_, delta_frame_);
+                pull(b);
 
                 // This snake won't get its target reset otherwise
                 // This causes problems post "resurrection" from undo!
@@ -398,9 +398,9 @@ void SnakeBlock::pull(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered
             }
             // The chain was even length; cut!
             else {
-                cur->remove_link(prev, delta_frame);
-                cur->pull_aux(room_map, delta_frame, check_snakes, dir);
-                prev->pull_aux(room_map, delta_frame, check_snakes, dir);
+                cur->remove_link(prev, delta_frame_);
+                pull(cur);
+                pull(prev);
             }
             break;
         }
@@ -408,11 +408,10 @@ void SnakeBlock::pull(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered
     }
 }
 
-void SnakeBlock::pull_aux(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered_set<SnakeBlock*>& check_snakes, Point dir) {
-    if (ends_ == 2) {
-        collect_unlinked_neighbors(room_map, check_snakes);
+void SnakePuller::pull(SnakeBlock* cur) {
+    if (cur->ends_ == 2) {
+        cur->collect_unlinked_neighbors(room_map_, check_);
     }
-    SnakeBlock* cur = this;
     SnakeBlock* next = cur->target_;
     Point cur_pos, next_pos;
     while (next) {
@@ -423,10 +422,10 @@ void SnakeBlock::pull_aux(RoomMap* room_map, DeltaFrame* delta_frame, std::unord
         if (cur->distance() <= 2) {
             cur_pos = cur->pos();
             if (abs(next_pos.x - cur_pos.x) + abs(next_pos.y - cur_pos.y) != 1) {
-                next_pos = Point{next_pos.x - dir.x, next_pos.y - dir.y};
+                next_pos = Point{next_pos.x - dir_.x, next_pos.y - dir_.y};
             }
         }
-        cur->set_pos_auto(next_pos, room_map, delta_frame);
+        cur->set_pos_auto(next_pos, room_map_, delta_frame_);
         cur->reset_target();
         cur = next;
         next = cur->target_;

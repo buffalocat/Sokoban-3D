@@ -102,6 +102,21 @@ private:
     unsigned int ends_;
     int distance_;
     SnakeBlock* target_;
+
+    friend class SnakePuller;
+};
+
+class SnakePuller {
+public:
+    SnakePuller(RoomMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&, Point);
+    void prepare_pull(SnakeBlock*);
+    void pull(SnakeBlock*);
+
+private:
+    RoomMap* room_map_;
+    DeltaFrame* delta_frame_;
+    std::unordered_set<SnakeBlock*>& check_;
+    Point dir_;
 };
 
 #endif // BLOCK_H

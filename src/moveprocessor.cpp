@@ -71,9 +71,10 @@ void MoveProcessor::move_riding(DeltaFrame* delta_frame) {
         block->check_remove_local_links(map_, delta_frame);
     }
     // Now that links are broken, we can pull snakes
+    SnakePuller puller(map_, delta_frame, check_snakes, dir_);
     for (auto& sb : good_snakes) {
         if (sb->distance() == 1) {
-            sb->pull(map_, delta_frame, check_snakes, dir_);
+            puller.prepare_pull(sb);
         }
     }
     // Now that everything has moved, check for created links

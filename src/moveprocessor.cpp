@@ -27,7 +27,14 @@ void MoveProcessor::try_move(DeltaFrame* delta_frame) {
     }
 }
 
-void MoveProcessor::move_bound(DeltaFrame* delta_frame) {}
+void MoveProcessor::move_bound(DeltaFrame* delta_frame) {
+    // We know that we're standing on a block already!
+    Block* cur = static_cast<Block*>(map_->view(player_->pos(), Layer::Solid));
+    Block* adj = dynamic_cast<Block*>(map_->view(player_->shifted_pos(dir_), Layer::Solid));
+    if (adj && cur->color() == adj->color()) {
+        player_->shift_pos_auto(dir_, map_, delta_frame);
+    }
+}
 
 void MoveProcessor::move_riding(DeltaFrame* delta_frame) {
     std::vector<Component*> roots {};

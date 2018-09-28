@@ -126,7 +126,7 @@ int main(void) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     int width, height, channels;
-    unsigned char *texture_data = stbi_load("resources\\textures1.png", &width, &height, &channels, 0);
+    unsigned char *texture_data = stbi_load("resources\\textures.png", &width, &height, &channels, 0);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data);
     stbi_image_free(texture_data);
 

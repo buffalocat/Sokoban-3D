@@ -128,8 +128,6 @@ const glm::vec4 COLORS[] = {
     glm::vec4(0.7f, 0.7f, 0.3f, 1.0f),
 };
 
-const glm::vec4 TRANSPARENT_BLACK = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f);
-
 // NOTE: the order matters here, for serialization reasons!
 const Point DIRECTIONS[4] = {Point{-1,0}, Point{0,-1}, Point{1,0}, Point{0,1}};
 

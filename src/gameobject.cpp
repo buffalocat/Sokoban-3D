@@ -93,25 +93,36 @@ RidingState Player::state() {
     return state_;
 }
 
+//NOTE: still need deltas for this
+void Player::toggle_riding(RoomMap* room_map, DeltaFrame* delta_frame) {
+    if (state_ == RidingState::Riding) {
+        delta_frame->push(std::make_unique<RidingStateDelta>(this, state_));
+        state_ = RidingState::Bound;
+    } else if (state_ == RidingState::Bound) {
+        Block* block = dynamic_cast<Block*>(room_map->view(pos(), Layer::Solid));
+        if (block && block->is_car()) {
+            delta_frame->push(std::make_unique<RidingStateDelta>(this, state_));
+            state_ = RidingState::Riding;
+        }
+    }
+}
+
+void Player::set_riding(RidingState state) {
+    state_ = state;
+}
+
 Block* Player::get_car(RoomMap* room_map) {
     if (state_ != RidingState::Riding) {
-        std::cout << "Player wasn't riding";
         return nullptr;
     } else {
-        std::cout << pos_ << std::endl;
-        std::cout << room_map << std::endl;
         GameObject* car = room_map->view(pos_, Layer::Solid);
-        std::cout << "The car was " << car << std::endl;
-        if (car) {
-            std::cout << "The car had type " << (int)car->obj_code() << std::endl;
-        }
         return static_cast<Block*>(car);
     }
 }
 
 void Player::draw(Shader* shader) {
     Point p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.0f, p.y));
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.0f + 0.5f * (state_ == RidingState::Bound), p.y));
     model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
     shader->setMat4("model", model);
     shader->setVec4("color", COLORS[PINK]);
@@ -143,7 +154,7 @@ void PlayerWall::draw(Shader* shader) {
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.1f, p.y));
     model = glm::scale(model, glm::vec3(1.0f, 0.2f, 1.0f));
     shader->setMat4("model", model);
-    shader->setVec4("color", TRANSPARENT_BLACK);
+    shader->setVec4("color", COLORS[BLACK]);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 }
 

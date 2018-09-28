@@ -109,3 +109,10 @@ obj_ {obj}, active_ {active}, waiting_ {waiting} {}
 void SwitchableDelta::revert() {
     obj_->set_aw(active_, waiting_);
 }
+
+RidingStateDelta::RidingStateDelta(Player* player, RidingState state):
+player_ {player}, state_ {state} {}
+
+void RidingStateDelta::revert() {
+    player_->set_riding(state_);
+}

@@ -43,6 +43,8 @@ private:
     int pb_sticky;
     bool is_car;
     int sb_ends;
+    bool persistent;
+    bool default_state;
 };
 
 class Camera;

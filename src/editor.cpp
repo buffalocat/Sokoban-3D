@@ -10,6 +10,7 @@
 #include "editor.h"
 #include "roommanager.h"
 #include "block.h"
+#include "switch.h"
 #include "door.h"
 
 Editor::Editor(GLFWwindow* window, RoomManager* mgr): window_ {window}, mgr_ {mgr}, pos_ {Point{0,0}},
@@ -119,10 +120,19 @@ void ObjectTab::draw() {
 
     if (layer == (int)Layer::Floor) {
         ImGui::RadioButton("Door##OBJECT_SELECT", &obj_code, (int)ObjCode::Door);
+        ImGui::RadioButton("Switch##OBJECT_SELECT", &obj_code, (int)ObjCode::Switch);
+        ImGui::RadioButton("Gate##OBJECT_SELECT", &obj_code, (int)ObjCode::Gate);
 
         if (obj_code == (int)ObjCode::Door) {}
+        else if (obj_code == (int)ObjCode::Switch) {
+            ImGui::InputInt("color##OBJECT_COLOR", &color);
+            ImGui::ColorButton("##OBJECT_COLOR_BUTTON", unpack_color(COLORS[color]), 0, ImVec2(40,40));
+            ImGui::Checkbox("persistent##SWITCH", &persistent);
+        } else if (obj_code == (int)ObjCode::Gate) {
+            ImGui::Checkbox("default##GATE", &default_state);
+        }
     } else if (layer == (int)Layer::Player) {
-
+        ImGui::RadioButton("PlayerWall##OBJECT_SELECT", &obj_code, (int)ObjCode::PlayerWall);
     } else if (layer == (int)Layer::Solid) {
         ImGui::RadioButton("Wall##OBJECT_SELECT", &obj_code, (int)ObjCode::Wall);
         ImGui::RadioButton("PushBlock##OBJECT_SELECT", &obj_code, (int)ObjCode::PushBlock);
@@ -214,13 +224,25 @@ void ObjectTab::handle_left_click(Point pos) {
     case (int)ObjCode::SnakeBlock :
         obj = std::make_unique<SnakeBlock>(x, y, color, is_car, sb_ends);
         break;
+    case (int)ObjCode::PlayerWall :
+        obj = std::make_unique<PlayerWall>(x, y);
+        break;
     case (int)ObjCode::Door :
         obj = std::make_unique<Door>(x, y);
+        break;
+    case (int)ObjCode::Switch :
+        obj = std::make_unique<Switch>(x, y, color, persistent);
+        break;
+    case (int)ObjCode::Gate :
+        obj = std::make_unique<Gate>(x, y, default_state);
         break;
     default:
         return;
     }
-    mgr_->create_obj(static_cast<Layer>(layer), std::move(obj));
+    // For now we'll do this, to stop the player from making things "on the wrong layer"
+    if ((int)obj->layer() == layer) {
+        mgr_->create_obj(static_cast<Layer>(layer), std::move(obj));
+    }
 }
 
 void ObjectTab::handle_right_click(Point pos) {

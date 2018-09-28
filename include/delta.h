@@ -11,6 +11,7 @@ class Block;
 class PushBlock;
 class SnakeBlock;
 class Switchable;
+class Player;
 
 struct Point;
 
@@ -117,6 +118,16 @@ private:
     Switchable* obj_;
     bool active_;
     bool waiting_;
+};
+
+class RidingStateDelta: public Delta {
+public:
+    RidingStateDelta(Player* player, RidingState state);
+    void revert();
+
+private:
+    Player* player_;
+    RidingState state_;
 };
 
 #endif // DELTA_H

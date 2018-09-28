@@ -84,6 +84,7 @@
 		<Unit filename="include/roommap.h" />
 		<Unit filename="include/shader.h" />
 		<Unit filename="include/stb_image.h" />
+		<Unit filename="include/switch.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="shaders/shader.fs" />
 		<Unit filename="shaders/shader.vs" />
@@ -98,6 +99,7 @@
 		<Unit filename="src/roommanager.cpp" />
 		<Unit filename="src/roommap.cpp" />
 		<Unit filename="src/shader.cpp" />
+		<Unit filename="src/switch.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

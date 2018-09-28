@@ -19,6 +19,7 @@
 #include "moveprocessor.h"
 #include "block.h"
 #include "door.h"
+#include "switch.h"
 
 Room::Room(std::string name, std::unique_ptr<RoomMap> room_map, std::unique_ptr<Camera> camera):
     name_ {name},
@@ -147,6 +148,9 @@ void RoomManager::handle_input(DeltaFrame* delta_frame) {
                 }
                 cooldown_ = MAX_COOLDOWN;
             }
+        } else if (glfwGetKey(window_, GLFW_KEY_X) == GLFW_PRESS) {
+            player_->toggle_riding(cur_map_, delta_frame);
+            cooldown_ = MAX_COOLDOWN;
         }
     } else {
         --cooldown_;
@@ -243,7 +247,7 @@ void RoomManager::delete_obj(Point pos, Layer layer) {
     GameObject* obj = cur_map_->view(pos, layer);
     if (obj) {
         if (obj == player_) {
-            player_ = nullptr;
+            return;
         }
         obj->cleanup(nullptr);
         auto sb = dynamic_cast<SnakeBlock*>(obj);
@@ -554,7 +558,9 @@ void read_objects(std::ifstream& file, RoomMap* room_map, RoomManager* mgr) {
                 room_map->put_quiet(std::move(player_unique));
                 break;
             }
-        //CASE_OBJCODE(PlayerWall)
+        CASE_OBJCODE(PlayerWall)
+        CASE_OBJCODE(Switch)
+        CASE_OBJCODE(Gate)
         case ObjCode::NONE :
             return;
         default :

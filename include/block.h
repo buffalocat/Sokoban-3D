@@ -21,6 +21,7 @@ public:
     bool is_car();
     void set_car(bool is_car);
     void draw(Shader*);
+    unsigned char color();
     virtual bool push_recheck(MoveProcessor*) = 0;
     virtual const BlockSet& get_strong_links() = 0;
     virtual const BlockSet& get_weak_links() = 0;

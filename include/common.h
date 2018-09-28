@@ -80,6 +80,8 @@ enum class ObjCode {
     Door = 4,
     Player = 5,
     PlayerWall = 6,
+    Switch = 7,
+    Gate = 8,
 };
 
 enum class CameraCode {
@@ -126,10 +128,12 @@ const glm::vec4 COLORS[] = {
     glm::vec4(0.7f, 0.7f, 0.3f, 1.0f),
 };
 
+const glm::vec4 TRANSPARENT_BLACK = glm::vec4(0.0f, 0.0f, 0.0f, 0.5f);
+
 // NOTE: the order matters here, for serialization reasons!
 const Point DIRECTIONS[4] = {Point{-1,0}, Point{0,-1}, Point{1,0}, Point{0,1}};
 
-#define SOKOBAN_LARGE_WINDOW
+//#define SOKOBAN_LARGE_WINDOW
 #ifdef SOKOBAN_LARGE_WINDOW
 const int SCREEN_WIDTH = 1200;
 const int SCREEN_HEIGHT = 900;

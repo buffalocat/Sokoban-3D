@@ -53,10 +53,6 @@ void GameObject::reinit() {}
 
 void GameObject::cleanup(DeltaFrame* delta_frame) {}
 
-bool GameObject::wall () {
-    return false;
-}
-
 Wall::Wall(int x, int y): GameObject(x, y) {}
 
 Wall::~Wall() {}
@@ -67,10 +63,6 @@ ObjCode Wall::obj_code() {
 
 Layer Wall::layer() {
     return Layer::Solid;
-}
-
-bool Wall::wall() {
-    return true;
 }
 
 void Wall::draw(Shader* shader) {
@@ -120,7 +112,7 @@ Block* Player::get_car(RoomMap* room_map) {
 void Player::draw(Shader* shader) {
     Point p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.0f, p.y));
-    model = glm::scale(model, glm::vec3(0.5f, 0.3f, 0.5f));
+    model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
     shader->setMat4("model", model);
     shader->setVec4("color", COLORS[PINK]);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
@@ -133,3 +125,29 @@ void Player::serialize(std::ofstream& file) {
 GameObject* Player::deserialize(unsigned char* b) {
     return new Player(b[0], b[1], static_cast<RidingState>(b[2]));
 }
+
+PlayerWall::PlayerWall(int x, int y): GameObject(x, y) {}
+
+PlayerWall::~PlayerWall() {}
+
+ObjCode PlayerWall::obj_code() {
+    return ObjCode::PlayerWall;
+}
+
+Layer PlayerWall::layer() {
+    return Layer::Player;
+}
+
+void PlayerWall::draw(Shader* shader) {
+    Point p = pos();
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.1f, p.y));
+    model = glm::scale(model, glm::vec3(1.0f, 0.2f, 1.0f));
+    shader->setMat4("model", model);
+    shader->setVec4("color", TRANSPARENT_BLACK);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+}
+
+GameObject* PlayerWall::deserialize(unsigned char* b) {
+    return new PlayerWall(b[0], b[1]);
+}
+

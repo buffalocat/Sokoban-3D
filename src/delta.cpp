@@ -3,6 +3,7 @@
 #include "roommap.h"
 #include "block.h"
 #include "roommanager.h"
+#include "switch.h"
 
 #include <iostream>
 
@@ -100,4 +101,11 @@ void DoorMoveDelta::revert() {
     }
     player->set_pos(pos_);
     room_map->put_quiet(std::move(player_unique));
+}
+
+SwitchableDelta::SwitchableDelta(Switchable* obj, bool active, bool waiting):
+obj_ {obj}, active_ {active}, waiting_ {waiting} {}
+
+void SwitchableDelta::revert() {
+    obj_->set_aw(active_, waiting_);
 }

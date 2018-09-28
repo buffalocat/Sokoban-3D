@@ -10,6 +10,7 @@ class GameObject;
 class Block;
 class PushBlock;
 class SnakeBlock;
+class Switchable;
 
 struct Point;
 
@@ -105,6 +106,17 @@ private:
     RoomManager* mgr_;
     Room* prev_room_;
     Point pos_;
+};
+
+class SwitchableDelta: public Delta {
+public:
+    SwitchableDelta(Switchable* obj, bool active, bool waiting);
+    void revert();
+
+private:
+    Switchable* obj_;
+    bool active_;
+    bool waiting_;
 };
 
 #endif // DELTA_H

@@ -30,7 +30,7 @@ void Block::draw(Shader* shader) {
     glm::mat4 model;
     if (car_) {
         model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.0f, p.y));
-        model = glm::scale(model, glm::vec3(0.7f, 0.1f, 0.7f));
+        model = glm::scale(model, glm::vec3(0.7f, 0.2f, 0.7f));
         shader->setMat4("model", model);
         shader->setVec4("color", COLORS[LIGHT_GREY]);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);

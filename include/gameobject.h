@@ -24,6 +24,7 @@ public:
     void set_pos_auto(Point p, RoomMap* room_map, DeltaFrame* delta_frame);
     void set_pos(Point p);
     void shift_pos_auto(Point d, RoomMap* room_map, DeltaFrame* delta_frame);
+
     virtual void draw(Shader*) = 0;
 
     /// Called when an existing object is "revived" via undo
@@ -31,9 +32,6 @@ public:
     virtual void reinit();
     /// Called when an object is destroyed
     virtual void cleanup(DeltaFrame*);
-
-    // If layer == Solid && !wall(), then downcast to Block is safe
-    virtual bool wall();
 
 protected:
     GameObject(int x, int y);
@@ -48,7 +46,6 @@ public:
     ~Wall();
     Layer layer();
     ObjCode obj_code();
-    bool wall();
     static GameObject* deserialize(unsigned char* buffer);
 
     void draw(Shader*);
@@ -74,4 +71,16 @@ public:
 private:
     RidingState state_;
 };
+
+class PlayerWall: public GameObject {
+public:
+    PlayerWall(int x, int y);
+    ~PlayerWall();
+    Layer layer();
+    ObjCode obj_code();
+    static GameObject* deserialize(unsigned char* buffer);
+
+    void draw(Shader*);
+};
+
 #endif // GAMEOBJECT_H

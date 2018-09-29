@@ -2,6 +2,7 @@
 #include "block.h"
 #include "delta.h"
 #include "roommap.h"
+#include "switch.h"
 
 MoveProcessor::MoveProcessor(Player* player, RoomMap* room_map, Point dir):
 player_ {player}, map_ {room_map}, dir_ {dir}, comps_ {},
@@ -68,9 +69,12 @@ void MoveProcessor::move_riding(DeltaFrame* delta_frame) {
         }
     }
     // Standard block movement
+    PointSet floor_check = {};
     for (auto& p : comps_) {
         if (p.second->good()) {
+            floor_check.insert(p.first->pos());
             p.first->shift_pos_auto(dir_, map_, delta_frame);
+            floor_check.insert(p.first->pos());
         }
     }
     // Remove any links that were broken
@@ -78,13 +82,34 @@ void MoveProcessor::move_riding(DeltaFrame* delta_frame) {
         block->check_remove_local_links(map_, delta_frame);
     }
     // Now that links are broken, we can pull snakes
-    SnakePuller puller(map_, delta_frame, check_snakes, dir_);
+    SnakePuller puller(map_, delta_frame, check_snakes, floor_check, dir_);
     for (auto& sb : good_snakes) {
         if (sb->distance() == 1) {
             puller.prepare_pull(sb);
         }
     }
-    // Now that everything has moved, check for created links
+    // Now that everything has moved, check for effects on floor tiles
+    std::unordered_set<Signaler*> signaler_check = {};
+    std::unordered_set<Switchable*> switchable_check = {};
+    for (auto& pos : floor_check) {
+        auto obj = map_->view(pos, Layer::Floor);
+        Switch* obj_switch = dynamic_cast<Switch*>(obj);
+        if (obj_switch) {
+            obj_switch->check_send_signal(map_, delta_frame, signaler_check);
+            continue;
+        }
+        Switchable* obj_switchable = dynamic_cast<Switchable*>(obj);
+        if (obj_switchable) {
+            switchable_check.insert(obj_switchable);
+        }
+    }
+    for (auto& signaler : signaler_check) {
+        signaler->check_send_signal(map_, delta_frame);
+    }
+    for (auto& obj : switchable_check) {
+        obj->check_waiting(map_, delta_frame);
+    }
+    // Check for created links
     for (auto& p : comps_) {
         if (p.second->good()) {
             p.first->check_add_local_links(map_, delta_frame);

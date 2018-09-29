@@ -342,8 +342,8 @@ void SnakeBlock::collect_unlinked_neighbors(RoomMap* room_map, std::unordered_se
     }
 }
 
-SnakePuller::SnakePuller(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered_set<SnakeBlock*>& check, Point dir):
-room_map_ {room_map}, delta_frame_ {delta_frame}, check_ {check}, dir_ {dir} {}
+SnakePuller::SnakePuller(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered_set<SnakeBlock*>& check, PointSet& floor_check, Point dir):
+room_map_ {room_map}, delta_frame_ {delta_frame}, check_ {check}, floor_check_ {floor_check}, dir_ {dir} {}
 
 void SnakePuller::prepare_pull(SnakeBlock* cur) {
     SnakeBlock *prev;
@@ -413,6 +413,7 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
 }
 
 void SnakePuller::pull(SnakeBlock* cur) {
+    floor_check_.insert(cur->pos_);
     if (cur->ends_ == 2) {
         cur->collect_unlinked_neighbors(room_map_, check_);
     }

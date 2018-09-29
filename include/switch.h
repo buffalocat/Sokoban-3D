@@ -15,6 +15,7 @@ public:
     bool state();
     virtual bool can_set_state(bool state, RoomMap*) = 0;
     void receive_signal(bool signal, RoomMap*, DeltaFrame*);
+    void check_waiting(RoomMap*, DeltaFrame*);
 
 protected:
     bool default_;
@@ -39,9 +40,17 @@ public:
 
 class Signaler {
 public:
+    Signaler(unsigned int threshold, bool persistent);
+
+    void push_switchable(Switchable*);
+    void receive_signal(bool signal);
+    void toggle();
+    void check_send_signal(RoomMap*, DeltaFrame*);
 
 private:
+    unsigned int count_;
     unsigned int threshold_;
+    bool state_;
     bool persistent_;
     std::vector<Switchable*> switchables_;
 };
@@ -54,6 +63,11 @@ public:
     Layer layer();
     void serialize(std::ofstream& file);
     static GameObject* deserialize(unsigned char* buffer);
+
+    void push_signaler(Signaler*);
+    void check_send_signal(RoomMap*, DeltaFrame*, std::unordered_set<Signaler*>& check);
+    bool should_toggle(RoomMap*);
+    void toggle();
 
     void draw(Shader*);
 

@@ -109,7 +109,7 @@ private:
 
 class SnakePuller {
 public:
-    SnakePuller(RoomMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&, Point);
+    SnakePuller(RoomMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&, PointSet&, Point);
     void prepare_pull(SnakeBlock*);
     void pull(SnakeBlock*);
 
@@ -117,6 +117,7 @@ private:
     RoomMap* room_map_;
     DeltaFrame* delta_frame_;
     std::unordered_set<SnakeBlock*>& check_;
+    PointSet& floor_check_;
     Point dir_;
 };
 

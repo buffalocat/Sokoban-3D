@@ -93,7 +93,6 @@ RidingState Player::state() {
     return state_;
 }
 
-//NOTE: still need deltas for this
 void Player::toggle_riding(RoomMap* room_map, DeltaFrame* delta_frame) {
     if (state_ == RidingState::Riding) {
         delta_frame->push(std::make_unique<RidingStateDelta>(this, state_));
@@ -152,7 +151,7 @@ Layer PlayerWall::layer() {
 void PlayerWall::draw(Shader* shader) {
     Point p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.1f, p.y));
-    model = glm::scale(model, glm::vec3(1.0f, 0.2f, 1.0f));
+    model = glm::scale(model, glm::vec3(0.5f, 0.2f, 0.5f));
     shader->setMat4("model", model);
     shader->setVec4("color", COLORS[BLACK]);
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);

@@ -110,6 +110,18 @@ void SwitchableDelta::revert() {
     obj_->set_aw(active_, waiting_);
 }
 
+SwitchToggleDelta::SwitchToggleDelta(Switch* obj): obj_ {obj} {}
+
+void SwitchToggleDelta::revert() {
+    obj_->toggle();
+}
+
+SignalerToggleDelta::SignalerToggleDelta(Signaler* obj): obj_ {obj} {}
+
+void SignalerToggleDelta::revert() {
+    obj_->toggle();
+}
+
 RidingStateDelta::RidingStateDelta(Player* player, RidingState state):
 player_ {player}, state_ {state} {}
 

@@ -11,6 +11,8 @@ class Block;
 class PushBlock;
 class SnakeBlock;
 class Switchable;
+class Switch;
+class Signaler;
 class Player;
 
 struct Point;
@@ -118,6 +120,24 @@ private:
     Switchable* obj_;
     bool active_;
     bool waiting_;
+};
+
+class SwitchToggleDelta: public Delta {
+public:
+    SwitchToggleDelta(Switch* obj);
+    void revert();
+
+private:
+    Switch* obj_;
+};
+
+class SignalerToggleDelta: public Delta {
+public:
+    SignalerToggleDelta(Signaler* obj);
+    void revert();
+
+private:
+    Signaler* obj_;
 };
 
 class RidingStateDelta: public Delta {

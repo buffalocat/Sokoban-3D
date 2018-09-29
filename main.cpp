@@ -27,6 +27,7 @@
 
 #include "gameobject.h"
 #include "block.h"
+#include "switch.h"
 
 bool window_init(GLFWwindow*&);
 
@@ -140,7 +141,90 @@ int main(void) {
     Editor editor(window, &mgr);
     mgr.set_editor(&editor);
 
-    glfwSwapInterval(0);
+    // Hardcoded Object Testing
+
+    RoomMap* room_map = mgr.room_map();
+    auto sw = std::make_unique<Switch>(4,4,5,false);
+    auto swp = std::make_unique<Switch>(4,6,6,true);
+    auto g1 = std::make_unique<Gate>(7,4,false);
+    auto g2 = std::make_unique<Gate>(8,4,true);
+    auto g3 = std::make_unique<Gate>(7,6,false);
+    auto g4 = std::make_unique<Gate>(8,6,true);
+
+    Signaler s1(1, false);
+    Signaler s2(1, false);
+
+    sw->push_signaler(&s1);
+    swp->push_signaler(&s2);
+
+    s1.push_switchable(g1.get());
+    s1.push_switchable(g2.get());
+    s2.push_switchable(g3.get());
+    s2.push_switchable(g4.get());
+
+    g1->check_waiting(room_map, nullptr);
+    g2->check_waiting(room_map, nullptr);
+    g3->check_waiting(room_map, nullptr);
+    g4->check_waiting(room_map, nullptr);
+
+    room_map->put_quiet(std::move(sw));
+    room_map->put_quiet(std::move(swp));
+    room_map->put_quiet(std::move(g1));
+    room_map->put_quiet(std::move(g2));
+    room_map->put_quiet(std::move(g3));
+    room_map->put_quiet(std::move(g4));
+
+
+    auto sw1 = std::make_unique<Switch>(4,8,2,false);
+    auto sw2 = std::make_unique<Switch>(5,8,3,false);
+    auto sw3 = std::make_unique<Switch>(6,8,4,false);
+    auto sw4 = std::make_unique<Switch>(7,8,5,false);
+    auto sw5 = std::make_unique<Switch>(8,8,6,true);
+
+    Signaler sa(1, false);
+    Signaler sb(5, false);
+    Signaler sc(5, true);
+
+    auto gany = std::make_unique<Gate>(10,6,false);
+    auto gall = std::make_unique<Gate>(10,8,false);
+    auto gallp = std::make_unique<Gate>(10,10,false);
+
+    sw1->push_signaler(&sa);
+    sw1->push_signaler(&sb);
+    sw1->push_signaler(&sc);
+
+    sw2->push_signaler(&sa);
+    sw2->push_signaler(&sb);
+    sw2->push_signaler(&sc);
+
+    sw3->push_signaler(&sa);
+    sw3->push_signaler(&sb);
+    sw3->push_signaler(&sc);
+
+    sw4->push_signaler(&sa);
+    sw4->push_signaler(&sb);
+    sw4->push_signaler(&sc);
+
+    sw5->push_signaler(&sa);
+    sw5->push_signaler(&sb);
+    sw5->push_signaler(&sc);
+
+    sa.push_switchable(gany.get());
+    sb.push_switchable(gall.get());
+    sc.push_switchable(gallp.get());
+
+    gany->check_waiting(room_map, nullptr);
+    gall->check_waiting(room_map, nullptr);
+    gallp->check_waiting(room_map, nullptr);
+
+    room_map->put_quiet(std::move(sw1));
+    room_map->put_quiet(std::move(sw2));
+    room_map->put_quiet(std::move(sw3));
+    room_map->put_quiet(std::move(sw4));
+    room_map->put_quiet(std::move(sw5));
+    room_map->put_quiet(std::move(gany));
+    room_map->put_quiet(std::move(gall));
+    room_map->put_quiet(std::move(gallp));
 
     // ImGui init
 
@@ -159,6 +243,8 @@ int main(void) {
     // for when we want to explore ImGui features
     bool show_demo_window = false;
     bool show_editor_window = true;
+
+    glfwSwapInterval(0);
 
     while(!glfwWindowShouldClose(window)) {
         glfwPollEvents();

@@ -90,7 +90,7 @@ public:
 
 class Camera {
 public:
-    Camera(RoomMap*);
+    Camera(int w, int h);
     void serialize(std::ofstream& file);
     void update();
     void set_target(Point);

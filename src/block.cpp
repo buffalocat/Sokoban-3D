@@ -33,7 +33,7 @@ void Block::draw(Shader* shader) {
         model = glm::scale(model, glm::vec3(0.7f, 0.1f, 0.7f));
         shader->setMat4("model", model);
         shader->setVec4("color", COLORS[LIGHT_GREY]);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+
     }
     // Debugging mode!! Maybe this will be toggle-able later?
     shader->setVec4("color", COLORS[BLACK]);
@@ -281,7 +281,7 @@ void SnakeBlock::relation_serialize(std::ofstream& file) {
         }
     }
     if (link_encode) {
-        file << static_cast<unsigned char>(State::SnakeLink);
+        file << static_cast<unsigned char>(MapCode::SnakeLink);
         file << static_cast<unsigned char>(pos_.x);
         file << static_cast<unsigned char>(pos_.y);
         file << link_encode;

@@ -83,6 +83,7 @@ void RemoveLinkDelta::revert() {
     a_->add_link(b_, nullptr);
 }
 
+/*
 DoorMoveDelta::DoorMoveDelta(RoomManager* mgr, Room* prev_room, Point pos):
     mgr_ {mgr}, prev_room_ {prev_room}, pos_ {pos} {}
 
@@ -102,6 +103,7 @@ void DoorMoveDelta::revert() {
     player->set_pos(pos_);
     room_map->put_quiet(std::move(player_unique));
 }
+//*/
 
 SwitchableDelta::SwitchableDelta(Switchable* obj, bool active, bool waiting):
 obj_ {obj}, active_ {active}, waiting_ {waiting} {}

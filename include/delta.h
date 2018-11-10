@@ -3,7 +3,6 @@
 
 #include "common.h"
 
-class RoomManager;
 class Room;
 class RoomMap;
 class GameObject;
@@ -100,6 +99,7 @@ private:
     Block* b_;
 };
 
+/*
 class DoorMoveDelta: public Delta {
 public:
     DoorMoveDelta(RoomManager* mgr, Room* room, Point pos);
@@ -110,6 +110,7 @@ private:
     Room* prev_room_;
     Point pos_;
 };
+//*/
 
 class SwitchableDelta: public Delta {
 public:

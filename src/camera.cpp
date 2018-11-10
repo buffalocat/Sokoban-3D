@@ -144,18 +144,18 @@ CameraContext* NullCameraContext::deserialize(unsigned char* b) {
     return new NullCameraContext(b[0], b[1], b[2], b[3], b[4]);
 }
 
-Camera::Camera(RoomMap* room_map): width_ {room_map->width()}, height_ {room_map->height()},
-    default_context_ {FreeCameraContext(0, 0, room_map->width(), room_map->height(), 0, DEFAULT_CAM_RADIUS)},
+Camera::Camera(int w, int h): width_ {w}, height_ {h},
+    default_context_ {FreeCameraContext(0, 0, w, h, 0, DEFAULT_CAM_RADIUS)},
     context_ {}, loaded_contexts_ {},
     context_map_ {},
     target_rad_ {DEFAULT_CAM_RADIUS}, cur_rad_ {DEFAULT_CAM_RADIUS},
     target_pos_ {FPoint{0,0}}, cur_pos_ {FPoint{0,0}}
 {
-    context_map_ = std::vector<std::vector<CameraContext*>>(room_map->width(), std::vector<CameraContext*>(room_map->height(), &default_context_));
+    context_map_ = std::vector<std::vector<CameraContext*>>(w, std::vector<CameraContext*>(h, &default_context_));
 }
 
 void Camera::serialize(std::ofstream& file) {
-    file << static_cast<unsigned char>(State::CameraRect);
+    file << static_cast<unsigned char>(MapCode::CameraRect);
     for (auto& context : loaded_contexts_) {
         context->serialize(file);
     }

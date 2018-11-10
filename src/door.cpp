@@ -33,7 +33,7 @@ bool Door::relation_check() {
 }
 
 void Door::relation_serialize(std::ofstream& file) {
-    file << (unsigned char)State::DoorDest;
+    file << (unsigned char)MapCode::DoorDest;
     file << (unsigned char)pos_.x;
     file << (unsigned char)pos_.y;
     file << (unsigned char)dest_->pos.x;

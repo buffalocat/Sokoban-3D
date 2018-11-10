@@ -1,3 +1,5 @@
+/*
+
 #include <unistd.h>
 #include <fstream>
 #include <iostream>
@@ -10,6 +12,7 @@
 
 #pragma GCC diagnostic pop
 
+#include "room.h"
 #include "roommanager.h"
 
 #include "editor.h"
@@ -21,37 +24,6 @@
 #include "door.h"
 #include "switch.h"
 
-Room::Room(std::string name, std::unique_ptr<RoomMap> room_map, std::unique_ptr<Camera> camera):
-    name_ {name},
-    map_ {std::move(room_map)},
-    camera_ {std::move(camera)},
-    doors_ {},
-    default_player_pos_ {Point{0,0}} {}
-
-Room::Room(int w, int h): name_ {""}, map_ {}, camera_ {}, doors_ {} {
-    map_ = std::make_unique<RoomMap>(w, h);
-    camera_ = std::make_unique<Camera>(map_.get());
-}
-
-RoomMap* Room::room_map() {
-    return map_.get();
-}
-
-Camera* Room::camera() {
-    return camera_.get();
-}
-
-std::string Room::name() {
-    return name_;
-}
-
-void Room::set_default_player_pos(Point p) {
-    default_player_pos_ = p;
-}
-
-Point Room::default_player_pos() {
-    return default_player_pos_;
-}
 
 RoomManager::RoomManager(GLFWwindow* window, Shader* shader):
     window_ {window},
@@ -67,6 +39,24 @@ RoomManager::RoomManager(GLFWwindow* window, Shader* shader):
 
 void RoomManager::set_editor(Editor* editor) {
     editor_ = editor;
+}
+
+Room* RoomManager::room() {
+    return cur_room_;
+}
+
+int RoomManager::get_room_names(const char* room_names[]) {
+    int i = 0;
+    for (auto& p : rooms_) {
+        room_names[i] = p.first.c_str();
+        ++i;
+    }
+    return i;
+}
+
+void RoomManager::set_cur_room(std::string name, Player* player) {
+    set_cur_room(rooms_[name].get());
+    player_ = player;
 }
 
 void RoomManager::set_cur_room(Room* room) {
@@ -184,7 +174,6 @@ void RoomManager::handle_input_editor_mode() {
 }
 
 void RoomManager::draw(bool editor_mode) {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     cur_camera_->update();
     float cam_radius = cur_camera_->get_radius();
@@ -286,66 +275,9 @@ bool RoomManager::valid(Point pos) {
     return cur_map_->valid(pos);
 }
 
-void Room::serialize(std::ofstream& file, bool editor_mode) {
-    // Specify failure conditions first!
-    for (Point p : doors_) {
-        if (map_->view(p, Layer::Solid)) {
-            file << static_cast<unsigned char>(State::BlockedDoor);
-            file << static_cast<unsigned char>(p.x);
-            file << static_cast<unsigned char>(p.y);
-        }
-    }
-    // Map initialization
-    file << static_cast<unsigned char>(State::SmallDims);
-    file << static_cast<unsigned char>(map_->width());
-    file << static_cast<unsigned char>(map_->height());
-
-    // All other map data
-    file << static_cast<unsigned char>(State::PlayerDefault);
-    file << static_cast<unsigned char>(default_player_pos_.x);
-    file << static_cast<unsigned char>(default_player_pos_.y);
-
-    map_->serialize(file, editor_mode);
-
-    camera_->serialize(file);
-
-    file << static_cast<unsigned char>(State::End);
-}
-
-const char* BASE_MAP_DIRECTORY = "maps\\";
-
-//const char* TEMP_MAP_DIRECTORY = "maps\\temp\\";
-
-/*
-void Room::save() {
-    std::string file_name = BASE_MAP_DIRECTORY + name_ + ".map";
-    std::ofstream file;
-    file.open(file_name, std::ios::out | std::ios::binary);
-    serialize(file);
-    file.close();
-}
-*/
-
-void RoomManager::save(std::string map_name, bool overwrite, bool editor_mode) {
-    std::string file_name = BASE_MAP_DIRECTORY + map_name + ".map";
-    std::ofstream file;
-    if (access((file_name).c_str(), F_OK) != -1 && !overwrite) {
-        std::cout << "File \"" << file_name << "\" already exists! Save failed." << std::endl;
-        return;
-    }
-    // In editor mode, just move the player around to update its default position
-    // This makes it easy to save/reload consistently without "placing" a player object
-    if (editor_mode) {
-        cur_room_->set_default_player_pos(player_->pos());
-    }
-    file.open(file_name, std::ios::out | std::ios::binary);
-    cur_room_->serialize(file, editor_mode);
-    file.close();
-    std::cout <<  file_name << " saved." << std::endl;
-}
 
 /** Load cached copy of room if possible, otherwise load from file
-  */
+
 Room* RoomManager::activate(std::string map_name, Point start) {
     Room* room {};
     if (rooms_.count(map_name)) {
@@ -363,7 +295,7 @@ Room* RoomManager::activate(std::string map_name, Point start) {
 }
 
 /** Load room fresh from file, overwriting cache
-  */
+
 Room* RoomManager::load(std::string map_name, Point start) {
     // Check validity
     if (map_name.size() == 0) {
@@ -388,58 +320,6 @@ Room* RoomManager::load(std::string map_name, Point start) {
         return nullptr;
     }
     rooms_[map_name] = std::move(loaded_room);
-    return room;
-}
-
-std::unique_ptr<Room> RoomManager::load_from_file(std::string& map_name, std::ifstream& file, Point start) {
-    unsigned char b[8];
-    bool reading_file = true;
-    std::unique_ptr<RoomMap> room_map_unique;
-    RoomMap* room_map;
-    std::unique_ptr<Camera> camera_unique;
-    Camera* camera;
-    std::unique_ptr<Room> room;
-    while (reading_file) {
-        file.read((char *)b, 1);
-        //NOTE: We can simplify this switch with macros if we use camelCase for these methods...?
-        switch (static_cast<State>(b[0])) {
-        case State::BlockedDoor :
-            file.read((char *)b, 2);
-            if (b[0] == start.x && b[1] == start.y) {
-                return nullptr;
-            }
-        case State::SmallDims :
-            file.read((char *)b, 2);
-            room_map_unique = std::make_unique<RoomMap>(b[0], b[1]);
-            room_map = room_map_unique.get();
-            camera_unique = std::make_unique<Camera>(room_map);
-            camera = camera_unique.get();
-            room = std::make_unique<Room>(map_name, std::move(room_map_unique), std::move(camera_unique));
-            break;
-        case State::PlayerDefault :
-            file.read((char *)b, 2);
-            room->set_default_player_pos(Point{b[0], b[1]});
-            break;
-        case State::Objects :
-            read_objects(file, room_map, this);
-            break;
-        case State::CameraRect :
-            read_camera_rects(file, camera);
-            break;
-        case State::SnakeLink :
-            read_snake_link(file, room_map);
-            break;
-        case State::DoorDest :
-            read_door_dest(file, room_map);
-            break;
-        case State::End :
-            reading_file = false;
-            break;
-        default :
-            throw std::runtime_error("Unknown State code encountered in .map file (it's probably corrupt/an old version)");
-            break;
-        }
-    }
     return room;
 }
 
@@ -476,7 +356,7 @@ void RoomManager::init_make(std::string map_name, int w, int h) {
     }
     w = std::max(1, std::min(256, w));
     h = std::max(1, std::min(256, h));
-    std::unique_ptr<Room> room = std::make_unique<Room>(w, h);
+    std::unique_ptr<Room> room = std::make_unique<Room>(map_name, w, h);
     //rooms_.clear();
     undo_stack_.reset();
     set_cur_room(room.get());
@@ -517,107 +397,4 @@ void RoomManager::use_door(MapLocation* dest, DeltaFrame* delta_frame) {
     cur_camera_->set_current_pos(player_->pos());
 }
 
-const std::unordered_map<ObjCode, unsigned int, ObjCodeHash> BYTES_PER_OBJECT = {
-    {ObjCode::NONE, 0},
-    {ObjCode::Wall, 2},
-    {ObjCode::PushBlock, 4},
-    {ObjCode::SnakeBlock, 4},
-    {ObjCode::Door, 2},
-    {ObjCode::Player, 3},
-    {ObjCode::PlayerWall, 2},
-};
-
-const std::unordered_map<CameraCode, unsigned int, CameraCodeHash> BYTES_PER_CAMERA = {
-    {CameraCode::NONE, 0},
-    {CameraCode::Free, 9},
-    {CameraCode::Fixed, 13},
-    {CameraCode::Clamped, 11},
-    {CameraCode::Null, 5},
-};
-
-#define CASE_OBJCODE(CLASS)\
-case ObjCode::CLASS :\
-    room_map->put_quiet(std::unique_ptr<GameObject>(CLASS::deserialize(b)));\
-    break;
-
-void read_objects(std::ifstream& file, RoomMap* room_map, RoomManager* mgr) {
-    unsigned char b[8];
-    while (true) {
-        file.read(reinterpret_cast<char *>(b), 1);
-        ObjCode code = static_cast<ObjCode>(b[0]);
-        file.read((char *)b, BYTES_PER_OBJECT.at(code));
-        switch (code) {
-        CASE_OBJCODE(Wall)
-        CASE_OBJCODE(PushBlock)
-        CASE_OBJCODE(SnakeBlock)
-        CASE_OBJCODE(Door)
-        case ObjCode::Player :
-            {
-                auto player_unique = std::unique_ptr<GameObject>(Player::deserialize(b));
-                mgr->set_player(static_cast<Player*>(player_unique.get()));
-                room_map->put_quiet(std::move(player_unique));
-                break;
-            }
-        CASE_OBJCODE(PlayerWall)
-        CASE_OBJCODE(Switch)
-        CASE_OBJCODE(Gate)
-        case ObjCode::NONE :
-            return;
-        default :
-            throw std::runtime_error("Unknown Object code encountered in .map file (it's probably corrupt/an old version)");
-            break;
-        }
-    }
-}
-
-#undef CASE_OBJCODE
-
-#define CASE_CAMCODE(CLASS)\
-case CameraCode::CLASS :\
-    camera->push_context(std::unique_ptr<CameraContext>(CLASS ## CameraContext::deserialize(b)));\
-    break;
-
-void read_camera_rects(std::ifstream& file, Camera* camera) {
-    unsigned char b[16];
-    while (true) {
-        file.read(reinterpret_cast<char *>(b), 1);
-        CameraCode code = static_cast<CameraCode>(b[0]);
-        file.read((char *)b, BYTES_PER_CAMERA.at(code));
-        switch (code) {
-        CASE_CAMCODE(Free)
-        CASE_CAMCODE(Fixed)
-        CASE_CAMCODE(Clamped)
-        CASE_CAMCODE(Null)
-        case CameraCode::NONE :
-            return;
-        default :
-            throw std::runtime_error("Unknown Camera code encountered in .map file (it's probably corrupt/an old version)");
-            return;
-        }
-    }
-}
-
-#undef CASE_CAMCODE
-
-void read_snake_link(std::ifstream& file, RoomMap* room_map) {
-    unsigned char b[3];
-    file.read((char *)b, 3);
-    SnakeBlock* sb = static_cast<SnakeBlock*>(room_map->view(Point{b[0], b[1]}, Layer::Solid));
-    // Linked right
-    if (b[2] & 1) {
-        sb->add_link(static_cast<SnakeBlock*>(room_map->view(Point{b[0]+1, b[1]}, Layer::Solid)), nullptr);
-    }
-    // Linked down
-    if (b[2] & 2) {
-        sb->add_link(static_cast<SnakeBlock*>(room_map->view(Point{b[0], b[1]+1}, Layer::Solid)), nullptr);
-    }
-}
-
-void read_door_dest(std::ifstream& file, RoomMap* room_map) {
-    unsigned char b[5];
-    file.read((char *)b, 5);
-    auto door = static_cast<Door*>(room_map->view(Point{b[0],b[1]}, ObjCode::Door));
-    char name[256];
-    file.read(name, b[4]);
-    door->set_dest(Point{b[2],b[3]}, std::string(name, b[4]));
-}
+//*/

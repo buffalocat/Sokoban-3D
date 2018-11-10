@@ -18,12 +18,8 @@ public:
     bool valid(Point pos);
     int width() const;
     int height() const;
-    const std::deque<Block*>& movers();
-    Block* get_mover();
-    Block* cycle_movers();
-    void add_mover(Block*);
 
-    void serialize(std::ofstream& file, bool editor_mode) const;
+    void serialize(std::ofstream& file) const;
 
     GameObject* view(Point, Layer);
     GameObject* view(Point, ObjCode);
@@ -42,9 +38,6 @@ private:
     int width_;
     int height_;
     std::vector<std::vector<MapCell>> map_;
-
-    // State variables
-    std::deque<Block*> movers_;
 };
 
 #endif // ROOMMAP_H

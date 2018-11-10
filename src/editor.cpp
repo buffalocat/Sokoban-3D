@@ -1,3 +1,5 @@
+/*
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
 
@@ -9,11 +11,13 @@
 
 #include "editor.h"
 #include "roommanager.h"
+#include "camera.h"
+#include "room.h"
 #include "block.h"
 #include "switch.h"
 #include "door.h"
 
-Editor::Editor(GLFWwindow* window, RoomManager* mgr): window_ {window}, mgr_ {mgr}, pos_ {Point{0,0}},
+Editor::Editor(GLFWwindow* window): window_ {window}, mgr_ {mgr}, pos_ {Point{0,0}},
 save_load_tab_ {SaveLoadTab(mgr)},
 object_tab_ {ObjectTab(mgr)},
 camera_tab_ {CameraTab(mgr)},
@@ -91,12 +95,29 @@ void Editor::handle_input() {
     }
 }
 
+EditorRoom::EditorRoom(): room_ {nullptr}, player_ {nullptr}, cam_ {Point{0,0}} {}
+
+EditorRoom::EditorRoom(RoomManager* mgr): room_ {mgr->room()},
+player_ {mgr->player()}, cam_ {Point{0,0}} {
+    if (player_) {
+        cam_ = player_->pos();
+    }
+}
+
 void SaveLoadTab::draw() {
-    static char map_name[64] = "";
-    static std::map<std::string, bool> loaded_rooms;
-    ImGui::InputText(".map", map_name, IM_ARRAYSIZE(map_name));
+    static char map_name_input[64] = "";
+    ImGui::InputText(".map", map_name_input, IM_ARRAYSIZE(map_name_input));
+    static int current = 0;
+    const char* room_names[256];
+    int len = mgr_->get_room_names(room_names);
+    if (ImGui::ListBox("Loaded Maps", &current, room_names, len, len)) {
+        std::string map_str(room_names[current]);
+        mgr_->set_cur_room(map_str, loaded_rooms_[map_str].player_);
+    }
     if (ImGui::Button("Load Map")) {
+        loaded_rooms_[active_name_].player_ = mgr_->player();
         mgr_->init_load(map_name);
+        loaded_rooms_[map_name] = EditorRoom(mgr_);
     }
     if (ImGui::Button("Save Map")) {
         mgr_->save(map_name, false, true);
@@ -181,7 +202,7 @@ void CameraTab::draw() {
         int y = std::min(y1, y2);
         int w = abs(x1 - x2) + 1;
         int h = abs(y1 - y2) + 1;
-        camera_->push_context(std::make_unique<FixedCameraContext>(x, y, w, h, priority, radius, x + w/2.0, y + h/2.0));
+        mgr_->camera()->push_context(std::make_unique<FixedCameraContext>(x, y, w, h, priority, radius, x + w/2.0, y + h/2.0));
     }
 }
 
@@ -265,7 +286,11 @@ void DoorTab::handle_right_click(Point) {}
 EditorTab::EditorTab(RoomManager* mgr): mgr_ {mgr} {}
 EditorTab::~EditorTab() {}
 
-SaveLoadTab::SaveLoadTab(RoomManager* mgr): EditorTab(mgr) {}
+SaveLoadTab::SaveLoadTab(RoomManager* mgr): EditorTab(mgr),
+active_name_ {mgr->room()->name()},
+loaded_rooms_ {} {
+    loaded_rooms_[active_name_] = EditorRoom(mgr);
+}
 SaveLoadTab::~SaveLoadTab() {}
 
 ObjectTab::ObjectTab(RoomManager* mgr): EditorTab(mgr),
@@ -274,10 +299,13 @@ color {GREEN}, pb_sticky {(int)StickyLevel::None},
 is_car {true}, sb_ends {2} {}
 ObjectTab::~ObjectTab() {}
 
-CameraTab::CameraTab(RoomManager* mgr): EditorTab(mgr), camera_ {mgr->camera()},
+CameraTab::CameraTab(RoomManager* mgr): EditorTab(mgr),
 x1 {0}, y1 {0}, x2 {0}, y2 {0},
 radius {6.0}, priority {10} {}
 CameraTab::~CameraTab() {}
 
 DoorTab::DoorTab(RoomManager* mgr): EditorTab(mgr) {}
 DoorTab::~DoorTab() {}
+
+
+//*/

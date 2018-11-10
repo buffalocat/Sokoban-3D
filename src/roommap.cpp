@@ -6,7 +6,7 @@
 #include "delta.h"
 #include "block.h"
 
-RoomMap::RoomMap(int width, int height): width_ {width}, height_ {height}, map_ {}, movers_ {} {
+RoomMap::RoomMap(int width, int height): width_ {width}, height_ {height}, map_ {} {
     for (int i = 0; i != width; ++i) {
         map_.push_back({});
         for (int j = 0; j != height; ++j) {
@@ -27,35 +27,10 @@ int RoomMap::height() const {
     return height_;
 }
 
-const std::deque<Block*>& RoomMap::movers() {
-    return movers_;
-}
-
-Block* RoomMap::get_mover() {
-    if (!movers_.empty()) {
-        return movers_.back();
-    } else {
-        return nullptr;
-    }
-}
-
-// Return a mover, and also cycle camera targets!
-Block* RoomMap::cycle_movers() {
-    if (!movers_.empty()) {
-        Block* cur = movers_.back();
-        movers_.pop_back();
-        movers_.push_front(cur);
-        return cur;
-    } else {
-        return nullptr;
-    }
-}
-
-// Assuming not big_map
-void RoomMap::serialize(std::ofstream& file, bool editor_mode) const {
+void RoomMap::serialize(std::ofstream& file) const {
     std::vector<GameObject*> rel_check;
     // Serialize raw object data
-    file << static_cast<unsigned char>(State::Objects);
+    file << static_cast<unsigned char>(MapCode::Objects);
     for (int x = 0; x != width_; ++x) {
         for (int y = 0; y != height_; ++y) {
             for (auto& object : map_[x][y]) {
@@ -154,12 +129,6 @@ void RoomMap::put_quiet(std::unique_ptr<GameObject> object) {
     }
 }
 
-void RoomMap::add_mover(Block* block) {
-    if (block->is_car()) {
-        movers_.push_back(block);
-    }
-}
-
 void RoomMap::draw(Shader* shader) {
     for (auto& column : map_) {
         for (auto& cell : column) {
@@ -171,14 +140,11 @@ void RoomMap::draw(Shader* shader) {
 }
 
 void RoomMap::set_initial_state() {
-    movers_ = {};
     for (int x = 0; x != width_; ++x) {
         for (int y = 0; y != height_; ++y) {
-            // There's no need to check for snakes; it's easier to just
-            // store their link data in the map
+            // PushBlock links are determined automatically, so they're not part of map data
             auto pb = dynamic_cast<PushBlock*>(view(Point{x,y}, Layer::Solid));
             if (pb) {
-                add_mover(pb);
                 pb->check_add_local_links(this, nullptr);
             }
         }

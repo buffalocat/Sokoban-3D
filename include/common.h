@@ -23,12 +23,13 @@
 #include <sstream>
 #include <iostream>
 
-#include <deque>
 #include <memory>
+
+#include <deque>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <iostream>
 
 class GameObject;
 class Block;
@@ -131,7 +132,7 @@ const glm::vec4 COLORS[] = {
 // NOTE: the order matters here, for serialization reasons!
 const Point DIRECTIONS[4] = {Point{-1,0}, Point{0,-1}, Point{1,0}, Point{0,1}};
 
-//#define SOKOBAN_LARGE_WINDOW
+#define SOKOBAN_LARGE_WINDOW
 #ifdef SOKOBAN_LARGE_WINDOW
 const int SCREEN_WIDTH = 1200;
 const int SCREEN_HEIGHT = 900;
@@ -155,14 +156,16 @@ const float DEFAULT_CAM_RADIUS = 16.0;
 
 const int FAST_MAP_MOVE = 10;
 
-enum State {
+const std::string MAPS_DIR = "maps\\main\\";
+
+enum MapCode {
     SmallDims = 1, // Gets width and height as 1 byte integers
-    PlayerDefault = 2, // Mark the position to start the player at when loading from this map (only useful for testing, or a select few rooms)
+    DefaultPos = 2, // Mark the position to start the player at when loading from this map (only useful for testing, or a select few rooms)
     Objects = 3, // Read in all map objects
     CameraRect = 4, // Get a camera context rectangle
     SnakeLink = 5, // Link two snakes (1 = Right, 2 = Down)
     DoorDest = 6, // Give a door a destination Map + Pos
-    BlockedDoor = 7, // Coords of blocked doors in map; the player can't come here
+    //BlockedDoor = 7, // Coords of blocked doors in map; the player can't come here
     End = 255,
 };
 

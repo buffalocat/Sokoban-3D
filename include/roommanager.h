@@ -1,3 +1,5 @@
+/*
+
 #ifndef ROOM_H
 #define ROOM_H
 
@@ -5,8 +7,6 @@
 
 #include "common.h"
 
-#include "roommap.h"
-#include "camera.h"
 #include "delta.h"
 #include "gameobject.h"
 
@@ -22,28 +22,6 @@ class Door;
 
 struct MapLocation;
 
-class Room {
-public:
-
-    Room(std::string, std::unique_ptr<RoomMap>, std::unique_ptr<Camera>);
-    Room(int w, int h);
-    RoomMap* room_map();
-    Camera* camera();
-    std::string name();
-    void serialize(std::ofstream& file, bool editor_mode);
-
-    void set_default_player_pos(Point p);
-    Point default_player_pos();
-
-private:
-    std::string name_;
-    std::unique_ptr<RoomMap> map_;
-    std::unique_ptr<Camera> camera_;
-    // For writing "shut" doors to the map before anything else!
-    std::vector<Point> doors_;
-    Point default_player_pos_;
-};
-
 class RoomManager {
 public:
     RoomManager(GLFWwindow*, Shader* shader);
@@ -55,10 +33,14 @@ public:
     void save(std::string map_name, bool overwrite, bool editor_mode);
 
     void set_editor(Editor* editor);
+    void set_cur_room(std::string name, Player* player);
     void set_cur_room(Room* room);
     void set_player(Player* player);
 
     void use_door(MapLocation*, DeltaFrame*);
+
+    Room* room();
+    int get_room_names(const char* room_names[]);
 
     RoomMap* room_map();
     Camera* camera();
@@ -94,17 +76,7 @@ private:
     RoomMap* cur_map_;
     Camera* cur_camera_;
 
-    // These really shouldn't be here!
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 projection;
 };
 
-// These aren't methods - we don't even want to *accidentally* access the
-// "old" map or camera while initializing the new ones!
-void read_objects(std::ifstream& file, RoomMap*, RoomManager*);
-void read_camera_rects(std::ifstream& file, Camera*);
-void read_snake_link(std::ifstream& file, RoomMap*);
-void read_door_dest(std::ifstream& file, RoomMap*);
-
 #endif // ROOM_H
+//*/

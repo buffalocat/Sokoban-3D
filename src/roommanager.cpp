@@ -147,31 +147,6 @@ void RoomManager::handle_input(DeltaFrame* delta_frame) {
     }
 }
 
-void RoomManager::handle_input_editor_mode() {
-    if (glfwGetKey(window_, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window_, true);
-    }
-    if (cooldown_ == 0 && !editor_->want_capture_keyboard()) {
-        for (auto p : MOVEMENT_KEYS) {
-            if (glfwGetKey(window_, p.first) == GLFW_PRESS) {
-                if (glfwGetKey(window_, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-                    Point d = {FAST_MAP_MOVE * p.second.x, FAST_MAP_MOVE * p.second.y};
-                    editor_->shift_pos(d);
-                } else {
-                    editor_->shift_pos(p.second);
-                }
-                editor_->clamp_pos(cur_map_->width(), cur_map_->height());
-                cur_camera_->set_current_pos(editor_->pos());
-                cooldown_ = MAX_COOLDOWN;
-                break;
-            }
-        }
-    }
-    editor_->handle_input();
-    if (cooldown_) {
-        --cooldown_;
-    }
-}
 
 void RoomManager::draw(bool editor_mode) {
 

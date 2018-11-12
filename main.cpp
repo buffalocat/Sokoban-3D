@@ -21,7 +21,7 @@
 #include "room.h"
 #include "roommap.h"
 #include "graphicsmanager.h"
-#include "editorstate.h"
+#include "gamestate.h"
 
 #include "gameobject.h"
 #include "block.h"
@@ -64,7 +64,7 @@ int main(void) {
 
     GraphicsManager gfx(window);
 
-    std::unique_ptr<GameState> current_state = std::make_unique<EditorState>(&gfx);
+    std::unique_ptr<GameState> current_state = std::make_unique<MainMenuState>(&gfx);
     current_state->set_csp(&current_state);
 
     /*
@@ -113,6 +113,10 @@ int main(void) {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        if (!current_state) {
+            break;
+        }
+        current_state->check_for_quit();
         current_state->main_loop();
 
         if (show_demo_window) {

@@ -3,9 +3,9 @@
 
 #include "common.h"
 
-class Shader;
 class DeltaFrame;
 class RoomMap;
+class GraphicsManager;
 
 // The GameObject class will really act like the base class
 // for Solid objects, until some non-solid objects exist too.
@@ -25,7 +25,7 @@ public:
     void set_pos(Point p);
     void shift_pos_auto(Point d, RoomMap* room_map, DeltaFrame* delta_frame);
 
-    virtual void draw(Shader*) = 0;
+    virtual void draw(GraphicsManager*) = 0;
 
     /// Called when an existing object is "revived" via undo
     // Hence it doesn't need a DeltaFrame
@@ -48,7 +48,7 @@ public:
     ObjCode obj_code();
     static GameObject* deserialize(unsigned char* buffer);
 
-    void draw(Shader*);
+    void draw(GraphicsManager*);
 };
 
 // The Player object behaves differently from all other objects with respect to save/load.
@@ -68,7 +68,7 @@ public:
     void set_riding(RidingState state);
     Block* get_car(RoomMap* room_map);
 
-    void draw(Shader*);
+    void draw(GraphicsManager*);
 
 private:
     RidingState state_;
@@ -82,7 +82,7 @@ public:
     ObjCode obj_code();
     static GameObject* deserialize(unsigned char* buffer);
 
-    void draw(Shader*);
+    void draw(GraphicsManager*);
 };
 
 #endif // GAMEOBJECT_H

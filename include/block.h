@@ -20,7 +20,7 @@ public:
     Layer layer();
     bool is_car();
     void set_car(bool is_car);
-    void draw(Shader*);
+    void draw(GraphicsManager*);
     unsigned char color();
     virtual bool push_recheck(MoveProcessor*) = 0;
     virtual const BlockSet& get_strong_links() = 0;
@@ -61,7 +61,7 @@ public:
 
     bool push_recheck(MoveProcessor*);
     void set_sticky(StickyLevel sticky);
-    void draw(Shader*);
+    void draw(GraphicsManager*);
     StickyLevel sticky();
     const BlockSet& get_strong_links();
     const BlockSet& get_weak_links();
@@ -90,13 +90,11 @@ public:
     void reset_target();
     const BlockSet& get_strong_links();
     const BlockSet& get_weak_links();
-    void draw(Shader*);
+    void draw(GraphicsManager*);
     bool available();
     bool confused(RoomMap*);
     void check_add_local_links(RoomMap*, DeltaFrame*);
     void collect_unlinked_neighbors(RoomMap*, std::unordered_set<SnakeBlock*>&);
-    void pull(RoomMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&, Point);
-    void pull_aux(RoomMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&, Point);
     void post_move_reset();
 
 private:

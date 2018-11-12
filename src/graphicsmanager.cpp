@@ -7,8 +7,6 @@
 #include <stb_image.h>
 #pragma GCC diagnostic pop
 
-#include "shader.h"
-
 GraphicsManager::GraphicsManager(GLFWwindow* window):
 window_ {window},
 shader_ {Shader("shaders\\shader.vs", "shaders\\shader.fs")} {
@@ -37,38 +35,28 @@ void GraphicsManager::init_vertex_attributes() {
 const int TEXTURE_ATLAS_SIZE = 4;
 
 void GraphicsManager::init_cube_buffer() {
-    float cubeVertices[8*STRIDE*TEXTURE_ATLAS_SIZE*TEXTURE_ATLAS_SIZE];
-    for (int u = 0; u < TEXTURE_ATLAS_SIZE; ++u) {
-        for (int v = 0; v < TEXTURE_ATLAS_SIZE; ++v) {
-            int offset = 8*STRIDE*(u + TEXTURE_ATLAS_SIZE*v);
-            for (int i = 0; i < 8; ++i) {
-                int a, b, c;
-                a = i & 1;
-                b = (i >> 1) & 1;
-                c = (i >> 2) & 1;
-                cubeVertices[offset + STRIDE*i] = a - 0.5f;
-                cubeVertices[offset + STRIDE*i+1] = b - 0.5f;
-                cubeVertices[offset + STRIDE*i+2] = c - 0.5f;
-                cubeVertices[offset + STRIDE*i+3] = ((i == 0 || i == 7) ? u+1 : u)/((float)TEXTURE_ATLAS_SIZE);
-                cubeVertices[offset + STRIDE*i+4] = ((a + b + c > 1) ? v+1 : v)/((float)TEXTURE_ATLAS_SIZE);
-            }
-        }
+    float cubeVertices[8*STRIDE];
+    for (int i = 0; i < 8; ++i) {
+        int a, b, c;
+        a = i & 1;
+        b = (i >> 1) & 1;
+        c = (i >> 2) & 1;
+        cubeVertices[STRIDE*i] = a - 0.5f;
+        cubeVertices[STRIDE*i+1] = b - 0.5f;
+        cubeVertices[STRIDE*i+2] = c - 0.5f;
+        cubeVertices[STRIDE*i+3] = (i == 0 || i == 7) ? 1 : 0;
+        cubeVertices[STRIDE*i+4] = (a + b + c > 1) ? 1 : 0;
     }
 
-    int cubeTriangles[36*TEXTURE_ATLAS_SIZE*TEXTURE_ATLAS_SIZE];
+    int cubeTriangles[36];
 
     int i = 0;
-    for (int u = 0; u < TEXTURE_ATLAS_SIZE; ++u) {
-        for (int v = 0; v < TEXTURE_ATLAS_SIZE; ++v) {
-            int offset = 36*(u + TEXTURE_ATLAS_SIZE*v);
-            for (int a : {1,2,4}) {
-                for (int b : {1,2,4}) {
-                    if (a == b) continue;
-                    for (int x : {0, a, a|b, 7, 7 & (~a), 7 & (~(a|b))}) {
-                        cubeTriangles[i] = x + offset;
-                        ++i;
-                    }
-                }
+    for (int a : {1,2,4}) {
+        for (int b : {1,2,4}) {
+            if (a == b) continue;
+            for (int x : {0, a, a|b, 7, 7 & (~a), 7 & (~(a|b))}) {
+                cubeTriangles[i] = x;
+                ++i;
             }
         }
     }
@@ -101,6 +89,46 @@ void GraphicsManager::load_texture_atlas() {
     stbi_image_free(texture_data);
 }
 
-void GraphicsManager::draw_cube(Texture t) {
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, (void*)((int)t * 36 * sizeof(int)));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+
+void GraphicsManager::set_model(glm::mat4 model) {
+    if (model != model_) {
+        model_ = model;
+        shader_.setMat4("model", model);
+    }
+}
+
+void GraphicsManager::set_view(glm::mat4 view) {
+    if (view != view_) {
+        view_ = view;
+        shader_.setMat4("view", view);
+    }
+}
+
+void GraphicsManager::set_projection(glm::mat4 projection) {
+    if (projection != projection_) {
+        projection_ = projection;
+        shader_.setMat4("projection", projection);
+    }
+}
+
+void GraphicsManager::set_color(glm::vec4 color) {
+    if (color != color_) {
+        color_ = color;
+        shader_.setVec4("color", color);
+    }
+}
+
+void GraphicsManager::set_tex(glm::vec2 tex) {
+    if (tex != tex_) {
+        tex_ = tex;
+        shader_.setVec2("tex", tex);
+    }
+}
+
+#pragma GCC diagnostic pop
+
+void GraphicsManager::draw_cube() {
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 }

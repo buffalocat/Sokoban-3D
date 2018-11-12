@@ -129,11 +129,11 @@ void RoomMap::put_quiet(std::unique_ptr<GameObject> object) {
     }
 }
 
-void RoomMap::draw(Shader* shader) {
+void RoomMap::draw(GraphicsManager* gfx) {
     for (auto& column : map_) {
         for (auto& cell : column) {
             for (auto& object : cell) {
-                object->draw(shader);
+                object->draw(gfx);
             }
         }
     }

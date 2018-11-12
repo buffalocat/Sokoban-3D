@@ -5,6 +5,7 @@
 		<Option title="Sokoban-3D" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
+		<Option virtualFolders="GameObjects\;" />
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/Debug/Sokoban-3D" prefix_auto="1" extension_auto="1" />
@@ -80,32 +81,42 @@
 		<Unit filename="include/editor.h" />
 		<Unit filename="include/editorstate.h" />
 		<Unit filename="include/gameobject.h" />
+		<Unit filename="include/gamestate.h" />
+		<Unit filename="include/graphicsmanager.h" />
 		<Unit filename="include/moveprocessor.h" />
 		<Unit filename="include/room.h" />
 		<Unit filename="include/roommanager.h" />
 		<Unit filename="include/roommap.h" />
-		<Unit filename="include/roomset.h" />
 		<Unit filename="include/shader.h" />
 		<Unit filename="include/stb_image.h" />
 		<Unit filename="include/switch.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="shaders/shader.fs" />
 		<Unit filename="shaders/shader.vs" />
-		<Unit filename="src/block.cpp" />
+		<Unit filename="src/block.cpp">
+			<Option virtualFolder="GameObjects/" />
+		</Unit>
 		<Unit filename="src/camera.cpp" />
 		<Unit filename="src/common.cpp" />
 		<Unit filename="src/delta.cpp" />
-		<Unit filename="src/door.cpp" />
+		<Unit filename="src/door.cpp">
+			<Option virtualFolder="GameObjects/" />
+		</Unit>
 		<Unit filename="src/editor.cpp" />
 		<Unit filename="src/editorstate.cpp" />
-		<Unit filename="src/gameobject.cpp" />
+		<Unit filename="src/gameobject.cpp">
+			<Option virtualFolder="GameObjects/" />
+		</Unit>
+		<Unit filename="src/gamestate.cpp" />
+		<Unit filename="src/graphicsmanager.cpp" />
 		<Unit filename="src/moveprocessor.cpp" />
 		<Unit filename="src/room.cpp" />
 		<Unit filename="src/roommanager.cpp" />
 		<Unit filename="src/roommap.cpp" />
-		<Unit filename="src/roomset.cpp" />
 		<Unit filename="src/shader.cpp" />
-		<Unit filename="src/switch.cpp" />
+		<Unit filename="src/switch.cpp">
+			<Option virtualFolder="GameObjects/" />
+		</Unit>
 		<Extensions>
 			<code_completion />
 			<envvars />

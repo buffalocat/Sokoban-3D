@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-class Shader;
+class GraphicsManager;
 class DeltaFrame;
 class GameObject;
 class SnakeBlock;
@@ -15,6 +15,7 @@ typedef std::vector<std::unique_ptr<GameObject>> MapCell;
 class RoomMap {
 public:
     RoomMap(int width, int height);
+    ~RoomMap() = default;
     bool valid(Point pos);
     int width() const;
     int height() const;
@@ -28,7 +29,7 @@ public:
     void put(std::unique_ptr<GameObject>, DeltaFrame*);
     void put_quiet(std::unique_ptr<GameObject>);
 
-    void draw(Shader*);
+    void draw(GraphicsManager*);
 
     void set_initial_state();
 

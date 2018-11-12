@@ -37,15 +37,20 @@ class Block;
 struct Point {
     int x;
     int y;
+    Point& operator+=(const Point&);
 };
 
 bool operator==(const Point& a, const Point& b);
+
+Point operator*(const int, const Point&);
 
 std::ostream& operator<<(std::ostream& os, const Point& p);
 
 struct PointHash {
     std::size_t operator()(const Point& p) const;
 };
+
+void clamp(int* n, int a, int b);
 
 typedef std::unordered_set<Point, PointHash> PointSet;
 typedef std::vector<Point> PointVec;
@@ -132,6 +137,8 @@ const glm::vec4 COLORS[] = {
 // NOTE: the order matters here, for serialization reasons!
 const Point DIRECTIONS[4] = {Point{-1,0}, Point{0,-1}, Point{1,0}, Point{0,1}};
 
+const int MAX_ROOM_DIMS = 255;
+
 #define SOKOBAN_LARGE_WINDOW
 #ifdef SOKOBAN_LARGE_WINDOW
 const int SCREEN_WIDTH = 1200;
@@ -156,10 +163,11 @@ const float DEFAULT_CAM_RADIUS = 16.0;
 
 const int FAST_MAP_MOVE = 10;
 
-const std::string MAPS_DIR = "maps\\main\\";
+const std::string MAPS_MAIN = "maps\\main\\";
+const std::string MAPS_TEMP = "maps\\temp\\";
 
 enum MapCode {
-    SmallDims = 1, // Gets width and height as 1 byte integers
+    Dimensions = 1, // Gets width and height as 1 byte integers
     DefaultPos = 2, // Mark the position to start the player at when loading from this map (only useful for testing, or a select few rooms)
     Objects = 3, // Read in all map objects
     CameraRect = 4, // Get a camera context rectangle

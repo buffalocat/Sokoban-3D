@@ -7,41 +7,23 @@
 
 class Room;
 
-struct EditorRoom;
 class EditorState;
 
-typedef std::map<std::string, std::unique_ptr<EditorRoom>> EditorRoomMap;
-
-
 struct EditorRoom {
-    Room* room;
+    std::unique_ptr<Room> room;
     Point start_pos;
     Point cam_pos;
     bool changed;
+    EditorRoom(std::unique_ptr<Room>, Point);
 };
-
-
-/*
-class EditorRoomSet: public RoomSet {
-public:
-    EditorRoomSet();
-    bool activate(std::string name);
-    bool load_fresh(std::string name);
-    void save_all(bool commit);
-    void set_changed(std::string name);
-
-private:
-    Room* active_room_;
-    std::set<std::string, bool> changed_;
-}; //*/
 
 class EditorTab {
 public:
     EditorTab(EditorState*, GraphicsManager*);
-    virtual ~EditorTab();
+    virtual ~EditorTab() = default;
     virtual void main_loop(EditorRoom*) = 0;
-    //virtual void handle_left_click(Point) = 0;
-    //virtual void handle_right_click(Point) = 0;
+    virtual void handle_left_click(EditorRoom*, Point);
+    virtual void handle_right_click(EditorRoom*, Point);
 
 protected:
     EditorState* editor_;
@@ -53,6 +35,8 @@ class SaveLoadTab: public EditorTab {
 public:
     SaveLoadTab(EditorState*, GraphicsManager*);
     void main_loop(EditorRoom*);
+    void handle_left_click(EditorRoom*, Point);
+    //void handle_right_click(EditorRoom*, Point);
 };
 
 
@@ -60,8 +44,8 @@ class ObjectTab: public EditorTab {
 public:
     ObjectTab(EditorState*, GraphicsManager*);
     void main_loop(EditorRoom*);
-    //void handle_left_click(Point);
-    //void handle_right_click(Point);
+    //void handle_left_click(EditorRoom*, Point);
+    //void handle_right_click(EditorRoom*, Point);
 
 private:
     int layer;
@@ -110,18 +94,36 @@ class EditorState: public GameState {
 public:
     EditorState(GraphicsManager*);
     void main_loop();
-    EditorRoomMap* rooms();
+
+    void set_active_room(std::string name);
+    int get_room_names(const char* room_names[]);
+
+    void new_room(std::string name, int w, int h);
+    bool load_room(std::string name);
+    void save_room(EditorRoom* eroom, bool commit);
+    void unload_current_room();
+    void commit_current_room();
+    void commit_all();
+
+    void begin_test();
 
 private:
-    EditorRoomMap rooms_;
+    std::map<std::string, std::unique_ptr<EditorRoom>> rooms_;
     EditorRoom* active_room_;
 
     std::map<std::string, std::unique_ptr<EditorTab>> tabs_;
     EditorTab* active_tab_;
 
-    GraphicsManager* gfx_;
-    GLFWwindow* window_;
     bool ortho_cam_;
+    int keyboard_cooldown_;
+
+    void handle_mouse_input();
+    void handle_keyboard_input();
+
+    bool want_capture_keyboard();
+    bool want_capture_mouse();
+    Point get_pos_from_mouse();
+    void clamp_to_active_map(Point&);
 };
 
 #endif // EDITORSTATE_H

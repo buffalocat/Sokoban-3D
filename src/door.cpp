@@ -1,5 +1,6 @@
 #include "door.h"
-#include "shader.h"
+
+#include "graphicsmanager.h"
 
 MapLocation::MapLocation(Point p, std::string name): pos {p}, map_name {name} {}
 
@@ -43,15 +44,15 @@ void Door::relation_serialize(std::ofstream& file) {
     file.write(dest_->map_name.c_str(), n);
 }
 
-void Door::draw(Shader* shader) {
+void Door::draw(GraphicsManager* gfx) {
     Point p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0, p.y));
     model = glm::scale(model, glm::vec3(1, 0.1, 1));
-    shader->setMat4("model", model);
+    gfx->set_model(model);
     if (dest_) {
-        shader->setVec4("color", COLORS[BLUE]);
+        gfx->set_color(COLORS[BLUE]);
     } else {
-        shader->setVec4("color", COLORS[DARK_RED]);
+        gfx->set_color(COLORS[DARK_RED]);
     }
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    gfx->draw_cube();
 }

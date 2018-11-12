@@ -1,7 +1,7 @@
 #include "switch.h"
 #include "roommap.h"
 #include "delta.h"
-#include "shader.h"
+#include "graphicsmanager.h"
 
 Switchable::Switchable(bool default_state, bool initial_state): default_ {default_state},
 active_ {(bool)(default_state ^ initial_state)}, waiting_ {(bool)(default_state ^ initial_state)} {}
@@ -65,13 +65,13 @@ bool Gate::can_set_state(bool state, RoomMap* room_map) {
     return !state || (room_map->view(pos_, Layer::Solid) == nullptr);
 }
 
-void Gate::draw(Shader* shader) {
+void Gate::draw(GraphicsManager* gfx) {
     Point p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, .9f * state() - 0.45f, p.y));
     model = glm::scale(model, glm::vec3(0.7f, 1.0f, 0.7f));
-    shader->setMat4("model", model);
-    shader->setVec4("color", COLORS[DARK_PURPLE]);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    gfx->set_model(model);
+    gfx->set_color(COLORS[DARK_PURPLE]);
+    gfx->draw_cube();
 }
 
 Signaler::Signaler(unsigned int threshold, bool persistent): count_ {0}, threshold_ {threshold},
@@ -151,21 +151,21 @@ void Switch::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame, std::
     }
 }
 
-void Switch::draw(Shader* shader) {
+void Switch::draw(GraphicsManager* gfx) {
     Point p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, -0.4f, p.y));
     model = glm::scale(model, glm::vec3(0.9f, 1.0f, 0.9f));
-    shader->setMat4("model", model);
-    shader->setVec4("color", COLORS[color_]);
+    gfx->set_model(model);
+    gfx->set_color(COLORS[color_]);
     if (persistent_) {
         if (active_) {
-            shader->setVec2("TexOffset", glm::vec2(2,1));
+            gfx->set_tex(glm::vec2(2,1));
         } else {
-            shader->setVec2("TexOffset", glm::vec2(1,1));
+            gfx->set_tex(glm::vec2(1,1));
         }
     } else {
-        shader->setVec2("TexOffset", glm::vec2(0,1));
+        gfx->set_tex(glm::vec2(0,1));
     }
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-    shader->setVec2("TexOffset", glm::vec2(0,0));
+    gfx->draw_cube();
+    gfx->set_tex(glm::vec2(0,0));
 }

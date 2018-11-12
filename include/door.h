@@ -23,7 +23,7 @@ public:
     void set_dest(Point, std::string);
     MapLocation* dest();
 
-    void draw(Shader*);
+    void draw(GraphicsManager*);
 
 private:
     std::unique_ptr<MapLocation> dest_;

@@ -3,8 +3,9 @@
 #include "gameobject.h"
 #include "block.h"
 #include "roommap.h"
-#include "shader.h"
+#include "graphicsmanager.h"
 #include "delta.h"
+
 
 GameObject::GameObject(int x, int y): pos_ {x, y} {}
 
@@ -65,12 +66,12 @@ Layer Wall::layer() {
     return Layer::Solid;
 }
 
-void Wall::draw(Shader* shader) {
+void Wall::draw(GraphicsManager* gfx) {
     Point p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f, p.y));
-    shader->setMat4("model", model);
-    shader->setVec4("color", COLORS[BLACK]);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    gfx->set_model(model);
+    gfx->set_color(COLORS[BLACK]);
+    gfx->draw_cube();
 }
 
 GameObject* Wall::deserialize(unsigned char* b) {
@@ -119,13 +120,13 @@ Block* Player::get_car(RoomMap* room_map) {
     }
 }
 
-void Player::draw(Shader* shader) {
+void Player::draw(GraphicsManager* gfx) {
     Point p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.0f + 0.5f * (state_ == RidingState::Bound), p.y));
     model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-    shader->setMat4("model", model);
-    shader->setVec4("color", COLORS[PINK]);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    gfx->set_model(model);
+    gfx->set_color(COLORS[PINK]);
+    gfx->draw_cube();
 }
 
 void Player::serialize(std::ofstream& file) {
@@ -148,13 +149,13 @@ Layer PlayerWall::layer() {
     return Layer::Player;
 }
 
-void PlayerWall::draw(Shader* shader) {
+void PlayerWall::draw(GraphicsManager* gfx) {
     Point p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.1f, p.y));
     model = glm::scale(model, glm::vec3(0.5f, 0.2f, 0.5f));
-    shader->setMat4("model", model);
-    shader->setVec4("color", COLORS[BLACK]);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+    gfx->set_model(model);
+    gfx->set_color(COLORS[BLACK]);
+    gfx->draw_cube();
 }
 
 GameObject* PlayerWall::deserialize(unsigned char* b) {

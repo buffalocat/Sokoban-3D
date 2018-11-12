@@ -1,8 +1,10 @@
 #include "block.h"
-#include "shader.h"
+#include "graphicsmanager.h"
 #include "delta.h"
 #include "roommap.h"
 #include "moveprocessor.h"
+
+#include "graphicsmanager.h"
 
 BlockSet Block::EMPTY_BLOCK_SET {};
 
@@ -25,26 +27,26 @@ void Block::set_car(bool is_car) {
     car_ = is_car;
 }
 
-void Block::draw(Shader* shader) {
+void Block::draw(GraphicsManager* gfx) {
     Point p = pos();
     glm::mat4 model;
     if (car_) {
         model = glm::translate(glm::mat4(), glm::vec3(p.x, 1.0f, p.y));
         model = glm::scale(model, glm::vec3(0.7f, 0.1f, 0.7f));
-        shader->setMat4("model", model);
-        shader->setVec4("color", COLORS[LIGHT_GREY]);
-
+        gfx->set_model(model);
+        gfx->set_color(COLORS[LIGHT_GREY]);
+        gfx->draw_cube();
     }
     // Debugging mode!! Maybe this will be toggle-able later?
-    shader->setVec4("color", COLORS[BLACK]);
+    gfx->set_color(COLORS[BLACK]);
     for (auto link : links_) {
         Point q = link->pos();
         Point d {q.x - p.x, q.y - p.y};
         model = glm::translate(glm::mat4(), glm::vec3(0.2f*d.x, 0.5f, 0.2f*d.y));
         model = glm::translate(model, glm::vec3(p.x, 0.5f, p.y));
         model = glm::scale(model, glm::vec3(0.1f + 0.2f*abs(d.x), 0.2f, 0.1f + 0.2f*abs(d.y)));
-        shader->setMat4("model", model);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+        gfx->set_model(model);
+        gfx->draw_cube();
     }
 }
 
@@ -119,19 +121,18 @@ void PushBlock::set_sticky(StickyLevel sticky) {
     sticky_ = sticky;
 }
 
-void PushBlock::draw(Shader* shader) {
+void PushBlock::draw(GraphicsManager* gfx) {
     Point p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f, p.y));
-    shader->setMat4("model", model);
-    shader->setVec4("color", COLORS[color_]);
+    gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f, p.y)));
+    gfx->set_color(COLORS[color_]);
     if (sticky_ == StickyLevel::None) {
-        shader->setVec2("TexOffset", glm::vec2(2,0));
+        gfx->set_tex(glm::vec2(2,0));
     } else if (sticky_ == StickyLevel::Weak) {
-        shader->setVec2("TexOffset", glm::vec2(1,0));
+        gfx->set_tex(glm::vec2(1,0));
     }
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-    shader->setVec2("TexOffset", glm::vec2(0,0));
-    Block::draw(shader);
+    gfx->draw_cube();
+    gfx->set_tex(glm::vec2(0,0));
+    Block::draw(gfx);
 }
 
 StickyLevel PushBlock::sticky() {
@@ -224,19 +225,21 @@ void SnakeBlock::reset_target() {
     distance_ = -1;
 }
 
-void SnakeBlock::draw(Shader* shader) {
+void SnakeBlock::draw(GraphicsManager* gfx) {
     Point p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f, p.y));
     model = glm::scale(model, glm::vec3(0.7071f, 1, 0.7071f));
     model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0, 1, 0));
-    shader->setMat4("model", model);
-    shader->setVec4("color", COLORS[color_]);
+    gfx->set_model(model);
+    gfx->set_color(COLORS[color_]);
     if (ends_ == 1) {
-        shader->setVec2("TexOffset", glm::vec2(2,0));
+        gfx->set_tex(glm::vec2(2,0));
+        gfx->draw_cube();
+        gfx->set_tex(glm::vec2(0,0));
+    } else {
+        gfx->draw_cube();
     }
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-    shader->setVec2("TexOffset", glm::vec2(0,0));
-    Block::draw(shader);
+    Block::draw(gfx);
 }
 
 void SnakeBlock::serialize(std::ofstream& file) {

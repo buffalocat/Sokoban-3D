@@ -35,7 +35,7 @@ public:
     static GameObject* deserialize(unsigned char* buffer);
     bool can_set_state(bool state, RoomMap*);
 
-    void draw(Shader*);
+    void draw(GraphicsManager*);
 };
 
 class Signaler {
@@ -69,7 +69,7 @@ public:
     bool should_toggle(RoomMap*);
     void toggle();
 
-    void draw(Shader*);
+    void draw(GraphicsManager*);
 
 private:
     unsigned char color_;

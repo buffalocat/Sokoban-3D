@@ -5,7 +5,7 @@
 		<Option title="Sokoban-3D" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="GameObjects\;" />
+		<Option virtualFolders="GameObjects\;GameStates\;GameStates\EditorTabs\;" />
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/Debug/Sokoban-3D" prefix_auto="1" extension_auto="1" />
@@ -84,10 +84,12 @@
 		<Unit filename="include/gamestate.h" />
 		<Unit filename="include/graphicsmanager.h" />
 		<Unit filename="include/moveprocessor.h" />
+		<Unit filename="include/objecttab.h" />
 		<Unit filename="include/playingstate.h" />
 		<Unit filename="include/room.h" />
 		<Unit filename="include/roommanager.h" />
 		<Unit filename="include/roommap.h" />
+		<Unit filename="include/saveloadtab.h" />
 		<Unit filename="include/shader.h" />
 		<Unit filename="include/stb_image.h" />
 		<Unit filename="include/switch.h" />
@@ -104,17 +106,33 @@
 			<Option virtualFolder="GameObjects/" />
 		</Unit>
 		<Unit filename="src/editor.cpp" />
-		<Unit filename="src/editorstate.cpp" />
+		<Unit filename="src/editorstate.cpp">
+			<Option virtualFolder="GameStates/" />
+		</Unit>
 		<Unit filename="src/gameobject.cpp">
 			<Option virtualFolder="GameObjects/" />
 		</Unit>
-		<Unit filename="src/gamestate.cpp" />
+		<Unit filename="src/gamestate.cpp">
+			<Option virtualFolder="GameStates/" />
+		</Unit>
 		<Unit filename="src/graphicsmanager.cpp" />
 		<Unit filename="src/moveprocessor.cpp" />
+<<<<<<< HEAD
 		<Unit filename="src/playingstate.cpp" />
+=======
+		<Unit filename="src/objecttab.cpp">
+			<Option virtualFolder="GameStates/EditorTabs/" />
+		</Unit>
+		<Unit filename="src/playingstate.cpp">
+			<Option virtualFolder="GameStates/" />
+		</Unit>
+>>>>>>> switches-are-broekn
 		<Unit filename="src/room.cpp" />
 		<Unit filename="src/roommanager.cpp" />
 		<Unit filename="src/roommap.cpp" />
+		<Unit filename="src/saveloadtab.cpp">
+			<Option virtualFolder="GameStates/EditorTabs/" />
+		</Unit>
 		<Unit filename="src/shader.cpp" />
 		<Unit filename="src/switch.cpp">
 			<Option virtualFolder="GameObjects/" />

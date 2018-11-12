@@ -1,3 +1,6 @@
+// *** ADDED BY HEADER FIXUP ***
+#include <istream>
+// *** END ***
 #ifndef SHADER_H
 #define SHADER_H
 

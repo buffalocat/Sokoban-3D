@@ -2,6 +2,7 @@
 #define ROOM_H
 
 #include "common.h"
+#include "switch.h"
 
 class RoomMap;
 class Camera;
@@ -29,10 +30,13 @@ private:
     std::unique_ptr<RoomMap> map_;
     std::unique_ptr<Camera> camera_;
 
+    std::vector<std::unique_ptr<Signaler>> signalers_;
+
     void read_objects(std::ifstream& file);
     void read_camera_rects(std::ifstream& file);
     void read_snake_link(std::ifstream& file);
     void read_door_dest(std::ifstream& file);
+    void read_signaler(std::ifstream& file);
 };
 
 #endif // ROOM_H

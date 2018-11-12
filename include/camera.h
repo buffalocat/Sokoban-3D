@@ -3,8 +3,6 @@
 
 #include "common.h"
 
-#include <queue>
-
 class RoomMap;
 
 struct FPoint {

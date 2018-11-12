@@ -166,14 +166,14 @@ const int FAST_MAP_MOVE = 10;
 const std::string MAPS_MAIN = "maps\\main\\";
 const std::string MAPS_TEMP = "maps\\temp\\";
 
-enum MapCode {
+enum class MapCode {
     Dimensions = 1, // Gets width and height as 1 byte integers
     DefaultPos = 2, // Mark the position to start the player at when loading from this map (only useful for testing, or a select few rooms)
     Objects = 3, // Read in all map objects
     CameraRect = 4, // Get a camera context rectangle
     SnakeLink = 5, // Link two snakes (1 = Right, 2 = Down)
     DoorDest = 6, // Give a door a destination Map + Pos
-    //BlockedDoor = 7, // Coords of blocked doors in map; the player can't come here
+    Signaler = 7, // List of Switches and Switchables linked to a Signaler
     End = 255,
 };
 

@@ -91,7 +91,6 @@ public:
 
 private:
     unsigned char color_;
-    bool active_;
     std::vector<Signaler*> signalers_;
 };
 #endif // SWITCH_H

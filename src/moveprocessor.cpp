@@ -15,7 +15,7 @@ void MoveProcessor::try_move(DeltaFrame* delta_frame) {
     }
     switch (player_->state()) {
     case RidingState::Free :
-        player_->shift_pos_auto(dir_, map_, delta_frame);
+        move_free(delta_frame);
         break;
     case RidingState::Bound :
         move_bound(delta_frame);
@@ -25,6 +25,12 @@ void MoveProcessor::try_move(DeltaFrame* delta_frame) {
         break;
     default:
         break;
+    }
+}
+
+void MoveProcessor::move_free(DeltaFrame* delta_frame) {
+    if (map_->valid(player_->shifted_pos(dir_))) {
+        player_->shift_pos_auto(dir_, map_, delta_frame);
     }
 }
 

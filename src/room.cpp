@@ -10,11 +10,12 @@
 #include "switch.h"
 
 Room::Room(std::string name): name_ {name},
-map_ {}, camera_ {} {}
+map_ {}, camera_ {}, signalers_ {} {}
 
 Room::Room(std::string name, int w, int h): name_ {name},
 map_ {std::make_unique<RoomMap>(w, h)},
-camera_ {std::make_unique<Camera>(w, h)} {}
+camera_ {std::make_unique<Camera>(w, h)},
+signalers_ {} {}
 
 std::string const Room::name() {
     return name_;
@@ -98,6 +99,10 @@ void Room::write_to_file(std::ofstream& file, Point start_pos) {
 
     camera_->serialize(file);
 
+    for (auto& signaler : signalers_) {
+        signaler->serialize(file);
+    }
+
     file << static_cast<unsigned char>(MapCode::End);
 }
 
@@ -129,6 +134,9 @@ void Room::load_from_file(std::ifstream& file, Point* start_pos) {
         case MapCode::DoorDest :
             read_door_dest(file);
             break;
+        case MapCode::Signaler :
+            read_signaler(file);
+            break;
         case MapCode::End :
             reading_file = false;
             break;
@@ -148,6 +156,8 @@ const std::unordered_map<ObjCode, unsigned int, ObjCodeHash> BYTES_PER_OBJECT = 
     {ObjCode::Door, 2},
     {ObjCode::Player, 3},
     {ObjCode::PlayerWall, 2},
+    {ObjCode::PressSwitch, 4},
+    {ObjCode::Gate, 3},
 };
 
 const std::unordered_map<CameraCode, unsigned int, CameraCodeHash> BYTES_PER_CAMERA = {
@@ -166,6 +176,7 @@ case ObjCode::CLASS :\
 void Room::read_objects(std::ifstream& file) {
     unsigned char b[8];
     while (true) {
+
         file.read(reinterpret_cast<char *>(b), 1);
         ObjCode code = static_cast<ObjCode>(b[0]);
         file.read((char *)b, BYTES_PER_OBJECT.at(code));
@@ -240,4 +251,21 @@ void Room::read_door_dest(std::ifstream& file) {
     char name[256];
     file.read(name, b[4]);
     door->set_dest(Point{b[2],b[3]}, std::string(name, b[4]));
+}
+
+void Room::read_signaler(std::ifstream& file) {
+    unsigned char b[4];
+    file.read((char*)b, 4);
+    auto signaler = std::make_unique<Signaler>(b[0], b[1] & 1, b[1] & 2);
+    int switches = b[2];
+    int switchables = b[3];
+    for (int i = 0; i < switches; ++i) {
+        file.read((char*)b, 3);
+        signaler->push_switch(static_cast<Switch*>(map_->view(Point {b[0],b[1]}, (ObjCode)b[2])));
+    }
+    for (int i = 0; i < switchables; ++i) {
+        file.read((char*)b, 3);
+        signaler->push_switchable(static_cast<Switchable*>(map_->view(Point {b[0],b[1]}, (ObjCode)b[2])));
+    }
+    signalers_.push_back(std::move(signaler));
 }

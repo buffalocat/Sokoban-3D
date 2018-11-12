@@ -134,7 +134,7 @@ private:
 
 class SignalerToggleDelta: public Delta {
 public:
-    SignalerToggleDelta(Signaler* obj);
+    SignalerToggleDelta(Signaler*);
     void revert();
 
 private:

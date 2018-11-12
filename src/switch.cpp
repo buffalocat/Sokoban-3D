@@ -143,7 +143,7 @@ void Switch::push_signaler(Signaler* signaler) {
 
 void Switch::toggle() {
     active_ = !active_;
-    for (Signaler* signaler : signalers_) {
+    for (auto& signaler : signalers_) {
         signaler->receive_signal(active_);
     }
 }

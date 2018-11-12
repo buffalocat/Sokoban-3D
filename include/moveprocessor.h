@@ -48,6 +48,7 @@ class MoveProcessor {
 public:
     MoveProcessor(Player*, RoomMap*, Point d);
     void try_move(DeltaFrame*);
+    void move_free(DeltaFrame*);
     void move_bound(DeltaFrame*);
     void move_riding(DeltaFrame*);
     Component* move_component(Block* block, bool recheck);

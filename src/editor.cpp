@@ -127,67 +127,6 @@ void SaveLoadTab::draw() {
     }
 }
 
-ImVec4 unpack_color(glm::vec4 v) {
-    return ImVec4(v.x, v.y, v.z, v.w);
-}
-
-void ObjectTab::draw() {
-
-    ImGui::RadioButton("Floor##LAYER_SELECT", &layer, (int)Layer::Floor);
-    ImGui::RadioButton("Player##LAYER_SELECT", &layer, (int)Layer::Player);
-    ImGui::RadioButton("Solid##LAYER_SELECT", &layer, (int)Layer::Solid);
-
-    ImGui::BeginChild("active layer pane", ImVec2(380, 450), true);
-
-    if (layer == (int)Layer::Floor) {
-        ImGui::RadioButton("Door##OBJECT_SELECT", &obj_code, (int)ObjCode::Door);
-        ImGui::RadioButton("Switch##OBJECT_SELECT", &obj_code, (int)ObjCode::Switch);
-        ImGui::RadioButton("Gate##OBJECT_SELECT", &obj_code, (int)ObjCode::Gate);
-
-        if (obj_code == (int)ObjCode::Door) {}
-        else if (obj_code == (int)ObjCode::Switch) {
-            ImGui::InputInt("color##OBJECT_COLOR", &color);
-            ImGui::ColorButton("##OBJECT_COLOR_BUTTON", unpack_color(COLORS[color]), 0, ImVec2(40,40));
-            ImGui::Checkbox("persistent##SWITCH", &persistent);
-        } else if (obj_code == (int)ObjCode::Gate) {
-            ImGui::Checkbox("default##GATE", &default_state);
-        }
-    } else if (layer == (int)Layer::Player) {
-        ImGui::RadioButton("PlayerWall##OBJECT_SELECT", &obj_code, (int)ObjCode::PlayerWall);
-    } else if (layer == (int)Layer::Solid) {
-        ImGui::RadioButton("Wall##OBJECT_SELECT", &obj_code, (int)ObjCode::Wall);
-        ImGui::RadioButton("PushBlock##OBJECT_SELECT", &obj_code, (int)ObjCode::PushBlock);
-        ImGui::RadioButton("SnakeBlock##OBJECT_SELECT", &obj_code, (int)ObjCode::SnakeBlock);
-
-        ImGui::BeginChild("active solid object pane", ImVec2(360, 300), true);
-
-        if (obj_code == (int)ObjCode::Wall) {}
-        else if (obj_code == (int)ObjCode::PushBlock) {
-            ImGui::InputInt("color##OBJECT_COLOR", &color);
-            ImGui::ColorButton("##OBJECT_COLOR_BUTTON", unpack_color(COLORS[color]), 0, ImVec2(40,40));
-
-            ImGui::Text("Stickiness");
-            ImGui::RadioButton("Not Sticky", &pb_sticky, (int)StickyLevel::None);
-            ImGui::RadioButton("Weakly Sticky", &pb_sticky, (int)StickyLevel::Weak);
-            ImGui::RadioButton("Strongly Sticky", &pb_sticky, (int)StickyLevel::Strong);
-
-            ImGui::Checkbox("Is Player?", &is_car);
-        }
-        else if (obj_code == (int)ObjCode::SnakeBlock) {
-            ImGui::InputInt("color##OBJECT_COLOR", &color);
-            ImGui::ColorButton("##OBJECT_COLOR_BUTTON", unpack_color(COLORS[color]), 0, ImVec2(40,40));
-
-            ImGui::Text("Number of Ends");
-            ImGui::RadioButton("One Ended", &sb_ends, 1);
-            ImGui::RadioButton("Two Ended", &sb_ends, 2);
-
-            ImGui::Checkbox("Is Player?", &is_car);
-        }
-        ImGui::EndChild();
-    }
-    ImGui::EndChild();
-}
-
 void CameraTab::draw() {
     ImGui::Text("Camera Type");
 
@@ -228,43 +167,6 @@ void DoorTab::draw() {
     }
 }
 
-void SaveLoadTab::handle_left_click(Point) {}
-void SaveLoadTab::handle_right_click(Point) {}
-
-void ObjectTab::handle_left_click(Point pos) {
-    int x = pos.x;
-    int y = pos.y;
-    std::unique_ptr<GameObject> obj;
-    switch (obj_code) {
-    case (int)ObjCode::Wall :
-        obj = std::make_unique<Wall>(x, y);
-        break;
-    case (int)ObjCode::PushBlock :
-        obj = std::make_unique<PushBlock>(x, y, color, is_car, static_cast<StickyLevel>(pb_sticky));
-        break;
-    case (int)ObjCode::SnakeBlock :
-        obj = std::make_unique<SnakeBlock>(x, y, color, is_car, sb_ends);
-        break;
-    case (int)ObjCode::PlayerWall :
-        obj = std::make_unique<PlayerWall>(x, y);
-        break;
-    case (int)ObjCode::Door :
-        obj = std::make_unique<Door>(x, y);
-        break;
-    case (int)ObjCode::Switch :
-        obj = std::make_unique<Switch>(x, y, color, persistent);
-        break;
-    case (int)ObjCode::Gate :
-        obj = std::make_unique<Gate>(x, y, default_state);
-        break;
-    default:
-        return;
-    }
-    // For now we'll do this, to stop the player from making things "on the wrong layer"
-    if ((int)obj->layer() == layer) {
-        mgr_->create_obj(static_cast<Layer>(layer), std::move(obj));
-    }
-}
 
 void ObjectTab::handle_right_click(Point pos) {
     mgr_->delete_obj(pos, static_cast<Layer>(layer));

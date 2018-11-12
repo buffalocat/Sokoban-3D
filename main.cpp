@@ -24,8 +24,6 @@
 #include "gamestate.h"
 
 #include "gameobject.h"
-#include "block.h"
-#include "switch.h"
 
 bool window_init(GLFWwindow*&);
 
@@ -67,12 +65,6 @@ int main(void) {
     std::unique_ptr<GameState> current_state = std::make_unique<MainMenuState>(&gfx);
     current_state->set_csp(&current_state);
 
-    /*
-    RoomManager mgr(window, &shader);
-    mgr.init_make("default_", DEFAULT_BOARD_WIDTH, DEFAULT_BOARD_HEIGHT);
-    Editor editor(window, &mgr);
-    mgr.set_editor(&editor); */
-
     // Hardcoded Object Testing
 
     /*
@@ -95,7 +87,7 @@ int main(void) {
 
     // It's convenient to keep the demo code in here,
     // for when we want to explore ImGui features
-    bool show_demo_window = true;
+    bool show_demo_window = false;
 
     glfwSwapInterval(0);
 

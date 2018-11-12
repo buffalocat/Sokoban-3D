@@ -2,7 +2,6 @@
 #define PLAYINGSTATE_H
 
 #include "common.h"
-
 #include "delta.h"
 #include "gamestate.h"
 

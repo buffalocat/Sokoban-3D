@@ -10,13 +10,15 @@
 #include "graphicsmanager.h"
 #include "gamestate.h"
 #include "playingstate.h"
+#include "gameobject.h"
+
+#include "saveloadtab.h"
+#include "objecttab.h"
 
 #include "room.h"
 #include "roommap.h"
 #include "camera.h"
-#include "block.h"
-#include "switch.h"
-#include "door.h"
+
 
 
 EditorRoom::EditorRoom(std::unique_ptr<Room> arg_room, Point pos):
@@ -24,118 +26,11 @@ room {std::move(arg_room)},
 start_pos {pos}, cam_pos {pos},
 changed {true} {}
 
-/*
-EditorRoomSet::EditorRoomSet(): RoomSet(), active_room_ {}, changed_ {} {}
-
-bool EditorRoomSet::activate(std::string name) {
-    if (rooms_.count(name) == 0) {
-        if (!load(MAPS_DIR, name)) {
-            return false;
-        }
-    }
-    active_room_ = rooms_[name].get();
-    return true;
-}
-
-void EditorRoomSet::save_all(bool commit) {
-    set_changed(active_room_.name());
-    std::string base = commit ? "maps\\main\\" : "maps\\edit\\";
-    for (auto& name : changed_) {
-        std::string path = base + name;
-        Room* room = rooms_[name].get();
-        save(path, room);
-    }
-    changed_ = {active_room_.name()};
-}
-
-void EditorRoomSet::set_changed(std::string name) {
-    changed_.insert(name);
-}
-
-void EditorRoomSet::discard_current() {
-
-}
-
-void EditorRoomSet::discard_all() {
-
-} //*/
-
 EditorTab::EditorTab(EditorState* editor, GraphicsManager* gfx): editor_ {editor}, gfx_ {gfx} {}
 
 void EditorTab::handle_left_click(EditorRoom* eroom, Point pos) {}
 
 void EditorTab::handle_right_click(EditorRoom* eroom, Point pos) {}
-
-SaveLoadTab::SaveLoadTab(EditorState* editor, GraphicsManager* gfx): EditorTab(editor, gfx) {}
-
-void SaveLoadTab::main_loop(EditorRoom* eroom) {
-    ImGui::Text("The Save/Load Tab");
-
-    static char map_name_input[64] = "";
-    ImGui::InputText(".map##SAVELOAD", map_name_input, IM_ARRAYSIZE(map_name_input));
-
-    if (ImGui::Button("Load Map##SAVELOAD")) {
-        if (!editor_->load_room(map_name_input)) {
-            std::cout << "Failed to load room." << std::endl;
-        }
-    }
-
-    static int width = 17;
-    static int height = 13;
-    ImGui::InputInt("Room Width##SAVELOAD", &width);
-    ImGui::InputInt("Room Height##SAVELOAD", &height);
-    clamp(&width, 1, MAX_ROOM_DIMS);
-    clamp(&height, 1, MAX_ROOM_DIMS);
-
-    if (ImGui::Button("Create New Map##SAVELOAD")) {
-        editor_->new_room(map_name_input, width, height);
-    }
-
-    static int current = 0;
-    const char* room_names[256];
-    int len = editor_->get_room_names(room_names);
-    if (ImGui::ListBox("Loaded Maps##SAVELOAD", &current, room_names, len, len)) {
-        editor_->set_active_room(std::string(room_names[current]));
-    }
-
-    if (ImGui::Button("Unload Current Map##SAVELOAD")) {
-        editor_->unload_current_room();
-    }
-
-    if (ImGui::Button("Save Current Map##SAVELOAD")) {
-        editor_->commit_current_room();
-    }
-
-    if (ImGui::Button("Save All Maps##SAVELOAD")) {
-        editor_->commit_all();
-    }
-
-    if (ImGui::Button("Begin Test Session##SAVELOAD")) {
-        editor_->begin_test();
-    }
-}
-
-void SaveLoadTab::handle_left_click(EditorRoom* eroom, Point pos) {
-    RoomMap* room_map = eroom->room->room_map();
-    if (!room_map->view(pos, Layer::Player)) {
-        Player* player = static_cast<Player*>(room_map->view(eroom->start_pos, ObjCode::Player));
-        auto player_unique = room_map->take_quiet(player);
-        player->set_pos(pos);
-        eroom->start_pos = pos;
-        room_map->put_quiet(std::move(player_unique));
-    }
-}
-
-
-ObjectTab::ObjectTab(EditorState* editor, GraphicsManager* gfx): EditorTab(editor, gfx),
-layer {(int)Layer::Solid}, obj_code {(int)ObjCode::NONE},
-color {GREEN}, pb_sticky {(int)StickyLevel::None},
-is_car {true}, sb_ends {2} {}
-
-void ObjectTab::main_loop(EditorRoom* eroom) {
-    ImGui::Text("The Object Tab");
-}
-
 
 #define INIT_TAB(NAME)\
 tabs_[#NAME] = std::make_unique<NAME ## Tab>(this, gfx);
@@ -229,6 +124,7 @@ void EditorState::main_loop() {
     }
 
     if (active_room_) {
+        active_room_->changed = true;
         handle_mouse_input();
         handle_keyboard_input();
         active_room_->room->draw(gfx_, active_room_->cam_pos, ortho_cam_);
@@ -350,4 +246,3 @@ void EditorState::begin_test() {
     auto playing = std::make_unique<PlayingState>(gfx_, active_room_->room->name(), active_room_->start_pos, true);
     create_child(std::move(playing));
 }
-

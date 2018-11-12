@@ -157,15 +157,11 @@ const BlockSet& PushBlock::get_weak_links() {
 
 void PushBlock::serialize(std::ofstream& file) {
     file << color_;
-    unsigned char ser = static_cast<unsigned char>(sticky_); // StickyLevel stored in first two bits
-    if (car_) {
-        ser |= 1 << 7; // car stored in 8th bit
-    }
-    file << ser;
+    file << (unsigned char)((int)sticky_ | (car_ << 7));
 }
 
 GameObject* PushBlock::deserialize(unsigned char* b) {
-    bool is_car = (b[3] >> 7) == 1;
+    bool is_car = b[3] >> 7;
     StickyLevel sticky = static_cast<StickyLevel>(b[3] & 3);
     return new PushBlock(b[0], b[1], b[2], is_car, sticky);
 }

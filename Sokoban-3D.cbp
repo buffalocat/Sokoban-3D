@@ -84,6 +84,7 @@
 		<Unit filename="include/gamestate.h" />
 		<Unit filename="include/graphicsmanager.h" />
 		<Unit filename="include/moveprocessor.h" />
+		<Unit filename="include/playingstate.h" />
 		<Unit filename="include/room.h" />
 		<Unit filename="include/roommanager.h" />
 		<Unit filename="include/roommap.h" />
@@ -110,6 +111,7 @@
 		<Unit filename="src/gamestate.cpp" />
 		<Unit filename="src/graphicsmanager.cpp" />
 		<Unit filename="src/moveprocessor.cpp" />
+		<Unit filename="src/playingstate.cpp" />
 		<Unit filename="src/room.cpp" />
 		<Unit filename="src/roommanager.cpp" />
 		<Unit filename="src/roommap.cpp" />

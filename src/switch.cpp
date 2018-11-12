@@ -3,8 +3,11 @@
 #include "delta.h"
 #include "graphicsmanager.h"
 
-Switchable::Switchable(bool default_state, bool initial_state): default_ {default_state},
-active_ {(bool)(default_state ^ initial_state)}, waiting_ {(bool)(default_state ^ initial_state)} {}
+Switchable::Switchable(int x, int y, bool default_state, bool initial_state):
+GameObject(x, y),
+default_ {default_state},
+active_ {(bool)(default_state ^ initial_state)},
+waiting_ {(bool)(default_state ^ initial_state)} {}
 
 Switchable::~Switchable() {}
 
@@ -39,7 +42,7 @@ void Switchable::check_waiting(RoomMap* room_map, DeltaFrame* delta_frame) {
 }
 
 // Gates should be initialized down in case they are "covered" at load time
-Gate::Gate(int x, int y, bool def): GameObject(x, y), Switchable(def, false) {}
+Gate::Gate(int x, int y, bool def): Switchable(x, y, def, false) {}
 
 Gate::~Gate() {}
 
@@ -74,11 +77,18 @@ void Gate::draw(GraphicsManager* gfx) {
     gfx->draw_cube();
 }
 
-Signaler::Signaler(unsigned int threshold, bool persistent): count_ {0}, threshold_ {threshold},
-state_ {false}, persistent_ {persistent}, switchables_ {} {}
+Signaler::Signaler(unsigned int threshold, bool persistent, bool active):
+count_ {0}, threshold_ {threshold},
+active_ {active}, persistent_ {persistent},
+switches_ {}, switchables_ {} {}
 
 void Signaler::push_switchable(Switchable* obj) {
     switchables_.push_back(obj);
+}
+
+void Signaler::push_switch(Switch* obj) {
+    switches_.push_back(obj);
+    obj->push_signaler(this);
 }
 
 void Signaler::receive_signal(bool signal) {
@@ -90,45 +100,45 @@ void Signaler::receive_signal(bool signal) {
 }
 
 void Signaler::toggle() {
-    state_ = !state_;
+    active_ = !active_;
 }
 
 void Signaler::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame) {
-    if (!(state_ && persistent_) && ((count_ >= threshold_) != state_)) {
+    if (!(active_ && persistent_) && ((count_ >= threshold_) != active_)) {
         delta_frame->push(std::make_unique<SignalerToggleDelta>(this));
-        state_ = !state_;
+        active_ = !active_;
         for (Switchable* obj : switchables_) {
-            obj->receive_signal(state_, room_map, delta_frame);
+            obj->receive_signal(active_, room_map, delta_frame);
         }
     }
 }
 
-Switch::Switch(int x, int y, unsigned char color, bool persistent): GameObject(x, y),
-persistent_ {persistent}, active_ {false}, color_ {color}, signalers_ {} {}
-
-ObjCode Switch::obj_code() {
-    return ObjCode::Switch;
+void Signaler::serialize(std::ofstream& file) {
+    file << (unsigned char)threshold_;
+    file << (unsigned char)(persistent_ | (active_ << 1));
+    file << (unsigned char)switches_.size();
+    file << (unsigned char)switchables_.size();
+    for (auto& obj : switches_) {
+        Point pos = obj->pos();
+        file << (unsigned char)pos.x;
+        file << (unsigned char)pos.y;
+        file << (unsigned char)obj->obj_code();
+    }
+    for (auto& obj : switchables_) {
+        Point pos = obj->pos();
+        file << (unsigned char)pos.x;
+        file << (unsigned char)pos.y;
+        file << (unsigned char)obj->obj_code();
+    }
 }
 
-Layer Switch::layer() {
-    return Layer::Floor;
-}
+Switch::Switch(int x, int y, bool persistent, bool active): GameObject(x, y),
+persistent_ {persistent}, active_ {active}, signalers_ {} {}
 
-void Switch::serialize(std::ofstream& file) {
-    file << color_;
-    file << (unsigned char)persistent_;
-}
-
-GameObject* Switch::deserialize(unsigned char* b) {
-    return new Switch(b[0], b[1], b[2], (bool)b[3]);
-}
+Switch::~Switch() {}
 
 void Switch::push_signaler(Signaler* signaler) {
     signalers_.push_back(signaler);
-}
-
-bool Switch::should_toggle(RoomMap* room_map) {
-    return active_ ^ (room_map->view(pos_, Layer::Solid) != nullptr);
 }
 
 void Switch::toggle() {
@@ -138,7 +148,27 @@ void Switch::toggle() {
     }
 }
 
-void Switch::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered_set<Signaler*>& check) {
+PressSwitch::PressSwitch(int x, int y, unsigned char color, bool persistent, bool active):
+Switch(x, y, persistent, active), color_ {color} {}
+
+ObjCode PressSwitch::obj_code() {
+    return ObjCode::PressSwitch;
+}
+
+Layer PressSwitch::layer() {
+    return Layer::Floor;
+}
+
+void PressSwitch::serialize(std::ofstream& file) {
+    file << color_;
+    file << (unsigned char)(persistent_ | (active_ << 1));
+}
+
+GameObject* PressSwitch::deserialize(unsigned char* b) {
+    return new PressSwitch(b[0], b[1], b[2], b[3] & 1, b[3] & 2);
+}
+
+void PressSwitch::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered_set<Signaler*>& check) {
     if (active_ && persistent_) {
         return;
     }
@@ -151,7 +181,11 @@ void Switch::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame, std::
     }
 }
 
-void Switch::draw(GraphicsManager* gfx) {
+bool PressSwitch::should_toggle(RoomMap* room_map) {
+    return active_ ^ (room_map->view(pos_, Layer::Solid) != nullptr);
+}
+
+void PressSwitch::draw(GraphicsManager* gfx) {
     Point p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, -0.4f, p.y));
     model = glm::scale(model, glm::vec3(0.9f, 1.0f, 0.9f));

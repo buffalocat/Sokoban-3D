@@ -179,7 +179,7 @@ void Room::read_objects(std::ifstream& file) {
             break;
         //CASE_OBJCODE(Player)
         CASE_OBJCODE(PlayerWall)
-        CASE_OBJCODE(Switch)
+        CASE_OBJCODE(PressSwitch)
         CASE_OBJCODE(Gate)
         case ObjCode::NONE :
             return;

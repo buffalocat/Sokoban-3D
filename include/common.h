@@ -86,7 +86,7 @@ enum class ObjCode {
     Door = 4,
     Player = 5,
     PlayerWall = 6,
-    Switch = 7,
+    PressSwitch = 7,
     Gate = 8,
 };
 

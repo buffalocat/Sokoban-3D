@@ -38,6 +38,7 @@ struct Point {
     int x;
     int y;
     Point& operator+=(const Point&);
+    std::string to_str();
 };
 
 bool operator==(const Point& a, const Point& b);

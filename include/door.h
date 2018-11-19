@@ -2,23 +2,27 @@
 #define DOOR_H
 
 #include "common.h"
-#include "gameobject.h"
+#include "switch.h"
+
+class RoomMap;
 
 struct MapLocation {
     Point pos;
-    std::string map_name;
-    MapLocation(Point p, std::string name);
+    std::string name;
+    MapLocation(Point p, std::string room_name);
 };
 
-class Door: public GameObject {
+class Door: public Switchable {
 public:
-    Door(int x, int y);
+    Door(int x, int y, bool def);
     ~Door();
     ObjCode obj_code();
     Layer layer();
+    void serialize(std::ofstream& file);
     static GameObject* deserialize(unsigned char* buffer);
     bool relation_check();
     void relation_serialize(std::ofstream& file);
+    bool can_set_state(bool state, RoomMap*);
 
     void set_dest(Point, std::string);
     MapLocation* dest();

@@ -6,16 +6,17 @@
 #include "block.h"
 #include "room.h"
 #include "roommap.h"
-#include "camera.h"
 #include "moveprocessor.h"
 
-PlayingState::PlayingState(GraphicsManager* gfx, std::string name, Point pos, bool testing):
-GameState(gfx), loaded_rooms_ {}, room_ {}, player_ {},
-undo_stack_ {UndoStack(MAX_UNDO_DEPTH)},
+PlayingState::PlayingState(std::string name, Point pos, bool testing):
+GameState(), loaded_rooms_ {}, room_ {}, player_ {},
+undo_stack_ {MAX_UNDO_DEPTH},
 keyboard_cooldown_ {0}, testing_ {testing} {
     activate_room(name);
     init_player(pos);
 }
+
+PlayingState::~PlayingState() = default;
 
 void PlayingState::init_player(Point pos) {
     RidingState rs;

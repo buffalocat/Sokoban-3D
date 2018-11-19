@@ -78,11 +78,16 @@
 		<Unit filename="include/dear/imgui_widgets.cpp" />
 		<Unit filename="include/delta.h" />
 		<Unit filename="include/door.h" />
+		<Unit filename="include/doorselectstate.h" />
+		<Unit filename="include/doortab.h" />
 		<Unit filename="include/editor.h" />
+		<Unit filename="include/editorbasestate.h" />
 		<Unit filename="include/editorstate.h" />
+		<Unit filename="include/editortab.h" />
 		<Unit filename="include/gameobject.h" />
 		<Unit filename="include/gamestate.h" />
 		<Unit filename="include/graphicsmanager.h" />
+		<Unit filename="include/mainmenustate.h" />
 		<Unit filename="include/moveprocessor.h" />
 		<Unit filename="include/objecttab.h" />
 		<Unit filename="include/playingstate.h" />
@@ -105,9 +110,21 @@
 		<Unit filename="src/door.cpp">
 			<Option virtualFolder="GameObjects/" />
 		</Unit>
+		<Unit filename="src/doorselectstate.cpp">
+			<Option virtualFolder="GameStates/" />
+		</Unit>
+		<Unit filename="src/doortab.cpp">
+			<Option virtualFolder="GameStates/EditorTabs/" />
+		</Unit>
 		<Unit filename="src/editor.cpp" />
+		<Unit filename="src/editorbasestate.cpp">
+			<Option virtualFolder="GameStates/" />
+		</Unit>
 		<Unit filename="src/editorstate.cpp">
 			<Option virtualFolder="GameStates/" />
+		</Unit>
+		<Unit filename="src/editortab.cpp">
+			<Option virtualFolder="GameStates/EditorTabs/" />
 		</Unit>
 		<Unit filename="src/gameobject.cpp">
 			<Option virtualFolder="GameObjects/" />
@@ -116,17 +133,14 @@
 			<Option virtualFolder="GameStates/" />
 		</Unit>
 		<Unit filename="src/graphicsmanager.cpp" />
+		<Unit filename="src/mainmenustate.cpp" />
 		<Unit filename="src/moveprocessor.cpp" />
-<<<<<<< HEAD
-		<Unit filename="src/playingstate.cpp" />
-=======
 		<Unit filename="src/objecttab.cpp">
 			<Option virtualFolder="GameStates/EditorTabs/" />
 		</Unit>
 		<Unit filename="src/playingstate.cpp">
 			<Option virtualFolder="GameStates/" />
 		</Unit>
->>>>>>> switches-are-broekn
 		<Unit filename="src/room.cpp" />
 		<Unit filename="src/roommanager.cpp" />
 		<Unit filename="src/roommap.cpp" />

@@ -1,13 +1,35 @@
 #include "delta.h"
+
 #include "gameobject.h"
 #include "roommap.h"
 #include "block.h"
-#include "roommanager.h"
 #include "switch.h"
 
-#include <iostream>
+Delta::~Delta() {}
+
+
+DeltaFrame::DeltaFrame(): deltas_ {} {}
+
+DeltaFrame::~DeltaFrame() {}
+
+void DeltaFrame::revert() {
+    for (auto it = deltas_.rbegin(); it != deltas_.rend(); ++it) {
+        (**it).revert();
+    }
+}
+
+void DeltaFrame::push(std::unique_ptr<Delta> delta) {
+    deltas_.push_back(std::move(delta));
+}
+
+bool DeltaFrame::trivial() {
+    return deltas_.empty();
+}
+
 
 UndoStack::UndoStack(unsigned int max_depth): max_depth_ {max_depth}, size_ {0}, frames_ {} {}
+
+UndoStack::~UndoStack() {}
 
 void UndoStack::push(std::unique_ptr<DeltaFrame> delta_frame) {
     if (!(*delta_frame).trivial()) {
@@ -35,23 +57,9 @@ void UndoStack::reset() {
     size_ = 0;
 }
 
-DeltaFrame::DeltaFrame(): deltas_ {} {}
-
-void DeltaFrame::revert() {
-    for (auto it = deltas_.rbegin(); it != deltas_.rend(); ++it) {
-        (**it).revert();
-    }
-}
-
-void DeltaFrame::push(std::unique_ptr<Delta> delta) {
-    deltas_.push_back(std::move(delta));
-}
-
-bool DeltaFrame::trivial() {
-    return deltas_.empty();
-}
-
 DeletionDelta::DeletionDelta(std::unique_ptr<GameObject> object, RoomMap* room_map): object_ {std::move(object)}, room_map_ {room_map} {}
+
+DeletionDelta::~DeletionDelta() {}
 
 void DeletionDelta::revert() {
     GameObject* obj = object_.get();
@@ -59,25 +67,37 @@ void DeletionDelta::revert() {
     obj->reinit();
 }
 
+
 CreationDelta::CreationDelta(GameObject* object, RoomMap* room_map): object_ {object}, room_map_ {room_map} {}
+
+CreationDelta::~CreationDelta() {}
 
 void CreationDelta::revert() {
     room_map_->take_quiet(object_);
 }
 
+
 MotionDelta::MotionDelta(GameObject* object, Point p, RoomMap* room_map): object_ {object}, p_ {p}, room_map_ {room_map} {}
+
+MotionDelta::~MotionDelta() {}
 
 void MotionDelta::revert() {
     object_->set_pos_auto(p_, room_map_, nullptr);
 }
 
+
 AddLinkDelta::AddLinkDelta(Block* a, Block* b): a_ {a}, b_ {b} {}
+
+AddLinkDelta::~AddLinkDelta() {}
 
 void AddLinkDelta::revert() {
     a_->remove_link(b_, nullptr);
 }
 
+
 RemoveLinkDelta::RemoveLinkDelta(Block* a, Block* b): a_ {a}, b_ {b} {}
+
+RemoveLinkDelta::~RemoveLinkDelta() {}
 
 void RemoveLinkDelta::revert() {
     a_->add_link(b_, nullptr);
@@ -85,7 +105,9 @@ void RemoveLinkDelta::revert() {
 
 /*
 DoorMoveDelta::DoorMoveDelta(RoomManager* mgr, Room* prev_room, Point pos):
-    mgr_ {mgr}, prev_room_ {prev_room}, pos_ {pos} {}
+mgr_ {mgr}, prev_room_ {prev_room}, pos_ {pos} {}
+
+DoorMoveDelta::~DoorMoveDelta() {}
 
 void DoorMoveDelta::revert() {
     RoomMap* room_map = mgr_->room_map();
@@ -108,24 +130,35 @@ void DoorMoveDelta::revert() {
 SwitchableDelta::SwitchableDelta(Switchable* obj, bool active, bool waiting):
 obj_ {obj}, active_ {active}, waiting_ {waiting} {}
 
+SwitchableDelta::~SwitchableDelta() {}
+
 void SwitchableDelta::revert() {
     obj_->set_aw(active_, waiting_);
 }
 
+
 SwitchToggleDelta::SwitchToggleDelta(Switch* obj): obj_ {obj} {}
+
+SwitchToggleDelta::~SwitchToggleDelta() {}
 
 void SwitchToggleDelta::revert() {
     obj_->toggle();
 }
 
+
 SignalerToggleDelta::SignalerToggleDelta(Signaler* obj): obj_ {obj} {}
+
+SignalerToggleDelta::~SignalerToggleDelta() {}
 
 void SignalerToggleDelta::revert() {
     obj_->toggle();
 }
 
+
 RidingStateDelta::RidingStateDelta(Player* player, RidingState state):
 player_ {player}, state_ {state} {}
+
+RidingStateDelta::~RidingStateDelta() {}
 
 void RidingStateDelta::revert() {
     player_->set_riding(state_);

@@ -2,11 +2,9 @@
 #define EDITORSTATE_H
 
 #include "common.h"
-#include "gamestate.h"
-
-class Room;
-
-class EditorState;
+#include "editorbasestate.h"
+#include "editortab.h"
+#include "room.h"
 
 struct EditorRoom {
     std::unique_ptr<Room> room;
@@ -14,19 +12,6 @@ struct EditorRoom {
     Point cam_pos;
     bool changed;
     EditorRoom(std::unique_ptr<Room>, Point);
-};
-
-class EditorTab {
-public:
-    EditorTab(EditorState*, GraphicsManager*);
-    virtual ~EditorTab() = default;
-    virtual void main_loop(EditorRoom*) = 0;
-    virtual void handle_left_click(EditorRoom*, Point);
-    virtual void handle_right_click(EditorRoom*, Point);
-
-protected:
-    EditorState* editor_;
-    GraphicsManager* gfx_;
 };
 
 /*
@@ -48,25 +33,17 @@ private:
     float radius;
     int priority;
 };
-
-class DoorTab: public EditorTab {
-public:
-    DoorTab(RoomManager*);
-    ~DoorTab();
-    void draw();
-    void handle_left_click(Point);
-    void handle_right_click(Point);
-};
-
 //*/
 
-class EditorState: public GameState {
+class EditorState: public EditorBaseState {
 public:
-    EditorState(GraphicsManager*);
+    EditorState(GraphicsManager* gfx);
+    ~EditorState() = default;
     void main_loop();
 
     void set_active_room(std::string name);
     int get_room_names(const char* room_names[]);
+    EditorRoom* get_room(std::string name);
 
     void new_room(std::string name, int w, int h);
     bool load_room(std::string name);
@@ -84,16 +61,8 @@ private:
     std::map<std::string, std::unique_ptr<EditorTab>> tabs_;
     EditorTab* active_tab_;
 
-    bool ortho_cam_;
-    int keyboard_cooldown_;
-
-    void handle_mouse_input();
-    void handle_keyboard_input();
-
-    bool want_capture_keyboard();
-    bool want_capture_mouse();
-    Point get_pos_from_mouse();
-    void clamp_to_active_map(Point&);
+    void handle_left_click(Point);
+    void handle_right_click(Point);
 };
 
 #endif // EDITORSTATE_H

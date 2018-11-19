@@ -21,7 +21,7 @@
 #include "room.h"
 #include "roommap.h"
 #include "graphicsmanager.h"
-#include "gamestate.h"
+#include "mainmenustate.h"
 
 #include "gameobject.h"
 
@@ -62,7 +62,8 @@ int main(void) {
 
     GraphicsManager gfx(window);
 
-    std::unique_ptr<GameState> current_state = std::make_unique<MainMenuState>(&gfx);
+    std::unique_ptr<GameState> current_state = std::make_unique<MainMenuState>();
+    current_state->set_graphics(&gfx);
     current_state->set_csp(&current_state);
 
     // Hardcoded Object Testing
@@ -87,7 +88,7 @@ int main(void) {
 
     // It's convenient to keep the demo code in here,
     // for when we want to explore ImGui features
-    bool show_demo_window = false;
+    bool show_demo_window = true;
 
     glfwSwapInterval(0);
 

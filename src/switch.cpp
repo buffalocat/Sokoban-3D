@@ -82,6 +82,8 @@ count_ {0}, threshold_ {threshold},
 active_ {active}, persistent_ {persistent},
 switches_ {}, switchables_ {} {}
 
+Signaler::~Signaler() {}
+
 void Signaler::push_switchable(Switchable* obj) {
     switchables_.push_back(obj);
 }
@@ -150,6 +152,8 @@ void Switch::toggle() {
 
 PressSwitch::PressSwitch(int x, int y, unsigned char color, bool persistent, bool active):
 Switch(x, y, persistent, active), color_ {color} {}
+
+PressSwitch::~PressSwitch() {}
 
 ObjCode PressSwitch::obj_code() {
     return ObjCode::PressSwitch;

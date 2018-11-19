@@ -16,7 +16,7 @@ public:
 
     Block(int x, int y);
     Block(int x, int y, unsigned char color, bool is_car);
-    virtual ~Block() = 0;
+    virtual ~Block();
     Layer layer();
     bool is_car();
     void set_car(bool is_car);
@@ -108,6 +108,7 @@ private:
 class SnakePuller {
 public:
     SnakePuller(RoomMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&, PointSet&, Point);
+    ~SnakePuller();
     void prepare_pull(SnakeBlock*);
     void pull(SnakeBlock*);
 

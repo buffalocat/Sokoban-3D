@@ -1,15 +1,13 @@
 #include "saveloadtab.h"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
-#include <dear/imgui.h>
-#pragma GCC diagnostic pop
-
 #include "room.h"
 #include "roommap.h"
 #include "gameobject.h"
+#include "editorstate.h"
 
 SaveLoadTab::SaveLoadTab(EditorState* editor, GraphicsManager* gfx): EditorTab(editor, gfx) {}
+
+SaveLoadTab::~SaveLoadTab() {}
 
 void SaveLoadTab::main_loop(EditorRoom* eroom) {
     ImGui::Text("The Save/Load Tab");

@@ -2,17 +2,17 @@
 #define ROOM_H
 
 #include "common.h"
+#include "roommap.h"
+#include "camera.h"
 #include "switch.h"
 
-class RoomMap;
-class Camera;
 class GraphicsManager;
 
 class Room {
 public:
     Room(std::string name);
     Room(std::string name, int w, int h);
-    ~Room() = default;
+    ~Room();
     std::string const name();
     void initialize(int w, int h);
     void set_cam_pos(Point);

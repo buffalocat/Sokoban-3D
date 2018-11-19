@@ -2,7 +2,7 @@
 #define OBJECTTAB_H
 
 #include "common.h"
-#include "editorstate.h"
+#include "editortab.h"
 
 class ObjectTab: public EditorTab {
 public:

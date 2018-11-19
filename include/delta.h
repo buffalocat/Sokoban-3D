@@ -20,13 +20,14 @@ enum class Layer;
 
 class Delta {
 public:
-    virtual ~Delta() {};
+    virtual ~Delta();
     virtual void revert() = 0;
 };
 
 class DeltaFrame {
 public:
     DeltaFrame();
+    virtual ~DeltaFrame();
     void revert();
     void push(std::unique_ptr<Delta>);
     bool trivial();
@@ -38,6 +39,7 @@ private:
 class UndoStack {
 public:
     UndoStack(unsigned int max_depth);
+    virtual ~UndoStack();
     void push(std::unique_ptr<DeltaFrame>);
     bool pop();
     void reset();
@@ -51,6 +53,7 @@ private:
 class CreationDelta: public Delta {
 public:
     CreationDelta(GameObject* object, RoomMap* room_map);
+    ~CreationDelta();
     void revert();
 
 private:
@@ -61,6 +64,7 @@ private:
 class DeletionDelta: public Delta {
 public:
     DeletionDelta(std::unique_ptr<GameObject> object, RoomMap* room_map);
+    ~DeletionDelta();
     void revert();
 
 private:
@@ -71,6 +75,7 @@ private:
 class MotionDelta: public Delta {
 public:
     MotionDelta(GameObject* object, Point p, RoomMap* room_map);
+    ~MotionDelta();
     void revert();
 
 private:
@@ -82,6 +87,7 @@ private:
 class AddLinkDelta: public Delta {
 public:
     AddLinkDelta(Block* a, Block* b);
+    ~AddLinkDelta();
     void revert();
 
 private:
@@ -92,6 +98,7 @@ private:
 class RemoveLinkDelta: public Delta {
 public:
     RemoveLinkDelta(Block* a, Block* b);
+    ~RemoveLinkDelta();
     void revert();
 
 private:
@@ -103,6 +110,7 @@ private:
 class DoorMoveDelta: public Delta {
 public:
     DoorMoveDelta(RoomManager* mgr, Room* room, Point pos);
+    ~DoorMoveDelta();
     void revert();
 
 private:
@@ -115,6 +123,7 @@ private:
 class SwitchableDelta: public Delta {
 public:
     SwitchableDelta(Switchable* obj, bool active, bool waiting);
+    ~SwitchableDelta();
     void revert();
 
 private:
@@ -126,6 +135,7 @@ private:
 class SwitchToggleDelta: public Delta {
 public:
     SwitchToggleDelta(Switch* obj);
+    ~SwitchToggleDelta();
     void revert();
 
 private:
@@ -135,6 +145,7 @@ private:
 class SignalerToggleDelta: public Delta {
 public:
     SignalerToggleDelta(Signaler*);
+    ~SignalerToggleDelta();
     void revert();
 
 private:
@@ -144,6 +155,7 @@ private:
 class RidingStateDelta: public Delta {
 public:
     RidingStateDelta(Player* player, RidingState state);
+    ~RidingStateDelta();
     void revert();
 
 private:

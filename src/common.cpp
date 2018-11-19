@@ -4,6 +4,12 @@ void clamp(int* n, int a, int b) {
     *n = std::max(a, std::min(b, *n));
 }
 
+std::string Point::to_str() {
+    char buffer[11];
+    sprintf(buffer, "(%d,%d)", this->x, this->y);
+    return buffer;
+}
+
 bool operator==(const Point& a, const Point& b) {
     return a.x == b.x && a.y == b.y;
 }

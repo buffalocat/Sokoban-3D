@@ -2,9 +2,9 @@
 
 #include "graphicsmanager.h"
 
-MapLocation::MapLocation(Point p, std::string name): pos {p}, map_name {name} {}
+MapLocation::MapLocation(Point p, std::string room_name): pos {p}, name {room_name} {}
 
-Door::Door(int x, int y): GameObject(x, y), dest_ {} {}
+Door::Door(int x, int y, bool def): Switchable(x, y, def, def), dest_ {} {}
 
 Door::~Door() {}
 
@@ -24,9 +24,12 @@ MapLocation* Door::dest() {
     return dest_.get();
 }
 
-// Door serializes trivially
+void Door::serialize(std::ofstream& file) {
+    file << (unsigned char)default_;
+}
+
 GameObject* Door::deserialize(unsigned char* b) {
-    return new Door(b[0], b[1]);
+    return new Door(b[0], b[1], (bool)b[2]);
 }
 
 bool Door::relation_check() {
@@ -39,9 +42,13 @@ void Door::relation_serialize(std::ofstream& file) {
     file << (unsigned char)pos_.y;
     file << (unsigned char)dest_->pos.x;
     file << (unsigned char)dest_->pos.y;
-    unsigned char n = dest_->map_name.size();
+    unsigned char n = dest_->name.size();
     file << n;
-    file.write(dest_->map_name.c_str(), n);
+    file.write(dest_->name.c_str(), n);
+}
+
+bool Door::can_set_state(bool state, RoomMap* room_map) {
+    return true;
 }
 
 void Door::draw(GraphicsManager* gfx) {

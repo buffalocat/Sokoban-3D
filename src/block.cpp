@@ -344,6 +344,8 @@ void SnakeBlock::collect_unlinked_neighbors(RoomMap* room_map, std::unordered_se
 SnakePuller::SnakePuller(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered_set<SnakeBlock*>& check, PointSet& floor_check, Point dir):
 room_map_ {room_map}, delta_frame_ {delta_frame}, check_ {check}, floor_check_ {floor_check}, dir_ {dir} {}
 
+SnakePuller::~SnakePuller() {}
+
 void SnakePuller::prepare_pull(SnakeBlock* cur) {
     SnakeBlock *prev;
     // The previous snake block is the adjacent one which was pushed.

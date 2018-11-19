@@ -15,7 +15,7 @@ struct FPoint {
 class CameraContext {
 public:
     CameraContext(int x, int y, int w, int h, int priority);
-    virtual ~CameraContext() = 0;
+    virtual ~CameraContext();
     virtual bool is_null();
     virtual FPoint center(Point) = 0;
     virtual float radius(Point) = 0;

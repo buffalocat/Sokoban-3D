@@ -3,8 +3,8 @@
 #include "roommap.h"
 #include "camera.h"
 
-#include "gameobject.h"
 #include "graphicsmanager.h"
+#include "gameobject.h"
 #include "block.h"
 #include "door.h"
 #include "switch.h"
@@ -16,6 +16,8 @@ Room::Room(std::string name, int w, int h): name_ {name},
 map_ {std::make_unique<RoomMap>(w, h)},
 camera_ {std::make_unique<Camera>(w, h)},
 signalers_ {} {}
+
+Room::~Room() = default;
 
 std::string const Room::name() {
     return name_;
@@ -153,7 +155,7 @@ const std::unordered_map<ObjCode, unsigned int, ObjCodeHash> BYTES_PER_OBJECT = 
     {ObjCode::Wall, 2},
     {ObjCode::PushBlock, 4},
     {ObjCode::SnakeBlock, 4},
-    {ObjCode::Door, 2},
+    {ObjCode::Door, 3},
     {ObjCode::Player, 3},
     {ObjCode::PlayerWall, 2},
     {ObjCode::PressSwitch, 4},
@@ -176,7 +178,6 @@ case ObjCode::CLASS :\
 void Room::read_objects(std::ifstream& file) {
     unsigned char b[8];
     while (true) {
-
         file.read(reinterpret_cast<char *>(b), 1);
         ObjCode code = static_cast<ObjCode>(b[0]);
         file.read((char *)b, BYTES_PER_OBJECT.at(code));

@@ -11,7 +11,8 @@ class Player;
 
 class PlayingState: public GameState {
 public:
-    PlayingState(GraphicsManager*, std::string name, Point pos, bool testing);
+    PlayingState(std::string name, Point pos, bool testing);
+    virtual ~PlayingState();
     void init_player(Point);
     void main_loop();
     void handle_input(DeltaFrame*);

@@ -1,10 +1,6 @@
 #include "objecttab.h"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
-#include <dear/imgui.h>
-#pragma GCC diagnostic pop
-
+#include "editorstate.h"
 #include "room.h"
 #include "roommap.h"
 
@@ -35,13 +31,15 @@ void ObjectTab::main_loop(EditorRoom* eroom) {
         ImGui::RadioButton("PressSwitch##OBJECT_object", &obj_code, (int)ObjCode::PressSwitch);
         ImGui::RadioButton("Gate##OBJECT_object", &obj_code, (int)ObjCode::Gate);
 
-        if (obj_code == (int)ObjCode::Door) {}
+        if (obj_code == (int)ObjCode::Door) {
+            ImGui::Checkbox("default##SWITCHABLE", &default_state);
+        }
         else if (obj_code == (int)ObjCode::PressSwitch) {
             ImGui::InputInt("color##OBJECT_COLOR", &color);
             ImGui::ColorButton("##OBJECT_COLOR_BUTTON", unpack_color(COLORS[color]), 0, ImVec2(40,40));
             ImGui::Checkbox("persistent##SWITCH", &persistent);
         } else if (obj_code == (int)ObjCode::Gate) {
-            ImGui::Checkbox("default##GATE", &default_state);
+            ImGui::Checkbox("default##SWITCHABLE", &default_state);
         }
     } else if (layer == (int)Layer::Player) {
         ImGui::RadioButton("PlayerWall##OBJECT_object", &obj_code, (int)ObjCode::PlayerWall);
@@ -101,7 +99,7 @@ void ObjectTab::handle_left_click(EditorRoom* eroom, Point pos) {
         obj = std::make_unique<PlayerWall>(x, y);
         break;
     case (int)ObjCode::Door :
-        obj = std::make_unique<Door>(x, y);
+        obj = std::make_unique<Door>(x, y, default_state);
         break;
     case (int)ObjCode::PressSwitch :
         obj = std::make_unique<PressSwitch>(x, y, color, persistent, false);

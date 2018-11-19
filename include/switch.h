@@ -42,7 +42,7 @@ public:
 class Signaler {
 public:
     Signaler(unsigned int threshold, bool persistent, bool active);
-
+    ~Signaler();
     void push_switchable(Switchable*);
     void push_switch(Switch*);
     void receive_signal(bool signal);
@@ -79,6 +79,7 @@ protected:
 class PressSwitch: public Switch {
 public:
     PressSwitch(int x, int y, unsigned char color, bool persistent, bool active);
+    ~PressSwitch();
     ObjCode obj_code();
     Layer layer();
     void serialize(std::ofstream& file);

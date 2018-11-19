@@ -2,11 +2,6 @@
 
 #include <unistd.h>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
-#include <dear/imgui.h>
-#pragma GCC diagnostic pop
-
 #include "graphicsmanager.h"
 #include "gamestate.h"
 #include "playingstate.h"
@@ -14,119 +9,42 @@
 
 #include "saveloadtab.h"
 #include "objecttab.h"
+#include "doortab.h"
 
 #include "room.h"
 #include "roommap.h"
-#include "camera.h"
 
-
+#define INIT_TAB(NAME)\
+tabs_[#NAME] = std::make_unique<NAME ## Tab>(this, gfx);
 
 EditorRoom::EditorRoom(std::unique_ptr<Room> arg_room, Point pos):
 room {std::move(arg_room)},
 start_pos {pos}, cam_pos {pos},
 changed {true} {}
 
-EditorTab::EditorTab(EditorState* editor, GraphicsManager* gfx): editor_ {editor}, gfx_ {gfx} {}
-
-void EditorTab::handle_left_click(EditorRoom* eroom, Point pos) {}
-
-void EditorTab::handle_right_click(EditorRoom* eroom, Point pos) {}
-
-#define INIT_TAB(NAME)\
-tabs_[#NAME] = std::make_unique<NAME ## Tab>(this, gfx);
-
-EditorState::EditorState(GraphicsManager* gfx): GameState(gfx),
+EditorState::EditorState(GraphicsManager* gfx): EditorBaseState(),
 rooms_ {}, active_room_ {},
-tabs_ {}, active_tab_ {},
-ortho_cam_ {true}, keyboard_cooldown_ {0} {
+tabs_ {}, active_tab_ {} {
     INIT_TAB(SaveLoad);
     INIT_TAB(Object);
+    INIT_TAB(Door);
     active_tab_ = tabs_["SaveLoad"].get();
 }
 
 #undef INIT_TAB
 
-Point EditorState::get_pos_from_mouse() {
-    double xpos, ypos;
-    glfwGetCursorPos(window_, &xpos, &ypos);
-    Point cam_pos = active_room_->cam_pos;
-    if (xpos >= 0 && xpos < SCREEN_WIDTH && ypos >= 0 && ypos < SCREEN_HEIGHT) {
-        int x = ((int)xpos + MESH_SIZE*cam_pos.x - (SCREEN_WIDTH - MESH_SIZE) / 2) / MESH_SIZE;
-        int y = ((int)ypos + MESH_SIZE*cam_pos.y - (SCREEN_HEIGHT - MESH_SIZE) / 2) / MESH_SIZE;
-        return Point{x, y};
-    }
-    return Point{-1, -1};
-}
-
-bool EditorState::want_capture_keyboard() {
-    return ImGui::GetIO().WantCaptureKeyboard;
-}
-
-bool EditorState::want_capture_mouse() {
-    return ImGui::GetIO().WantCaptureMouse;
-}
-
-void EditorState::handle_mouse_input() {
-    if (want_capture_mouse() || !ortho_cam_) {
-        return;
-    }
-    Point mouse_pos = get_pos_from_mouse();
-    if (!active_room_->room->valid(mouse_pos)) {
-        return;
-    }
-    if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        active_tab_->handle_left_click(active_room_, mouse_pos);
-    } else if (glfwGetMouseButton(window_, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-        active_tab_->handle_right_click(active_room_, mouse_pos);
-    }
-}
-
-void EditorState::clamp_to_active_map(Point& pos) {
-    RoomMap* cur_map = active_room_->room->room_map();
-    pos = Point {
-        std::max(0, std::min(cur_map->width() - 1, pos.x)),
-        std::max(0, std::min(cur_map->height() - 1, pos.y))
-    };
-}
-
-void EditorState::handle_keyboard_input() {
-    if (keyboard_cooldown_ > 0) {
-        --keyboard_cooldown_;
-        return;
-    }
-    if (want_capture_keyboard()) {
-        return;
-    }
-    keyboard_cooldown_ = MAX_COOLDOWN;
-    for (auto p : MOVEMENT_KEYS) {
-        if (glfwGetKey(window_, p.first) == GLFW_PRESS) {
-            if (glfwGetKey(window_, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-                active_room_->cam_pos += FAST_MAP_MOVE * p.second;
-            } else {
-                active_room_->cam_pos += p.second;
-            }
-            clamp_to_active_map(active_room_->cam_pos);
-            return;
-        }
-    }
-    if (glfwGetKey(window_, GLFW_KEY_C)) {
-        ortho_cam_ = !ortho_cam_;
-        return;
-    }
-    keyboard_cooldown_ = 0;
-}
 
 void EditorState::main_loop() {
     bool p_open = true;
-    if (!ImGui::Begin("My Editor Window##ROOT", &p_open, ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (!ImGui::Begin("Editor Window##ROOT", &p_open, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::End();
         return;
     }
 
     if (active_room_) {
         active_room_->changed = true;
-        handle_mouse_input();
-        handle_keyboard_input();
+        handle_mouse_input(active_room_->cam_pos, active_room_->room.get());
+        handle_keyboard_input(active_room_->cam_pos, active_room_->room.get());
         active_room_->room->draw(gfx_, active_room_->cam_pos, ortho_cam_);
     }
 
@@ -134,6 +52,7 @@ void EditorState::main_loop() {
     for (const auto& p : tabs_) {
         if (ImGui::Button((p.first + "##ROOT").c_str())) {
             active_tab_ = p.second.get();
+            active_tab_->init();
         } ImGui::SameLine();
     }
     ImGui::Text(""); //This consumes the stray SameLine from the loop
@@ -160,6 +79,13 @@ int EditorState::get_room_names(const char* room_names[]) {
         ++i;
     }
     return i;
+}
+
+EditorRoom* EditorState::get_room(std::string name) {
+    if (rooms_.count(name)) {
+        return rooms_[name].get();
+    }
+    return nullptr;
 }
 
 void EditorState::new_room(std::string name, int w, int h) {
@@ -243,6 +169,14 @@ void EditorState::begin_test() {
             save_room(p.second.get(), false);
         }
     }
-    auto playing = std::make_unique<PlayingState>(gfx_, active_room_->room->name(), active_room_->start_pos, true);
-    create_child(std::move(playing));
+    auto playing_state = std::make_unique<PlayingState>(active_room_->room->name(), active_room_->start_pos, true);
+    create_child(std::move(playing_state));
+}
+
+void EditorState::handle_left_click(Point pos) {
+    active_tab_->handle_left_click(active_room_, pos);
+}
+
+void EditorState::handle_right_click(Point pos) {
+    active_tab_->handle_right_click(active_room_, pos);
 }

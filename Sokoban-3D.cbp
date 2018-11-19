@@ -92,7 +92,6 @@
 		<Unit filename="include/objecttab.h" />
 		<Unit filename="include/playingstate.h" />
 		<Unit filename="include/room.h" />
-		<Unit filename="include/roommanager.h" />
 		<Unit filename="include/roommap.h" />
 		<Unit filename="include/saveloadtab.h" />
 		<Unit filename="include/shader.h" />
@@ -133,7 +132,9 @@
 			<Option virtualFolder="GameStates/" />
 		</Unit>
 		<Unit filename="src/graphicsmanager.cpp" />
-		<Unit filename="src/mainmenustate.cpp" />
+		<Unit filename="src/mainmenustate.cpp">
+			<Option virtualFolder="GameStates/" />
+		</Unit>
 		<Unit filename="src/moveprocessor.cpp" />
 		<Unit filename="src/objecttab.cpp">
 			<Option virtualFolder="GameStates/EditorTabs/" />
@@ -142,7 +143,6 @@
 			<Option virtualFolder="GameStates/" />
 		</Unit>
 		<Unit filename="src/room.cpp" />
-		<Unit filename="src/roommanager.cpp" />
 		<Unit filename="src/roommap.cpp" />
 		<Unit filename="src/saveloadtab.cpp">
 			<Option virtualFolder="GameStates/EditorTabs/" />

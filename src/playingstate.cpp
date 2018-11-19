@@ -7,6 +7,7 @@
 #include "room.h"
 #include "roommap.h"
 #include "moveprocessor.h"
+#include "door.h"
 
 PlayingState::PlayingState(std::string name, Point pos, bool testing):
 GameState(), loaded_rooms_ {}, room_ {}, player_ {},
@@ -52,12 +53,11 @@ void PlayingState::handle_input(DeltaFrame* delta_frame) {
     for (auto p : MOVEMENT_KEYS) {
         if (glfwGetKey(window_, p.first) == GLFW_PRESS) {
             MoveProcessor(player_, room_->room_map(), p.second).try_move(delta_frame);
-            /*
-            Door* door = static_cast<Door*>(cur_map_->view(player_->pos(), ObjCode::Door));
+            Door* door = static_cast<Door*>(room_->room_map()->view(player_->pos(), ObjCode::Door));
+            // When doors are switchable, check for state too!
             if (door && door->dest()) {
                 use_door(door->dest(), delta_frame);
             }
-            */
             return;
         }
     }
@@ -104,4 +104,30 @@ bool PlayingState::load_room(std::string name) {
     room->room_map()->set_initial_state();
     loaded_rooms_[name] = std::move(room);
     return true;
+}
+
+void PlayingState::use_door(MapLocation* dest, DeltaFrame* delta_frame) {
+    if (!loaded_rooms_.count(dest->name)) {
+        load_room(dest->name);
+    }
+    Room* dest_room = loaded_rooms_[dest->name].get();
+    RoomMap* cur_map = room_->room_map();
+    RoomMap* dest_map = dest_room->room_map();
+    if (dest_map->view(dest->pos, Layer::Player)) {
+        return;
+    }
+    Block* car = player_->get_car(cur_map);
+    if (car && dest_map->view(dest->pos, Layer::Solid)) {
+        return;
+    }
+    delta_frame->push(std::make_unique<DoorMoveDelta>(this, room_, player_->pos()));
+    room_ = dest_room;
+    auto player_unique = cur_map->take_quiet(player_);
+    if (car) {
+        auto car_unique = cur_map->take_quiet(car);
+        car->set_pos(dest->pos);
+        dest_map->put_quiet(std::move(car_unique));
+    }
+    player_->set_pos(dest->pos);
+    dest_map->put_quiet(std::move(player_unique));
 }

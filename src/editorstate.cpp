@@ -42,6 +42,7 @@ void EditorState::main_loop() {
     }
 
     if (active_room_) {
+        ImGui::Text(("Current Room: " + active_room_->room->name()).c_str());
         active_room_->changed = true;
         handle_mouse_input(active_room_->cam_pos, active_room_->room.get());
         handle_keyboard_input(active_room_->cam_pos, active_room_->room.get());

@@ -1,9 +1,11 @@
 #include "delta.h"
 
 #include "gameobject.h"
+#include "room.h"
 #include "roommap.h"
 #include "block.h"
 #include "switch.h"
+#include "playingstate.h"
 
 Delta::~Delta() {}
 
@@ -103,29 +105,28 @@ void RemoveLinkDelta::revert() {
     a_->add_link(b_, nullptr);
 }
 
-/*
-DoorMoveDelta::DoorMoveDelta(RoomManager* mgr, Room* prev_room, Point pos):
-mgr_ {mgr}, prev_room_ {prev_room}, pos_ {pos} {}
+
+DoorMoveDelta::DoorMoveDelta(PlayingState* state, Room* room, Point pos):
+state_ {state}, room_ {room}, pos_ {pos} {}
 
 DoorMoveDelta::~DoorMoveDelta() {}
 
 void DoorMoveDelta::revert() {
-    RoomMap* room_map = mgr_->room_map();
-    Player* player = mgr_->player();
-    Block* car = player->get_car(room_map);
-    auto player_unique = room_map->take_quiet(player);
+    RoomMap* cur_map = state_->room_->room_map();
+    RoomMap* dest_map = room_->room_map();
+    Player* player = state_->player_;
+    Block* car = player->get_car(cur_map);
+    state_->room_ = room_;
+    auto player_unique = cur_map->take_quiet(player);
     if (car) {
-        auto car_unique = room_map->take_quiet(car);
-        mgr_->set_cur_room(prev_room_);
+        auto car_unique = cur_map->take_quiet(car);
         car->set_pos(pos_);
-        room_map->put_quiet(std::move(car_unique));
-    } else {
-        mgr_->set_cur_room(prev_room_);
+        dest_map->put_quiet(std::move(car_unique));
     }
     player->set_pos(pos_);
-    room_map->put_quiet(std::move(player_unique));
+    dest_map->put_quiet(std::move(player_unique));
 }
-//*/
+
 
 SwitchableDelta::SwitchableDelta(Switchable* obj, bool active, bool waiting):
 obj_ {obj}, active_ {active}, waiting_ {waiting} {}

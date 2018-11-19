@@ -13,16 +13,18 @@ class Switchable;
 class Switch;
 class Signaler;
 class Player;
+class PlayingState;
 
 struct Point;
-
 enum class Layer;
+
 
 class Delta {
 public:
     virtual ~Delta();
     virtual void revert() = 0;
 };
+
 
 class DeltaFrame {
 public:
@@ -35,6 +37,7 @@ public:
 private:
     std::vector<std::unique_ptr<Delta>> deltas_;
 };
+
 
 class UndoStack {
 public:
@@ -50,6 +53,7 @@ private:
     std::deque<std::unique_ptr<DeltaFrame>> frames_;
 };
 
+
 class CreationDelta: public Delta {
 public:
     CreationDelta(GameObject* object, RoomMap* room_map);
@@ -61,6 +65,7 @@ private:
     RoomMap* room_map_;
 };
 
+
 class DeletionDelta: public Delta {
 public:
     DeletionDelta(std::unique_ptr<GameObject> object, RoomMap* room_map);
@@ -71,6 +76,7 @@ private:
     std::unique_ptr<GameObject> object_;
     RoomMap* room_map_;
 };
+
 
 class MotionDelta: public Delta {
 public:
@@ -84,6 +90,7 @@ private:
     RoomMap* room_map_;
 };
 
+
 class AddLinkDelta: public Delta {
 public:
     AddLinkDelta(Block* a, Block* b);
@@ -94,6 +101,7 @@ private:
     Block* a_;
     Block* b_;
 };
+
 
 class RemoveLinkDelta: public Delta {
 public:
@@ -106,19 +114,19 @@ private:
     Block* b_;
 };
 
-/*
+
 class DoorMoveDelta: public Delta {
 public:
-    DoorMoveDelta(RoomManager* mgr, Room* room, Point pos);
+    DoorMoveDelta(PlayingState* state, Room* room, Point pos);
     ~DoorMoveDelta();
     void revert();
 
 private:
-    RoomManager* mgr_;
-    Room* prev_room_;
+    PlayingState* state_;
+    Room* room_;
     Point pos_;
 };
-//*/
+
 
 class SwitchableDelta: public Delta {
 public:
@@ -131,6 +139,7 @@ private:
     bool active_;
     bool waiting_;
 };
+
 
 class SwitchToggleDelta: public Delta {
 public:
@@ -151,6 +160,7 @@ public:
 private:
     Signaler* obj_;
 };
+
 
 class RidingStateDelta: public Delta {
 public:

@@ -11,7 +11,8 @@ BlockSet Block::EMPTY_BLOCK_SET {};
 // Push is the "default" BlockType
 Block::Block(int x, int y): GameObject(x, y), color_ {0}, car_ {false}, links_ {} {}
 
-Block::Block(int x, int y, unsigned char color, bool is_car): GameObject(x, y), color_ {color}, car_ {is_car}, links_ {} {}
+Block::Block(int x, int y, unsigned char color, bool car):
+GameObject(x, y), color_ {color}, car_ {car}, links_ {} {}
 
 Block::~Block() {}
 
@@ -75,10 +76,10 @@ void Block::remove_link(Block* link, DeltaFrame* delta_frame) {
 // This only gets called during room change, with a non-trivial DeltaFrame
 void Block::remove_all_links(DeltaFrame* delta_frame) {
     for (auto link : links_) {
-        links_.erase(link);
         link->links_.erase(this);
         delta_frame->push(std::make_unique<RemoveLinkDelta>(this, link));
     }
+    links_ = {};
 }
 
 void Block::cleanup(DeltaFrame* delta_frame) {
@@ -100,11 +101,15 @@ void Block::reinit() {
 void Block::check_remove_local_links(RoomMap* room_map, DeltaFrame* delta_frame) {
     Point p, q;
     p = pos();
+    std::vector<Block*> remove_links {};
     for (auto& link : links_) {
         q = link->pos();
-        if (abs(p.x - q.x) + abs(p.y - q.y) >= 2) {
-            remove_link(link, delta_frame);
+        if (abs(p.x - q.x) + abs(p.y - q.y) >= 2 || color_ != link->color_) {
+            remove_links.push_back(link);
         }
+    }
+    for (auto& link : remove_links) {
+        remove_link(link, delta_frame);
     }
 }
 

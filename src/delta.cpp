@@ -4,6 +4,7 @@
 #include "room.h"
 #include "roommap.h"
 #include "block.h"
+#include "multicolorblock.h"
 #include "switch.h"
 #include "playingstate.h"
 
@@ -115,7 +116,7 @@ void DoorMoveDelta::revert() {
     RoomMap* cur_map = state_->room_->room_map();
     RoomMap* dest_map = room_->room_map();
     Player* player = state_->player_;
-    Block* car = player->get_car(cur_map);
+    Block* car = player->get_car(cur_map, true);
     state_->room_ = room_;
     auto player_unique = cur_map->take_quiet(player);
     if (car) {
@@ -163,4 +164,12 @@ RidingStateDelta::~RidingStateDelta() {}
 
 void RidingStateDelta::revert() {
     player_->set_riding(state_);
+}
+
+ColorSwapDelta::ColorSwapDelta(TwoColorBlock* obj): obj_ {obj} {}
+
+ColorSwapDelta::~ColorSwapDelta() {}
+
+void ColorSwapDelta::revert() {
+    obj_->swap_colors();
 }

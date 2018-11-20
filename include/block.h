@@ -30,7 +30,7 @@ public:
     void remove_all_links(DeltaFrame*);
     void cleanup(DeltaFrame*);
     void reinit();
-    void check_remove_local_links(RoomMap*, DeltaFrame*);
+    virtual void check_remove_local_links(RoomMap*, DeltaFrame*);
     virtual void check_add_local_links(RoomMap*, DeltaFrame*) = 0;
     virtual void post_move_reset();
 
@@ -52,9 +52,9 @@ class PushBlock: public Block {
 public:
     PushBlock(int x, int y);
     PushBlock(int x, int y, unsigned char color, bool is_car, StickyLevel sticky);
-    ~PushBlock();
-    ObjCode obj_code();
-    void serialize(std::ofstream& file);
+    virtual ~PushBlock();
+    virtual ObjCode obj_code();
+    virtual void serialize(std::ofstream& file);
     static GameObject* deserialize(unsigned char* buffer);
     bool relation_check();
     void relation_serialize(std::ofstream& file);
@@ -77,8 +77,8 @@ class SnakeBlock: public Block {
 public:
     SnakeBlock(int x, int y);
     SnakeBlock(int x, int y, unsigned char color, bool is_car, unsigned int ends);
-    ~SnakeBlock();
-    ObjCode obj_code();
+    virtual ~SnakeBlock();
+    virtual ObjCode obj_code();
     void serialize(std::ofstream& file);
     static GameObject* deserialize(unsigned char* buffer);
     bool relation_check();

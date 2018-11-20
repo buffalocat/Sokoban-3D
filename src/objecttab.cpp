@@ -5,6 +5,7 @@
 #include "roommap.h"
 
 #include "block.h"
+#include "multicolorblock.h"
 #include "switch.h"
 #include "door.h"
 
@@ -16,15 +17,29 @@ ImVec4 unpack_color(glm::vec4 v) {
     return ImVec4(v.x, v.y, v.z, v.w);
 }
 
+// Object creation variables
 static int layer = (int)Layer::Solid;
 static int obj_code = (int)ObjCode::NONE;
 
 static int color = GREEN;
+static int alt_color = PINK;
 static int pb_sticky = (int)StickyLevel::None;
 static bool is_car = false;
 static int sb_ends = 2;
 static bool persistent = false;
 static bool switchable_state = true;
+
+void pushblock_options() {
+    ImGui::InputInt("color##OBJECT_COLOR", &color);
+    ImGui::ColorButton("##OBJECT_COLOR_BUTTON", unpack_color(COLORS[color]), 0, ImVec2(40,40));
+
+    ImGui::Text("Stickiness");
+    ImGui::RadioButton("Not Sticky##OBJECT_sticky", &pb_sticky, (int)StickyLevel::None);
+    ImGui::RadioButton("Weakly Sticky##OBJECT_sticky", &pb_sticky, (int)StickyLevel::Weak);
+    ImGui::RadioButton("Strongly Sticky##OBJECT_sticky", &pb_sticky, (int)StickyLevel::Strong);
+
+    ImGui::Checkbox("Is Rideable?##OBJECT_car", &is_car);
+}
 
 void ObjectTab::main_loop(EditorRoom* eroom) {
     ImGui::Text("The Object Tab");
@@ -62,19 +77,12 @@ void ObjectTab::main_loop(EditorRoom* eroom) {
         ImGui::RadioButton("Wall##OBJECT_object", &obj_code, (int)ObjCode::Wall);
         ImGui::RadioButton("PushBlock##OBJECT_object", &obj_code, (int)ObjCode::PushBlock);
         ImGui::RadioButton("SnakeBlock##OBJECT_object", &obj_code, (int)ObjCode::SnakeBlock);
+        ImGui::RadioButton("TwoColorPushBlock##OBJECT_object", &obj_code, (int)ObjCode::TwoColorPushBlock);
 
         ImGui::BeginChild("active solid object pane", ImVec2(360, 300), true);
         switch (static_cast<ObjCode>(obj_code)) {
         case ObjCode::PushBlock:
-            ImGui::InputInt("color##OBJECT_COLOR", &color);
-            ImGui::ColorButton("##OBJECT_COLOR_BUTTON", unpack_color(COLORS[color]), 0, ImVec2(40,40));
-
-            ImGui::Text("Stickiness");
-            ImGui::RadioButton("Not Sticky##OBJECT_sticky", &pb_sticky, (int)StickyLevel::None);
-            ImGui::RadioButton("Weakly Sticky##OBJECT_sticky", &pb_sticky, (int)StickyLevel::Weak);
-            ImGui::RadioButton("Strongly Sticky##OBJECT_sticky", &pb_sticky, (int)StickyLevel::Strong);
-
-            ImGui::Checkbox("Is Rideable?##OBJECT_car", &is_car);
+            pushblock_options();
             break;
         case ObjCode::SnakeBlock:
             ImGui::InputInt("color##OBJECT_COLOR", &color);
@@ -85,6 +93,11 @@ void ObjectTab::main_loop(EditorRoom* eroom) {
             ImGui::RadioButton("Two Ended##OBJECT_snake_ends", &sb_ends, 2);
 
             ImGui::Checkbox("Is Rideable?##OBJECT_car", &is_car);
+            break;
+        case ObjCode::TwoColorPushBlock:
+            pushblock_options();
+            ImGui::InputInt("alternate color##OBJECT_COLOR", &alt_color);
+            ImGui::ColorButton("##OBJECT_COLOR_BUTTON_2", unpack_color(COLORS[alt_color]), 0, ImVec2(40,40));
             break;
         }
         ImGui::EndChild();
@@ -122,6 +135,9 @@ void ObjectTab::handle_left_click(EditorRoom* eroom, Point pos) {
         break;
     case (int)ObjCode::Gate :
         obj = std::make_unique<Gate>(x, y, switchable_state);
+        break;
+    case (int)ObjCode::TwoColorPushBlock :
+        obj = std::make_unique<TwoColorPushBlock>(x, y, color, alt_color, is_car, static_cast<StickyLevel>(pb_sticky));
         break;
     default:
         return;

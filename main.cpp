@@ -66,13 +66,6 @@ int main(void) {
     current_state->set_graphics(&gfx);
     current_state->set_csp(&current_state);
 
-    // Hardcoded Object Testing
-
-    /*
-    RoomMap* room_map = mgr.room_map();
-    init_switch_room(room_map);
-    //*/
-
     // ImGui init
 
     const char* glsl_version = "#version 330";

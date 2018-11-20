@@ -66,7 +66,7 @@ public:
     RidingState state();
     void toggle_riding(RoomMap* room_map, DeltaFrame*);
     void set_riding(RidingState state);
-    Block* get_car(RoomMap* room_map);
+    Block* get_car(RoomMap* room_map, bool strict);
 
     void draw(GraphicsManager*);
 

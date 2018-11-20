@@ -97,6 +97,7 @@
 		<Unit filename="include/shader.h" />
 		<Unit filename="include/stb_image.h" />
 		<Unit filename="include/switch.h" />
+		<Unit filename="include/switchtab.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="shaders/shader.fs" />
 		<Unit filename="shaders/shader.vs" />
@@ -150,6 +151,9 @@
 		<Unit filename="src/shader.cpp" />
 		<Unit filename="src/switch.cpp">
 			<Option virtualFolder="GameObjects/" />
+		</Unit>
+		<Unit filename="src/switchtab.cpp">
+			<Option virtualFolder="GameStates/EditorTabs/" />
 		</Unit>
 		<Extensions>
 			<code_completion />

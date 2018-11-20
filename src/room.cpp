@@ -6,6 +6,7 @@
 #include "graphicsmanager.h"
 #include "gameobject.h"
 #include "block.h"
+#include "multicolorblock.h"
 #include "door.h"
 #include "switch.h"
 
@@ -160,6 +161,7 @@ const std::unordered_map<ObjCode, unsigned int, ObjCodeHash> BYTES_PER_OBJECT = 
     {ObjCode::PlayerWall, 2},
     {ObjCode::PressSwitch, 4},
     {ObjCode::Gate, 3},
+    {ObjCode::TwoColorPushBlock, 5},
 };
 
 const std::unordered_map<CameraCode, unsigned int, CameraCodeHash> BYTES_PER_CAMERA = {
@@ -193,6 +195,7 @@ void Room::read_objects(std::ifstream& file) {
         CASE_OBJCODE(PlayerWall)
         CASE_OBJCODE(PressSwitch)
         CASE_OBJCODE(Gate)
+        CASE_OBJCODE(TwoColorPushBlock)
         case ObjCode::NONE:
             return;
         default :

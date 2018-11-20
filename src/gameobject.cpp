@@ -111,8 +111,8 @@ void Player::set_riding(RidingState state) {
     state_ = state;
 }
 
-Block* Player::get_car(RoomMap* room_map) {
-    if (state_ != RidingState::Riding) {
+Block* Player::get_car(RoomMap* room_map, bool strict) {
+    if (state_ == RidingState::Free || (strict && state_ == RidingState::Bound)) {
         return nullptr;
     } else {
         GameObject* car = room_map->view(pos_, Layer::Solid);

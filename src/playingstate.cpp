@@ -4,6 +4,7 @@
 
 #include "gameobject.h"
 #include "block.h"
+#include "multicolorblock.h"
 #include "room.h"
 #include "roommap.h"
 #include "moveprocessor.h"
@@ -50,10 +51,11 @@ void PlayingState::handle_input(DeltaFrame* delta_frame) {
         return;
     }
     keyboard_cooldown_ = MAX_COOLDOWN;
+    RoomMap* room_map = room_->room_map();
     for (auto p : MOVEMENT_KEYS) {
         if (glfwGetKey(window_, p.first) == GLFW_PRESS) {
-            MoveProcessor(player_, room_->room_map(), p.second).try_move(delta_frame);
-            Door* door = static_cast<Door*>(room_->room_map()->view(player_->pos(), ObjCode::Door));
+            MoveProcessor(player_, room_map, p.second).try_move(delta_frame);
+            Door* door = static_cast<Door*>(room_map->view(player_->pos(), ObjCode::Door));
             // When doors are switchable, check for state too!
             if (door && door->dest() && door->state()) {
                 use_door(door->dest(), delta_frame);
@@ -69,8 +71,17 @@ void PlayingState::handle_input(DeltaFrame* delta_frame) {
             return;
         }
     } else if (glfwGetKey(window_, GLFW_KEY_X) == GLFW_PRESS) {
-        player_->toggle_riding(room_->room_map(), delta_frame);
+        player_->toggle_riding(room_map, delta_frame);
         return;
+    } else if (glfwGetKey(window_, GLFW_KEY_C) == GLFW_PRESS) {
+        auto car = dynamic_cast<TwoColorPushBlock*>(player_->get_car(room_map, false));
+        if (car) {
+            car->swap_colors();
+            delta_frame->push(std::make_unique<ColorSwapDelta>(car));
+            car->check_remove_local_links(room_map, delta_frame);
+            car->check_add_local_links(room_map, delta_frame);
+            return;
+        }
     }
     keyboard_cooldown_ = 0;
 }
@@ -116,7 +127,7 @@ void PlayingState::use_door(MapLocation* dest, DeltaFrame* delta_frame) {
     if (dest_map->view(dest->pos, Layer::Player)) {
         return;
     }
-    Block* car = player_->get_car(cur_map);
+    Block* car = player_->get_car(cur_map, true);
     if (car) {
         if (dest_map->view(dest->pos, Layer::Solid)) {
             return;

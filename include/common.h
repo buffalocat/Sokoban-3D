@@ -89,6 +89,7 @@ enum class ObjCode {
     PlayerWall = 6,
     PressSwitch = 7,
     Gate = 8,
+    TwoColorPushBlock = 9,
 };
 
 enum class CameraCode {
@@ -140,7 +141,7 @@ const Point DIRECTIONS[4] = {Point{-1,0}, Point{0,-1}, Point{1,0}, Point{0,1}};
 
 const int MAX_ROOM_DIMS = 255;
 
-#define SOKOBAN_LARGE_WINDOW
+//#define SOKOBAN_LARGE_WINDOW
 #ifdef SOKOBAN_LARGE_WINDOW
 const int SCREEN_WIDTH = 1200;
 const int SCREEN_HEIGHT = 900;
@@ -150,8 +151,8 @@ const int SCREEN_HEIGHT = 600;
 #endif
 const int MESH_SIZE = 50;
 
-const float ORTHO_WIDTH = (float)SCREEN_WIDTH/(float)MESH_SIZE;
-const float ORTHO_HEIGHT = (float)SCREEN_HEIGHT/(float)MESH_SIZE;
+constexpr float ORTHO_WIDTH = (float)SCREEN_WIDTH/(float)MESH_SIZE;
+constexpr float ORTHO_HEIGHT = (float)SCREEN_HEIGHT/(float)MESH_SIZE;
 
 const int DEFAULT_BOARD_WIDTH = 17;
 const int DEFAULT_BOARD_HEIGHT = 13;

@@ -27,3 +27,7 @@
 
 # Private Maps
 *_.map
+
+# Temp Maps
+maps/temp/*
+!maps/temp/.keep

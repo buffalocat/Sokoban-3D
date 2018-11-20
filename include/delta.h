@@ -8,6 +8,7 @@ class RoomMap;
 class GameObject;
 class Block;
 class PushBlock;
+class TwoColorBlock;
 class SnakeBlock;
 class Switchable;
 class Switch;
@@ -171,6 +172,17 @@ public:
 private:
     Player* player_;
     RidingState state_;
+};
+
+
+class ColorSwapDelta: public Delta {
+public:
+    ColorSwapDelta(TwoColorBlock* obj);
+    ~ColorSwapDelta();
+    void revert();
+
+private:
+    TwoColorBlock* obj_;
 };
 
 #endif // DELTA_H

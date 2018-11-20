@@ -7,6 +7,8 @@ class GraphicsManager;
 class DeltaFrame;
 class GameObject;
 class SnakeBlock;
+class Switchable;
+class Switch;
 
 enum class Layer;
 
@@ -24,6 +26,11 @@ public:
 
     GameObject* view(Point, Layer);
     GameObject* view(Point, ObjCode);
+
+    // Break the snake case convention here because of macros
+    Switchable* view_Switchable(Point);
+    Switch* view_Switch(Point);
+
     void take(GameObject*, DeltaFrame*);
     std::unique_ptr<GameObject> take_quiet(GameObject*);
     void put(std::unique_ptr<GameObject>, DeltaFrame*);
@@ -31,7 +38,7 @@ public:
 
     void draw(GraphicsManager*);
 
-    void set_initial_state();
+    void set_initial_state(bool editor_mode);
 
     void print_contents();
 

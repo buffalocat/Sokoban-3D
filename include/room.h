@@ -25,6 +25,8 @@ public:
 
     void draw(GraphicsManager*, Point cam_pos, bool ortho);
 
+    void push_signaler(std::unique_ptr<Signaler>);
+
 private:
     std::string name_;
     std::unique_ptr<RoomMap> map_;

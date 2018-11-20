@@ -55,7 +55,7 @@ void PlayingState::handle_input(DeltaFrame* delta_frame) {
             MoveProcessor(player_, room_->room_map(), p.second).try_move(delta_frame);
             Door* door = static_cast<Door*>(room_->room_map()->view(player_->pos(), ObjCode::Door));
             // When doors are switchable, check for state too!
-            if (door && door->dest()) {
+            if (door && door->dest() && door->state()) {
                 use_door(door->dest(), delta_frame);
             }
             return;
@@ -101,7 +101,7 @@ bool PlayingState::load_room(std::string name) {
     room->load_from_file(file);
     file.close();
     // Load dynamic component!
-    room->room_map()->set_initial_state();
+    room->room_map()->set_initial_state(false);
     loaded_rooms_[name] = std::move(room);
     return true;
 }
@@ -117,8 +117,11 @@ void PlayingState::use_door(MapLocation* dest, DeltaFrame* delta_frame) {
         return;
     }
     Block* car = player_->get_car(cur_map);
-    if (car && dest_map->view(dest->pos, Layer::Solid)) {
-        return;
+    if (car) {
+        if (dest_map->view(dest->pos, Layer::Solid)) {
+            return;
+        }
+        car->remove_all_links(delta_frame);
     }
     delta_frame->push(std::make_unique<DoorMoveDelta>(this, room_, player_->pos()));
     room_ = dest_room;
@@ -127,6 +130,7 @@ void PlayingState::use_door(MapLocation* dest, DeltaFrame* delta_frame) {
         auto car_unique = cur_map->take_quiet(car);
         car->set_pos(dest->pos);
         dest_map->put_quiet(std::move(car_unique));
+        car->check_add_local_links(dest_map, delta_frame);
     }
     player_->set_pos(dest->pos);
     dest_map->put_quiet(std::move(player_unique));

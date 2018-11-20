@@ -56,7 +56,7 @@ void Door::draw(GraphicsManager* gfx) {
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0, p.y));
     model = glm::scale(model, glm::vec3(1, 0.1, 1));
     gfx->set_model(model);
-    if (dest_) {
+    if (dest_ && state()) {
         gfx->set_color(COLORS[BLUE]);
     } else {
         gfx->set_color(COLORS[DARK_RED]);

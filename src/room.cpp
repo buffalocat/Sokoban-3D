@@ -114,32 +114,32 @@ void Room::load_from_file(std::ifstream& file, Point* start_pos) {
     while (reading_file) {
         file.read((char *)b, 1);
         switch (static_cast<MapCode>(b[0])) {
-        case MapCode::Dimensions :
+        case MapCode::Dimensions:
             file.read((char *)b, 2);
             initialize(b[0], b[1]);
             break;
-        case MapCode::DefaultPos :
+        case MapCode::DefaultPos:
             file.read((char *)b, 2);
             if (start_pos) {
                 *start_pos = {b[0], b[1]};
             }
             break;
-        case MapCode::Objects :
+        case MapCode::Objects:
             read_objects(file);
             break;
-        case MapCode::CameraRect :
+        case MapCode::CameraRect:
             read_camera_rects(file);
             break;
-        case MapCode::SnakeLink :
+        case MapCode::SnakeLink:
             read_snake_link(file);
             break;
         case MapCode::DoorDest :
             read_door_dest(file);
             break;
-        case MapCode::Signaler :
+        case MapCode::Signaler:
             read_signaler(file);
             break;
-        case MapCode::End :
+        case MapCode::End:
             reading_file = false;
             break;
         default :
@@ -171,7 +171,7 @@ const std::unordered_map<CameraCode, unsigned int, CameraCodeHash> BYTES_PER_CAM
 };
 
 #define CASE_OBJCODE(CLASS)\
-case ObjCode::CLASS :\
+case ObjCode::CLASS:\
     map_->put_quiet(std::unique_ptr<GameObject>(CLASS::deserialize(b)));\
     break;
 
@@ -187,13 +187,13 @@ void Room::read_objects(std::ifstream& file) {
         CASE_OBJCODE(SnakeBlock)
         CASE_OBJCODE(Door)
         // NOTE: this is a temporary fix to deal with the player for now
-        case ObjCode::Player :
+        case ObjCode::Player:
             break;
         //CASE_OBJCODE(Player)
         CASE_OBJCODE(PlayerWall)
         CASE_OBJCODE(PressSwitch)
         CASE_OBJCODE(Gate)
-        case ObjCode::NONE :
+        case ObjCode::NONE:
             return;
         default :
             throw std::runtime_error("Unknown Object code encountered in .map file (it's probably corrupt/an old version)");
@@ -205,7 +205,7 @@ void Room::read_objects(std::ifstream& file) {
 #undef CASE_OBJCODE
 
 #define CASE_CAMCODE(CLASS)\
-case CameraCode::CLASS :\
+case CameraCode::CLASS:\
     camera_->push_context(std::unique_ptr<CameraContext>(CLASS ## CameraContext::deserialize(b)));\
     break;
 
@@ -220,7 +220,7 @@ void Room::read_camera_rects(std::ifstream& file) {
         CASE_CAMCODE(Fixed)
         CASE_CAMCODE(Clamped)
         CASE_CAMCODE(Null)
-        case CameraCode::NONE :
+        case CameraCode::NONE:
             return;
         default :
             throw std::runtime_error("Unknown Camera code encountered in .map file (it's probably corrupt/an old version)");
@@ -268,5 +268,9 @@ void Room::read_signaler(std::ifstream& file) {
         file.read((char*)b, 3);
         signaler->push_switchable(static_cast<Switchable*>(map_->view(Point {b[0],b[1]}, (ObjCode)b[2])));
     }
+    push_signaler(std::move(signaler));
+}
+
+void Room::push_signaler(std::unique_ptr<Signaler> signaler) {
     signalers_.push_back(std::move(signaler));
 }

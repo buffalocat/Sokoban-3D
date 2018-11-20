@@ -116,6 +116,7 @@ void Signaler::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame) {
 }
 
 void Signaler::serialize(std::ofstream& file) {
+    file << (unsigned char)MapCode::Signaler;
     file << (unsigned char)threshold_;
     file << (unsigned char)(persistent_ | (active_ << 1));
     file << (unsigned char)switches_.size();
@@ -179,9 +180,9 @@ void PressSwitch::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame, 
     if (should_toggle(room_map)) {
         delta_frame->push(std::make_unique<SwitchToggleDelta>(this));
         toggle();
-    }
-    for (Signaler* signaler : signalers_) {
-        check.insert(signaler);
+        for (Signaler* signaler : signalers_) {
+            check.insert(signaler);
+        }
     }
 }
 

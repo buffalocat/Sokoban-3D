@@ -10,6 +10,7 @@
 #include "saveloadtab.h"
 #include "objecttab.h"
 #include "doortab.h"
+#include "switchtab.h"
 
 #include "room.h"
 #include "roommap.h"
@@ -28,6 +29,7 @@ tabs_ {}, active_tab_ {} {
     INIT_TAB(SaveLoad);
     INIT_TAB(Object);
     INIT_TAB(Door);
+    INIT_TAB(Switch);
     active_tab_ = tabs_["SaveLoad"].get();
 }
 

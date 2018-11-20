@@ -5,6 +5,7 @@
 #include "gameobject.h"
 #include "delta.h"
 #include "block.h"
+#include "switch.h"
 
 RoomMap::RoomMap(int width, int height): width_ {width}, height_ {height}, map_ {} {
     for (int i = 0; i != width; ++i) {
@@ -76,6 +77,24 @@ GameObject* RoomMap::view(Point pos, ObjCode code) {
     return nullptr;
 }
 
+#define ROOMMAP_VIEW(CLASS)\
+CLASS* RoomMap::view_ ## CLASS(Point pos) {\
+    if (valid(pos)) {\
+        for (auto& obj : map_[pos.x][pos.y]) {\
+            CLASS* ptr = dynamic_cast<CLASS*>(obj.get());\
+            if (ptr) {\
+                return ptr;\
+            }\
+        }\
+    }\
+    return nullptr;\
+}
+
+ROOMMAP_VIEW(Switchable)
+ROOMMAP_VIEW(Switch)
+
+#undef ROOMMAP_VIEW
+
 void RoomMap::take(GameObject* object, DeltaFrame* delta_frame) {
     Point pos = object->pos();
     auto &vec = map_[pos.x][pos.y];
@@ -139,13 +158,19 @@ void RoomMap::draw(GraphicsManager* gfx) {
     }
 }
 
-void RoomMap::set_initial_state() {
+void RoomMap::set_initial_state(bool editor_mode) {
     for (int x = 0; x != width_; ++x) {
         for (int y = 0; y != height_; ++y) {
-            // PushBlock links are determined automatically, so they're not part of map data
             auto pb = dynamic_cast<PushBlock*>(view(Point{x,y}, Layer::Solid));
             if (pb) {
                 pb->check_add_local_links(this, nullptr);
+            }
+            if (editor_mode) {
+                continue;
+            }
+            auto gate = dynamic_cast<Gate*>(view(Point{x,y}, ObjCode::Gate));
+            if (gate) {
+                gate->check_waiting(this, nullptr);
             }
         }
     }

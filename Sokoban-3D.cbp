@@ -89,6 +89,7 @@
 		<Unit filename="include/graphicsmanager.h" />
 		<Unit filename="include/mainmenustate.h" />
 		<Unit filename="include/moveprocessor.h" />
+		<Unit filename="include/multicolorblock.h" />
 		<Unit filename="include/objecttab.h" />
 		<Unit filename="include/playingstate.h" />
 		<Unit filename="include/room.h" />
@@ -137,6 +138,9 @@
 			<Option virtualFolder="GameStates/" />
 		</Unit>
 		<Unit filename="src/moveprocessor.cpp" />
+		<Unit filename="src/multicolorblock.cpp">
+			<Option virtualFolder="GameObjects/" />
+		</Unit>
 		<Unit filename="src/objecttab.cpp">
 			<Option virtualFolder="GameStates/EditorTabs/" />
 		</Unit>

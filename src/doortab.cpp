@@ -7,14 +7,14 @@
 #include "doorselectstate.h"
 
 DoorTab::DoorTab(EditorState* editor, GraphicsManager* gfx): EditorTab(editor, gfx),
-entrance_ {}, exit_name_ {""}, exit_pos_ {-1, -1}, exit_ {} {}
+entrance_ {}, exit_name_ {""}, exit_pos_ {-1, -1, -1}, exit_ {} {}
 
 DoorTab::~DoorTab() {}
 
 void DoorTab::init() {
     entrance_ = nullptr;
     exit_name_ = "";
-    exit_pos_ = Point {-1, -1};
+    exit_pos_ = {-1, -1, -1};
     exit_ = nullptr;
 }
 
@@ -27,11 +27,11 @@ void DoorTab::main_loop(EditorRoom* eroom) {
         return;
     }
 
-    Point pos = entrance_->pos();
-    ImGui::Text("Currently selected door: (%d,%d)", pos.x, pos.y);
+    Point3 pos = entrance_->pos();
+    ImGui::Text("Currently selected door: (%d,%d,%d)", pos.x, pos.y, pos.z);
     MapLocation* dest = entrance_->dest();
     if (dest) {
-        ImGui::Text("This door has destination \"%s\":(%d,%d)", dest->name.c_str(), dest->pos.x, dest->pos.y);
+        ImGui::Text("This door has destination \"%s\":(%d,%d,%d)", dest->name.c_str(), dest->pos.x, dest->pos.y, dest->pos.z);
     } else {
         ImGui::Text("This door doesn't have a destination yet");
     }
@@ -42,7 +42,7 @@ void DoorTab::main_loop(EditorRoom* eroom) {
     if (ImGui::ListBox("Loaded Maps##DOOR", &current, room_names, len, len)) {
         if (exit_name_.compare(room_names[current])) {
             exit_name_ = std::string(room_names[current]);
-            exit_pos_ = {-1, -1};
+            exit_pos_ = {-1, -1, -1};
         }
     }
 
@@ -64,7 +64,7 @@ void DoorTab::main_loop(EditorRoom* eroom) {
         return;
     }
 
-    ImGui::Text(("Destination Position: " + exit_pos_.to_str()).c_str());
+    ImGui::Text("Destination Position: (%d,%d,%d)", exit_pos_.x, exit_pos_.y, exit_pos_.z);
 
     if (exit_) {
         ImGui::Text("The exit position is also a door.");
@@ -80,8 +80,8 @@ void DoorTab::main_loop(EditorRoom* eroom) {
     }
 }
 
-void DoorTab::handle_left_click(EditorRoom* eroom, Point pos) {
-    Door* door = static_cast<Door*>(eroom->room->room_map()->view(pos, ObjCode::Door));
+void DoorTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
+    Door* door = dynamic_cast<Door*>(eroom->room->room_map()->view(pos));
     if (door) {
         entrance_ = door;
     }

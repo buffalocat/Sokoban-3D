@@ -9,7 +9,7 @@ public:
     SaveLoadTab(EditorState*, GraphicsManager*);
     ~SaveLoadTab();
     void main_loop(EditorRoom*);
-    void handle_left_click(EditorRoom*, Point);
+    void handle_left_click(EditorRoom*, Point3);
 };
 
 #endif // SAVELOADTAB_H

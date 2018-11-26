@@ -32,21 +32,21 @@ void SwitchTab::main_loop(EditorRoom* eroom) {
     }
 }
 
-void SwitchTab::handle_left_click(EditorRoom* eroom, Point pos) {
+void SwitchTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
     RoomMap* room_map = eroom->room->room_map();
-    auto swble = room_map->view_Switchable(pos);
+    auto swble = dynamic_cast<Switchable*>(room_map->view(pos));
     if (swble) {
         switchables_.insert(swble);
         return;
     }
-    auto sw = room_map->view_Switch(pos);
+    auto sw = dynamic_cast<Switch*>(room_map->view(pos));
     if (sw) {
         switches_.insert(sw);
         return;
     }
 }
 
-void SwitchTab::handle_right_click(EditorRoom* eroom, Point pos) {
+void SwitchTab::handle_right_click(EditorRoom* eroom, Point3 pos) {
     switchables_ = {};
     switches_ = {};
 }

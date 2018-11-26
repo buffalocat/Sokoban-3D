@@ -2,9 +2,10 @@
 #include "roommap.h"
 #include "delta.h"
 #include "graphicsmanager.h"
+#include "mapfile.h"
 
-Switchable::Switchable(int x, int y, bool default_state, bool initial_state):
-GameObject(x, y),
+Switchable::Switchable(Point3 pos, bool default_state, bool initial_state):
+GameObject(pos),
 default_ {default_state},
 active_ {(bool)(default_state ^ initial_state)},
 waiting_ {(bool)(default_state ^ initial_state)} {}
@@ -42,7 +43,7 @@ void Switchable::check_waiting(RoomMap* room_map, DeltaFrame* delta_frame) {
 }
 
 // Gates should be initialized down in case they are "covered" at load time
-Gate::Gate(int x, int y, bool def): Switchable(x, y, def, false) {}
+Gate::Gate(Point3 pos, bool def): Switchable(pos, def, false) {}
 
 Gate::~Gate() {}
 
@@ -50,26 +51,23 @@ ObjCode Gate::obj_code() {
     return ObjCode::Gate;
 }
 
-Layer Gate::layer() {
-    return state() ? Layer::Solid : Layer::Floor;
+void Gate::serialize(MapFileO& file) {
+    file << default_;
 }
 
-void Gate::serialize(std::ofstream& file) {
-    file << (unsigned char)default_;
-}
-
-GameObject* Gate::deserialize(unsigned char* b) {
-    return new Gate(b[0], b[1], (bool)b[2]);
+GameObject* Gate::deserialize(MapFileI& file) {
+    return nullptr;
+    //return new Gate(b[0], b[1], (bool)b[2]);
 }
 
 bool Gate::can_set_state(bool state, RoomMap* room_map) {
     // You can always set state to false, but setting it to true requires there be
     // nothing above the gate
-    return !state || (room_map->view(pos_, Layer::Solid) == nullptr);
+    return !state || (room_map->view(shifted_pos({0,0,1})) == nullptr);
 }
 
 void Gate::draw(GraphicsManager* gfx) {
-    Point p = pos();
+    Point3 p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, .9f * state() - 0.45f, p.y));
     model = glm::scale(model, glm::vec3(0.7f, 1.0f, 0.7f));
     gfx->set_model(model);
@@ -77,7 +75,7 @@ void Gate::draw(GraphicsManager* gfx) {
     gfx->draw_cube();
 }
 
-Signaler::Signaler(unsigned int threshold, bool persistent, bool active):
+Signaler::Signaler(unsigned char threshold, bool persistent, bool active):
 count_ {0}, threshold_ {threshold},
 active_ {active}, persistent_ {persistent},
 switches_ {}, switchables_ {} {}
@@ -115,27 +113,23 @@ void Signaler::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame) {
     }
 }
 
-void Signaler::serialize(std::ofstream& file) {
-    file << (unsigned char)MapCode::Signaler;
-    file << (unsigned char)threshold_;
-    file << (unsigned char)(persistent_ | (active_ << 1));
-    file << (unsigned char)switches_.size();
-    file << (unsigned char)switchables_.size();
+void Signaler::serialize(MapFileO& file) {
+    file << MapCode::Signaler;
+    file << threshold_;
+    file << (persistent_ | (active_ << 1));
+    file << switches_.size();
+    file << switchables_.size();
     for (auto& obj : switches_) {
-        Point pos = obj->pos();
-        file << (unsigned char)pos.x;
-        file << (unsigned char)pos.y;
-        file << (unsigned char)obj->obj_code();
+        file << obj->pos();
+        file << obj->obj_code();
     }
     for (auto& obj : switchables_) {
-        Point pos = obj->pos();
-        file << (unsigned char)pos.x;
-        file << (unsigned char)pos.y;
-        file << (unsigned char)obj->obj_code();
+        file << obj->pos();
+        file << obj->obj_code();
     }
 }
 
-Switch::Switch(int x, int y, bool persistent, bool active): GameObject(x, y),
+Switch::Switch(Point3 pos, bool persistent, bool active): GameObject(pos),
 persistent_ {persistent}, active_ {active}, signalers_ {} {}
 
 Switch::~Switch() {}
@@ -151,8 +145,8 @@ void Switch::toggle() {
     }
 }
 
-PressSwitch::PressSwitch(int x, int y, unsigned char color, bool persistent, bool active):
-Switch(x, y, persistent, active), color_ {color} {}
+PressSwitch::PressSwitch(Point3 pos, unsigned char color, bool persistent, bool active):
+Switch(pos, persistent, active), color_ {color} {}
 
 PressSwitch::~PressSwitch() {}
 
@@ -160,17 +154,16 @@ ObjCode PressSwitch::obj_code() {
     return ObjCode::PressSwitch;
 }
 
-Layer PressSwitch::layer() {
-    return Layer::Floor;
-}
-
-void PressSwitch::serialize(std::ofstream& file) {
+void PressSwitch::serialize(MapFileO& file) {
     file << color_;
-    file << (unsigned char)(persistent_ | (active_ << 1));
+    file << (persistent_ | (active_ << 1));
 }
 
-GameObject* PressSwitch::deserialize(unsigned char* b) {
-    return new PressSwitch(b[0], b[1], b[2], b[3] & 1, b[3] & 2);
+GameObject* PressSwitch::deserialize(MapFileI& file) {
+    Point3 pos {file.read_point3()};
+    unsigned char b[2];
+    file.read(b, 2);
+    return new PressSwitch(pos, b[0], b[1] & 1, b[1] & 2);
 }
 
 void PressSwitch::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered_set<Signaler*>& check) {
@@ -187,11 +180,11 @@ void PressSwitch::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame, 
 }
 
 bool PressSwitch::should_toggle(RoomMap* room_map) {
-    return active_ ^ (room_map->view(pos_, Layer::Solid) != nullptr);
+    return active_ ^ (room_map->view(shifted_pos({0,0,1})) != nullptr);
 }
 
 void PressSwitch::draw(GraphicsManager* gfx) {
-    Point p = pos();
+    Point3 p = pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, -0.4f, p.y));
     model = glm::scale(model, glm::vec3(0.9f, 1.0f, 0.9f));
     gfx->set_model(model);

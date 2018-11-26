@@ -8,10 +8,10 @@
 
 struct EditorRoom {
     std::unique_ptr<Room> room;
-    Point start_pos;
-    Point cam_pos;
+    Point3 start_pos;
+    Point3 cam_pos;
     bool changed;
-    EditorRoom(std::unique_ptr<Room>, Point);
+    EditorRoom(std::unique_ptr<Room>, Point3);
 };
 
 /*

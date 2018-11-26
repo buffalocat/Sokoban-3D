@@ -6,9 +6,10 @@
 #include "graphicsmanager.h"
 #include "gameobject.h"
 #include "block.h"
-#include "multicolorblock.h"
+#include "snakeblock.h"
 #include "door.h"
 #include "switch.h"
+#include "mapfile.h"
 
 Room::Room(std::string name): name_ {name},
 map_ {}, camera_ {}, signalers_ {} {}
@@ -29,11 +30,11 @@ void Room::initialize(int w, int h) {
     camera_ = std::make_unique<Camera>(w, h);
 }
 
-void Room::set_cam_pos(Point pos) {
+void Room::set_cam_pos(Point3 pos) {
     camera_->set_current_pos(pos);
 }
 
-void Room::set_cam_target(Point pos) {
+void Room::set_cam_target(Point3 pos) {
     camera_->set_target(pos);
 }
 
@@ -45,7 +46,7 @@ RoomMap* Room::room_map() {
     return map_.get();
 }
 
-void Room::draw(GraphicsManager* gfx, Point cam_pos, bool ortho) {
+void Room::draw(GraphicsManager* gfx, Point3 cam_pos, bool ortho) {
     glm::mat4 model, view, projection;
 
     if (ortho) {
@@ -59,7 +60,7 @@ void Room::draw(GraphicsManager* gfx, Point cam_pos, bool ortho) {
         camera_->update();
 
         float cam_radius = camera_->get_radius();
-        FPoint target_pos = camera_->get_pos();
+        FPoint3 target_pos = camera_->get_pos();
 
         // NOTE: These belong in the camera class later
         float cam_incline = 0.4;
@@ -89,14 +90,13 @@ void Room::draw(GraphicsManager* gfx, Point cam_pos, bool ortho) {
     gfx->draw_cube();
 }
 
-void Room::write_to_file(std::ofstream& file, Point start_pos) {
-    file << static_cast<unsigned char>(MapCode::Dimensions);
-    file << static_cast<unsigned char>(map_->width());
-    file << static_cast<unsigned char>(map_->height());
+void Room::write_to_file(MapFileO& file, Point3 start_pos) {
+    file << MapCode::Dimensions;
+    file << map_->width();
+    file << map_->height();
 
-    file << static_cast<unsigned char>(MapCode::DefaultPos);
-    file << static_cast<unsigned char>(start_pos.x);
-    file << static_cast<unsigned char>(start_pos.y);
+    file << MapCode::DefaultPos;
+    file << start_pos;
 
     map_->serialize(file);
 
@@ -109,20 +109,20 @@ void Room::write_to_file(std::ofstream& file, Point start_pos) {
     file << static_cast<unsigned char>(MapCode::End);
 }
 
-void Room::load_from_file(std::ifstream& file, Point* start_pos) {
+void Room::load_from_file(MapFileI& file, Point3* start_pos) {
     unsigned char b[8];
     bool reading_file = true;
     while (reading_file) {
-        file.read((char *)b, 1);
+        file.read(b, 1);
         switch (static_cast<MapCode>(b[0])) {
         case MapCode::Dimensions:
-            file.read((char *)b, 2);
+            file.read(b, 2);
             initialize(b[0], b[1]);
             break;
         case MapCode::DefaultPos:
-            file.read((char *)b, 2);
+            file.read(b, 3);
             if (start_pos) {
-                *start_pos = {b[0], b[1]};
+                *start_pos = {b[0], b[1], b[2]};
             }
             break;
         case MapCode::Objects:
@@ -151,51 +151,29 @@ void Room::load_from_file(std::ifstream& file, Point* start_pos) {
     }
 }
 
-const std::unordered_map<ObjCode, unsigned int, ObjCodeHash> BYTES_PER_OBJECT = {
-    {ObjCode::NONE, 0},
-    {ObjCode::Wall, 2},
-    {ObjCode::PushBlock, 4},
-    {ObjCode::SnakeBlock, 4},
-    {ObjCode::Door, 3},
-    {ObjCode::Player, 3},
-    {ObjCode::PlayerWall, 2},
-    {ObjCode::PressSwitch, 4},
-    {ObjCode::Gate, 3},
-    {ObjCode::TwoColorPushBlock, 5},
-};
-
-const std::unordered_map<CameraCode, unsigned int, CameraCodeHash> BYTES_PER_CAMERA = {
-    {CameraCode::NONE, 0},
-    {CameraCode::Free, 9},
-    {CameraCode::Fixed, 13},
-    {CameraCode::Clamped, 11},
-    {CameraCode::Null, 5},
-};
-
 #define CASE_OBJCODE(CLASS)\
 case ObjCode::CLASS:\
-    map_->put_quiet(std::unique_ptr<GameObject>(CLASS::deserialize(b)));\
+    map_->put_quiet(std::unique_ptr<GameObject>(CLASS::deserialize(file)));\
     break;
 
-void Room::read_objects(std::ifstream& file) {
-    unsigned char b[8];
+void Room::read_objects(MapFileI& file) {
+    unsigned char b[1];
     while (true) {
-        file.read(reinterpret_cast<char *>(b), 1);
+        file.read(b, 1);
         ObjCode code = static_cast<ObjCode>(b[0]);
-        file.read((char *)b, BYTES_PER_OBJECT.at(code));
         switch (code) {
         CASE_OBJCODE(Wall)
-        CASE_OBJCODE(PushBlock)
+        CASE_OBJCODE(NonStickBlock)
+        CASE_OBJCODE(WeakBlock)
+        CASE_OBJCODE(StickyBlock)
         CASE_OBJCODE(SnakeBlock)
         CASE_OBJCODE(Door)
         // NOTE: this is a temporary fix to deal with the player for now
         case ObjCode::Player:
             break;
         //CASE_OBJCODE(Player)
-        CASE_OBJCODE(PlayerWall)
         CASE_OBJCODE(PressSwitch)
         CASE_OBJCODE(Gate)
-        CASE_OBJCODE(TwoColorPushBlock)
         case ObjCode::NONE:
             return;
         default :
@@ -209,15 +187,14 @@ void Room::read_objects(std::ifstream& file) {
 
 #define CASE_CAMCODE(CLASS)\
 case CameraCode::CLASS:\
-    camera_->push_context(std::unique_ptr<CameraContext>(CLASS ## CameraContext::deserialize(b)));\
+    camera_->push_context(std::unique_ptr<CameraContext>(CLASS ## CameraContext::deserialize(file)));\
     break;
 
-void Room::read_camera_rects(std::ifstream& file) {
-    unsigned char b[16];
-    while (true) {
-        file.read(reinterpret_cast<char *>(b), 1);
+void Room::read_camera_rects(MapFileI& file) {
+    unsigned char b[1];
+    /*while (true) {
+        file.read(b, 1);
         CameraCode code = static_cast<CameraCode>(b[0]);
-        file.read((char *)b, BYTES_PER_CAMERA.at(code));
         switch (code) {
         CASE_CAMCODE(Free)
         CASE_CAMCODE(Fixed)
@@ -229,47 +206,45 @@ void Room::read_camera_rects(std::ifstream& file) {
             throw std::runtime_error("Unknown Camera code encountered in .map file (it's probably corrupt/an old version)");
             return;
         }
-    }
+    }*/
 }
 
 #undef CASE_CAMCODE
 
-void Room::read_snake_link(std::ifstream& file) {
-    unsigned char b[3];
-    file.read((char *)b, 3);
-    SnakeBlock* sb = static_cast<SnakeBlock*>(map_->view(Point{b[0], b[1]}, Layer::Solid));
+void Room::read_snake_link(MapFileI& file) {
+    unsigned char b[4];
+    file.read(b, 4);
+    SnakeBlock* sb = static_cast<SnakeBlock*>(map_->view({b[0], b[1], b[2]}));
     // Linked right
-    if (b[2] & 1) {
-        sb->add_link(static_cast<SnakeBlock*>(map_->view(Point{b[0]+1, b[1]}, Layer::Solid)), nullptr);
+    if (b[3] & 1) {
+        sb->add_link(static_cast<SnakeBlock*>(map_->view({b[0]+1, b[1], b[2]})), nullptr);
     }
     // Linked down
-    if (b[2] & 2) {
-        sb->add_link(static_cast<SnakeBlock*>(map_->view(Point{b[0], b[1]+1}, Layer::Solid)), nullptr);
+    if (b[3] & 2) {
+        sb->add_link(static_cast<SnakeBlock*>(map_->view({b[0], b[1]+1, b[2]})), nullptr);
     }
 }
 
-void Room::read_door_dest(std::ifstream& file) {
-    unsigned char b[5];
-    file.read((char *)b, 5);
-    auto door = static_cast<Door*>(map_->view(Point{b[0],b[1]}, ObjCode::Door));
+void Room::read_door_dest(MapFileI& file) {
+    unsigned char b[7];
+    file.read(b, 7);
+    auto door = static_cast<Door*>(map_->view({b[0],b[1],b[2]}));
     char name[256];
-    file.read(name, b[4]);
-    door->set_dest(Point{b[2],b[3]}, std::string(name, b[4]));
+    file.read_str(name, b[6]);
+    door->set_dest({b[3],b[4],b[5]}, std::string(name, b[6]));
 }
 
-void Room::read_signaler(std::ifstream& file) {
+void Room::read_signaler(MapFileI& file) {
     unsigned char b[4];
-    file.read((char*)b, 4);
+    file.read(b, 4);
     auto signaler = std::make_unique<Signaler>(b[0], b[1] & 1, b[1] & 2);
     int switches = b[2];
     int switchables = b[3];
     for (int i = 0; i < switches; ++i) {
-        file.read((char*)b, 3);
-        signaler->push_switch(static_cast<Switch*>(map_->view(Point {b[0],b[1]}, (ObjCode)b[2])));
+        signaler->push_switch(static_cast<Switch*>(map_->view(file.read_point3())));
     }
     for (int i = 0; i < switchables; ++i) {
-        file.read((char*)b, 3);
-        signaler->push_switchable(static_cast<Switchable*>(map_->view(Point {b[0],b[1]}, (ObjCode)b[2])));
+        signaler->push_switchable(static_cast<Switchable*>(map_->view(file.read_point3())));
     }
     push_signaler(std::move(signaler));
 }

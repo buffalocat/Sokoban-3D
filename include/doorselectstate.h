@@ -9,14 +9,14 @@ class Door;
 
 class DoorSelectState: public EditorBaseState {
 public:
-    DoorSelectState(Room*, Point cam_pos, Point* door_pos, Door** door);
+    DoorSelectState(Room*, Point3 cam_pos, Point3* door_pos, Door** door);
     virtual ~DoorSelectState();
     void main_loop();
 
 private:
     Room* room_;
-    Point cam_pos_;
-    Point* door_pos_;
+    Point3 cam_pos_;
+    Point3* door_pos_;
     Door** door_;
 
     virtual void handle_left_click(Point);

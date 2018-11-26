@@ -6,6 +6,8 @@
 #include "gamestate.h"
 #include "playingstate.h"
 #include "gameobject.h"
+#include "player.h"
+#include "mapfile.h"
 
 #include "saveloadtab.h"
 #include "objecttab.h"
@@ -18,7 +20,7 @@
 #define INIT_TAB(NAME)\
 tabs_[#NAME] = std::make_unique<NAME ## Tab>(this, gfx);
 
-EditorRoom::EditorRoom(std::unique_ptr<Room> arg_room, Point pos):
+EditorRoom::EditorRoom(std::unique_ptr<Room> arg_room, Point3 pos):
 room {std::move(arg_room)},
 start_pos {pos}, cam_pos {pos},
 changed {true} {}
@@ -46,7 +48,7 @@ void EditorState::main_loop() {
     if (active_room_) {
         ImGui::Text(("Current Room: " + active_room_->room->name()).c_str());
         active_room_->changed = true;
-        handle_mouse_input(active_room_->cam_pos, active_room_->room.get());
+        handle_mouse_input(active_room_->cam_pos.h(), active_room_->room.get());
         handle_keyboard_input(active_room_->cam_pos, active_room_->room.get());
         active_room_->room->draw(gfx_, active_room_->cam_pos, ortho_cam_);
     }
@@ -101,9 +103,9 @@ void EditorState::new_room(std::string name, int w, int h) {
         return;
     }
     auto room = std::make_unique<Room>(name, w, h);
-    room->room_map()->put_quiet(std::make_unique<Player>(0, 0, RidingState::Free));
-    room->set_cam_pos(Point {0,0});
-    rooms_[name] = std::make_unique<EditorRoom>(std::move(room), Point {0,0});
+    room->room_map()->put_quiet(std::make_unique<Player>(Point3 {0,0,0}, RidingState::Free));
+    room->set_cam_pos({0,0,0});
+    rooms_[name] = std::make_unique<EditorRoom>(std::move(room), Point3 {0,0,0});
     set_active_room(name);
 }
 
@@ -112,16 +114,14 @@ bool EditorState::load_room(std::string name) {
     if (access(path.c_str(), F_OK) == -1) {
         return false;
     }
-    std::ifstream file;
-    file.open(path, std::ios::in | std::ios::binary);
-    Point start_pos {0,0};
+    MapFileI file {path};
+    Point3 start_pos {0,0,0};
     std::unique_ptr<Room> room = std::make_unique<Room>(name);
     room->load_from_file(file, &start_pos);
-    file.close();
 
     //NOTE: Later, load .mapd file here!!
 
-    room->room_map()->put_quiet(std::make_unique<Player>(start_pos.x, start_pos.y, RidingState::Free));
+    room->room_map()->put_quiet(std::make_unique<Player>(start_pos, RidingState::Free));
     room->set_cam_pos(start_pos);
     rooms_[name] = std::make_unique<EditorRoom>(std::move(room), start_pos);
     set_active_room(name);
@@ -135,10 +135,8 @@ void EditorState::save_room(EditorRoom* eroom, bool commit) {
     } else {
         path = MAPS_TEMP + eroom->room->name() + ".map";
     }
-    std::ofstream file;
-    file.open(path, std::ios::out | std::ios::binary);
+    MapFileO file{path};
     eroom->room->write_to_file(file, eroom->start_pos);
-    file.close();
 }
 
 void EditorState::unload_current_room() {
@@ -177,9 +175,9 @@ void EditorState::begin_test() {
 }
 
 void EditorState::handle_left_click(Point pos) {
-    active_tab_->handle_left_click(active_room_, pos);
+    active_tab_->handle_left_click(active_room_, Point3 {pos.x, pos.y, active_room_->cam_pos.z});
 }
 
 void EditorState::handle_right_click(Point pos) {
-    active_tab_->handle_right_click(active_room_, pos);
+    active_tab_->handle_right_click(active_room_, Point3 {pos.x, pos.y, active_room_->cam_pos.z});
 }

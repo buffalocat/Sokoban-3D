@@ -4,7 +4,8 @@
 #include "room.h"
 #include "roommap.h"
 #include "block.h"
-#include "multicolorblock.h"
+#include "snakeblock.h"
+#include "player.h"
 #include "switch.h"
 #include "playingstate.h"
 
@@ -67,20 +68,19 @@ DeletionDelta::~DeletionDelta() {}
 void DeletionDelta::revert() {
     GameObject* obj = object_.get();
     room_map_->put_quiet(std::move(object_));
-    obj->reinit();
 }
 
 
-CreationDelta::CreationDelta(GameObject* object, RoomMap* room_map): object_ {object}, room_map_ {room_map} {}
+CreationDelta::CreationDelta(Point3 pos, RoomMap* room_map): pos_ {pos}, room_map_ {room_map} {}
 
 CreationDelta::~CreationDelta() {}
 
 void CreationDelta::revert() {
-    room_map_->take_quiet(object_);
+    room_map_->take_quiet(pos_);
 }
 
 
-MotionDelta::MotionDelta(GameObject* object, Point p, RoomMap* room_map): object_ {object}, p_ {p}, room_map_ {room_map} {}
+MotionDelta::MotionDelta(GameObject* object, Point3 p, RoomMap* room_map): object_ {object}, p_ {p}, room_map_ {room_map} {}
 
 MotionDelta::~MotionDelta() {}
 
@@ -89,7 +89,7 @@ void MotionDelta::revert() {
 }
 
 
-AddLinkDelta::AddLinkDelta(Block* a, Block* b): a_ {a}, b_ {b} {}
+AddLinkDelta::AddLinkDelta(SnakeBlock* a, SnakeBlock* b): a_ {a}, b_ {b} {}
 
 AddLinkDelta::~AddLinkDelta() {}
 
@@ -97,8 +97,7 @@ void AddLinkDelta::revert() {
     a_->remove_link(b_, nullptr);
 }
 
-
-RemoveLinkDelta::RemoveLinkDelta(Block* a, Block* b): a_ {a}, b_ {b} {}
+RemoveLinkDelta::RemoveLinkDelta(SnakeBlock* a, SnakeBlock* b): a_ {a}, b_ {b} {}
 
 RemoveLinkDelta::~RemoveLinkDelta() {}
 
@@ -107,7 +106,7 @@ void RemoveLinkDelta::revert() {
 }
 
 
-DoorMoveDelta::DoorMoveDelta(PlayingState* state, Room* room, Point pos):
+DoorMoveDelta::DoorMoveDelta(PlayingState* state, Room* room, Point3 pos):
 state_ {state}, room_ {room}, pos_ {pos} {}
 
 DoorMoveDelta::~DoorMoveDelta() {}
@@ -166,10 +165,10 @@ void RidingStateDelta::revert() {
     player_->set_riding(state_);
 }
 
-ColorSwapDelta::ColorSwapDelta(TwoColorBlock* obj): obj_ {obj} {}
+ColorChangeDelta::ColorChangeDelta(Block* obj): obj_ {obj} {}
 
-ColorSwapDelta::~ColorSwapDelta() {}
+ColorChangeDelta::~ColorChangeDelta() {}
 
-void ColorSwapDelta::revert() {
-    obj_->swap_colors();
+void ColorChangeDelta::revert() {
+    obj_->cycle_color(true);
 }

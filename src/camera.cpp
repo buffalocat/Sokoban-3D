@@ -1,22 +1,7 @@
 #include "camera.h"
 #include "roommap.h"
-#include <algorithm>
+#include "mapfile.h"
 
-// Because we only work with dyadic rationals,
-// the floats that get read in and out should
-// never accumulate any error.
-void float_ser(std::ofstream& file, float f) {
-    file << (unsigned char)f;
-    file << (unsigned char)(256.0*f);
-}
-
-float float_deser(unsigned char high, unsigned char low) {
-    return (float)high + (float)low/256.0;
-}
-
-FPoint::FPoint(float ax, float ay): x {ax}, y {ay} {}
-
-FPoint::FPoint(const Point& p): x {static_cast<float>(p.x)}, y {static_cast<float>(p.y)} {}
 
 CameraContext::CameraContext(int x, int y, int w, int h, int priority): x_ {x}, y_ {y}, w_ {w}, h_ {h}, priority_ {priority} {}
 
@@ -26,12 +11,12 @@ bool CameraContext::is_null() {
     return false;
 }
 
-void CameraContext::serialize(std::ofstream& file) {
-    file << (unsigned char)x_;
-    file << (unsigned char)y_;
-    file << (unsigned char)w_;
-    file << (unsigned char)h_;
-    file << (unsigned char)priority_;
+void CameraContext::serialize(MapFileO& file) {
+    file << x_;
+    file << y_;
+    file << w_;
+    file << h_;
+    file << priority_;
 }
 
 FreeCameraContext::FreeCameraContext(int x, int y, int w, int h, int priority, float radius):
@@ -39,85 +24,83 @@ CameraContext(x, y, w, h, priority), radius_ {radius} {}
 
 FreeCameraContext::~FreeCameraContext() {}
 
-FPoint FreeCameraContext::center(Point pos) {
+FPoint3 FreeCameraContext::center(Point3 pos) {
     return pos;
 }
 
-float FreeCameraContext::radius(Point pos) {
+float FreeCameraContext::radius(Point3 pos) {
     return radius_;
 }
 
-void FreeCameraContext::serialize(std::ofstream& file) {
-    file << (unsigned char)CameraCode::Free;
+void FreeCameraContext::serialize(MapFileO& file) {
+    file << CameraCode::Free;
     CameraContext::serialize(file);
-    float_ser(file, radius_);
-    float_ser(file, 0.0f);
+    file << radius_;
 }
 
+/*
 CameraContext* FreeCameraContext::deserialize(unsigned char* b) {
     return new FreeCameraContext(b[0], b[1], b[2], b[3], b[4],
                                  float_deser(b[5], b[6]));
-}
+}*/
 
-FixedCameraContext::FixedCameraContext(int x, int y, int w, int h, int priority, float radius, float cx, float cy):
-CameraContext(x, y, w, h, priority), radius_ {radius}, cx_ {cx}, cy_ {cy} {}
+FixedCameraContext::FixedCameraContext(int x, int y, int w, int h, int priority, float radius, FPoint3 center):
+CameraContext(x, y, w, h, priority), radius_ {radius}, center_ {center} {}
 
 FixedCameraContext::~FixedCameraContext() {}
 
-FPoint FixedCameraContext::center(Point pos) {
-    return FPoint{cx_, cy_};
+FPoint3 FixedCameraContext::center(Point3 pos) {
+    return center_;
 }
 
-float FixedCameraContext::radius(Point pos) {
+float FixedCameraContext::radius(Point3 pos) {
     return radius_;
 }
 
-void FixedCameraContext::serialize(std::ofstream& file) {
-    file << (unsigned char)CameraCode::Fixed;
+void FixedCameraContext::serialize(MapFileO& file) {
+    file << CameraCode::Fixed;
     CameraContext::serialize(file);
-    float_ser(file, radius_);
-    float_ser(file, 0.0f);
-    float_ser(file, cx_);
-    float_ser(file, cy_);
+    file << radius_;
+    file << center_;
 }
-
-CameraContext* FixedCameraContext::deserialize(unsigned char* b) {
+/*
+CameraContext* FixedCameraContext::deserialize(MapFileI& file) {
     return new FixedCameraContext(b[0], b[1], b[2], b[3], b[4],
                                   float_deser(b[5], b[6]),
                                   float_deser(b[7], b[8]), float_deser(b[9], b[10]));
-}
+}//*/
 
 ClampedCameraContext::ClampedCameraContext(int x, int y, int w, int h, int priority, float radius, int xpad, int ypad):
 CameraContext(x, y, w, h, priority), radius_ {radius}, xpad_ {xpad}, ypad_ {ypad} {}
 
 ClampedCameraContext::~ClampedCameraContext() {}
 
-FPoint ClampedCameraContext::center(Point pos) {
-    return Point{
+FPoint3 ClampedCameraContext::center(Point3 pos) {
+    return Point3{
         std::min(std::max(pos.x, x_ + xpad_), x_ + w_ - xpad_),
-        std::min(std::max(pos.y, y_ + ypad_), y_ + h_ - ypad_)
+        std::min(std::max(pos.y, y_ + ypad_), y_ + h_ - ypad_),
+        pos.z
     };
 }
 
-float ClampedCameraContext::radius(Point pos) {
+float ClampedCameraContext::radius(Point3 pos) {
     return radius_;
 }
 
-void ClampedCameraContext::serialize(std::ofstream& file) {
-    file << (unsigned char)CameraCode::Clamped;
+void ClampedCameraContext::serialize(MapFileO& file) {
+    file << CameraCode::Clamped;
     CameraContext::serialize(file);
-    float_ser(file, radius_);
-    float_ser(file, 0.0f);
-    file << (unsigned char) xpad_;
-    file << (unsigned char) ypad_;
+    file << radius_;
+    file << xpad_;
+    file << ypad_;
 }
-
+/*
 CameraContext* ClampedCameraContext::deserialize(unsigned char* b) {
     return new ClampedCameraContext(b[0], b[1], b[2], b[3], b[4],
                                     float_deser(b[5], b[6]),
                                     b[7], b[8]);
 }
-
+*/
 NullCameraContext::NullCameraContext(int x, int y, int w, int h, int priority):
     CameraContext(x, y, w, h, priority) {}
 
@@ -127,34 +110,34 @@ bool NullCameraContext::is_null() {
     return true;
 }
 
-FPoint NullCameraContext::center(Point pos) {
+FPoint3 NullCameraContext::center(Point3 pos) {
     return pos;
 }
 
-float NullCameraContext::radius(Point pos) {
+float NullCameraContext::radius(Point3 pos) {
     return DEFAULT_CAM_RADIUS;
 }
 
-void NullCameraContext::serialize(std::ofstream& file) {
+void NullCameraContext::serialize(MapFileO& file) {
     file << (unsigned char)CameraCode::Null;
     CameraContext::serialize(file);
 }
-
+/*
 CameraContext* NullCameraContext::deserialize(unsigned char* b) {
     return new NullCameraContext(b[0], b[1], b[2], b[3], b[4]);
-}
+}*/
 
 Camera::Camera(int w, int h): width_ {w}, height_ {h},
     default_context_ {FreeCameraContext(0, 0, w, h, 0, DEFAULT_CAM_RADIUS)},
     context_ {}, loaded_contexts_ {},
     context_map_ {},
     target_rad_ {DEFAULT_CAM_RADIUS}, cur_rad_ {DEFAULT_CAM_RADIUS},
-    target_pos_ {FPoint{0,0}}, cur_pos_ {FPoint{0,0}}
+    target_pos_ {FPoint3{0,0,0}}, cur_pos_ {FPoint3{0,0,0}}
 {
     context_map_ = std::vector<std::vector<CameraContext*>>(w, std::vector<CameraContext*>(h, &default_context_));
 }
 
-void Camera::serialize(std::ofstream& file) {
+void Camera::serialize(MapFileO& file) {
     file << static_cast<unsigned char>(MapCode::CameraRect);
     for (auto& context : loaded_contexts_) {
         context->serialize(file);
@@ -184,11 +167,11 @@ float Camera::get_radius() {
     return cur_rad_;
 }
 
-FPoint Camera::get_pos() {
+FPoint3 Camera::get_pos() {
     return cur_pos_;
 }
 
-void Camera::set_target(Point pos) {
+void Camera::set_target(Point3 pos) {
     CameraContext* new_context = context_map_[pos.x][pos.y];
     if (!new_context->is_null()) {
         context_ = new_context;
@@ -197,13 +180,13 @@ void Camera::set_target(Point pos) {
     target_rad_ = context_->radius(pos);
 }
 
-void Camera::set_current_pos(Point pos) {
+void Camera::set_current_pos(Point3 pos) {
     target_pos_ = pos;
     cur_pos_ = pos;
 }
 
 void Camera::update() {
-    cur_pos_ = FPoint{damp_avg(target_pos_.x, cur_pos_.x), damp_avg(target_pos_.y, cur_pos_.y)};
+    cur_pos_ = FPoint3{damp_avg(target_pos_.x, cur_pos_.x), damp_avg(target_pos_.y, cur_pos_.y), damp_avg(target_pos_.z, cur_pos_.z)};
     cur_rad_ = damp_avg(target_rad_, cur_rad_);
 }
 

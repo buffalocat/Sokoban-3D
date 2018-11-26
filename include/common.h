@@ -37,13 +37,29 @@ class Block;
 struct Point {
     int x;
     int y;
-    Point& operator+=(const Point&);
-    std::string to_str();
+};
+
+typedef Point Point2;
+
+struct Point3 {
+    int x;
+    int y;
+    int z;
+    Point h() {return {x, y};}
+    Point3& operator+=(const Point3&);
+};
+
+struct FPoint3 {
+    float x;
+    float y;
+    float z;
+    FPoint3(float, float, float);
+    FPoint3(const Point3&);
 };
 
 bool operator==(const Point& a, const Point& b);
 
-Point operator*(const int, const Point&);
+Point3 operator*(const int, const Point3&);
 
 std::ostream& operator<<(std::ostream& os, const Point& p);
 
@@ -53,43 +69,28 @@ struct PointHash {
 
 void clamp(int* n, int a, int b);
 
-typedef std::unordered_set<Point, PointHash> PointSet;
-typedef std::vector<Point> PointVec;
-typedef std::vector<GameObject*> ObjVec;
-typedef std::unordered_set<GameObject*> ObjSet;
-typedef std::unordered_set<Block*> BlockSet;
-typedef std::unordered_map<Point, GameObject*, PointHash> PosIdMap;
-//typedef std::pair<Point, GameObject*> PosId;
-//typedef std::vector<PosId> PosIdVec;
-
 //NOTE: all enums here should be explicitly numbered, because they are largely
 // used in serializing maps.  Maps should never go "out of date", unless a
 // feature absolutely has to be removed from the system (even then, the
 // numbering of the items around it should stay the same).
 
-enum class Layer {
-    Floor = 1,
-    Player = 2,
-    Solid = 3,
-};
-
 enum class RidingState {
-    Free,
-    Bound,
-    Riding,
+    Free = 1,
+    Bound = 2,
+    Riding = 3,
 };
 
 enum class ObjCode {
     NONE = 0,
     Wall = 1,
-    PushBlock = 2,
-    SnakeBlock = 3,
-    Door = 4,
-    Player = 5,
-    PlayerWall = 6,
-    PressSwitch = 7,
-    Gate = 8,
-    TwoColorPushBlock = 9,
+    NonStickBlock = 2,
+    WeakBlock = 3,
+    StickyBlock = 4,
+    SnakeBlock = 5,
+    Door = 6,
+    Player = 7,
+    PressSwitch = 8,
+    Gate = 9,
 };
 
 enum class CameraCode {
@@ -137,7 +138,8 @@ const glm::vec4 COLORS[] = {
 };
 
 // NOTE: the order matters here, for serialization reasons!
-const Point DIRECTIONS[4] = {Point{-1,0}, Point{0,-1}, Point{1,0}, Point{0,1}};
+const Point3 DIRECTIONS[6] = {{-1,0,0}, {0,-1,0}, {1,0,0}, {0,1,0}, {0,0,1}, {0,0,-1}};
+const Point3 H_DIRECTIONS[6] = {{-1,0,0}, {0,-1,0}, {1,0,0}, {0,1,0}};
 
 const int MAX_ROOM_DIMS = 255;
 
@@ -179,11 +181,11 @@ enum class MapCode {
     End = 255,
 };
 
-const std::unordered_map<int, Point> MOVEMENT_KEYS {
-    {GLFW_KEY_RIGHT, Point {1, 0}},
-    {GLFW_KEY_LEFT,  Point {-1,0}},
-    {GLFW_KEY_DOWN,  Point {0, 1}},
-    {GLFW_KEY_UP,    Point {0,-1}},
+const std::unordered_map<int, Point3> MOVEMENT_KEYS {
+    {GLFW_KEY_RIGHT, {1, 0, 0}},
+    {GLFW_KEY_LEFT,  {-1,0, 0}},
+    {GLFW_KEY_DOWN,  {0, 1, 0}},
+    {GLFW_KEY_UP,    {0,-1, 0}},
 };
 
 #endif // COMMON_H

@@ -27,11 +27,12 @@ Point EditorBaseState::get_pos_from_mouse(Point cam_pos) {
     return Point{-1, -1};
 }
 
-void EditorBaseState::clamp_to_room(Point& pos, Room* room) {
+void EditorBaseState::clamp_to_room(Point3& pos, Room* room) {
     RoomMap* cur_map = room->room_map();
-    pos = Point {
+    pos = {
         std::max(0, std::min(cur_map->width() - 1, pos.x)),
-        std::max(0, std::min(cur_map->height() - 1, pos.y))
+        std::max(0, std::min(cur_map->height() - 1, pos.y)),
+        pos.z
     };
 }
 
@@ -50,7 +51,7 @@ void EditorBaseState::handle_mouse_input(Point cam_pos, Room* room) {
     }
 }
 
-void EditorBaseState::handle_keyboard_input(Point& cam_pos, Room* room) {
+void EditorBaseState::handle_keyboard_input(Point3& cam_pos, Room* room) {
     if (keyboard_cooldown_ > 0) {
         --keyboard_cooldown_;
         return;

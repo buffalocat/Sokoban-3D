@@ -12,12 +12,12 @@ public:
     virtual ~DoorTab();
     void init();
     void main_loop(EditorRoom*);
-    void handle_left_click(EditorRoom*, Point);
+    void handle_left_click(EditorRoom*, Point3);
 
 private:
     Door* entrance_;
     std::string exit_name_;
-    Point exit_pos_;
+    Point3 exit_pos_;
     Door* exit_;
 };
 

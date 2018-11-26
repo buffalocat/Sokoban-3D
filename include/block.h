@@ -4,120 +4,90 @@
 #include "common.h"
 #include "gameobject.h"
 
-class GameObject;
-class MoveProcessor;
+class Component;
 
-/** Abstract class for Solid objects which can move around and do things
- * Everything that's not a Wall is a Block
- */
+class ColorCycle {
+public:
+    ~ColorCycle();
+
+private:
+    ColorCycle(unsigned char color);
+    unsigned char color();
+    void insert_color(unsigned char color);
+    void cycle(bool undo);
+    // 5 is the maximum number of colors a block will have (probably)
+    // This limit won't be stored in .maps, so it can be changed
+    unsigned char color_[5];
+    unsigned char size_;
+    unsigned char index_;
+
+    friend MapFileO;
+    friend Block;
+};
+
 class Block: public GameObject {
 public:
-    static BlockSet EMPTY_BLOCK_SET;
+    Block(Point3 pos, unsigned char color, bool is_car);
+    virtual ~Block() = 0;
+    virtual void serialize(MapFileO& file);
 
-    Block(int x, int y);
-    Block(int x, int y, unsigned char color, bool is_car);
-    virtual ~Block();
-    Layer layer();
-    bool is_car();
-    void set_car(bool is_car);
-    void draw(GraphicsManager*);
     unsigned char color();
-    virtual bool push_recheck(MoveProcessor*) = 0;
-    virtual const BlockSet& get_strong_links() = 0;
-    virtual const BlockSet& get_weak_links() = 0;
-    void add_link(Block*, DeltaFrame*);
-    void remove_link(Block*, DeltaFrame*);
-    void remove_all_links(DeltaFrame*);
-    void cleanup(DeltaFrame*);
-    void reinit();
-    virtual void check_remove_local_links(RoomMap*, DeltaFrame*);
-    virtual void check_add_local_links(RoomMap*, DeltaFrame*) = 0;
-    virtual void post_move_reset();
+    void insert_color(unsigned char color);
+    bool cycle_color(bool undo);
+
+    virtual std::unique_ptr<Component> make_strong_component(RoomMap*);
+    Component* comp();
+    void reset_comp();
+
+    virtual bool sticky();
+    virtual void get_weak_links(RoomMap*, std::vector<Block*>& links);
+
+    bool car();
 
 protected:
-    unsigned char color_;
     bool car_;
-    BlockSet links_;
+    Component* comp_;
+
+private:
+    ColorCycle color_;
 };
 
-enum class StickyLevel {
-    None,
-    Weak,
-    Strong,
-};
-
-/** The standard type of block, represented by a grid aligned square
- */
-class PushBlock: public Block {
+class NonStickBlock: public Block {
 public:
-    PushBlock(int x, int y);
-    PushBlock(int x, int y, unsigned char color, bool is_car, StickyLevel sticky);
-    virtual ~PushBlock();
-    virtual ObjCode obj_code();
-    virtual void serialize(std::ofstream& file);
-    static GameObject* deserialize(unsigned char* buffer);
-    bool relation_check();
-    void relation_serialize(std::ofstream& file);
+    NonStickBlock(Point3 pos, unsigned char color, bool is_car);
+    ~NonStickBlock();
+    ObjCode obj_code();
+    static GameObject* deserialize(MapFileI& file);
 
-    bool push_recheck(MoveProcessor*);
-    void set_sticky(StickyLevel sticky);
     void draw(GraphicsManager*);
-    StickyLevel sticky();
-    const BlockSet& get_strong_links();
-    const BlockSet& get_weak_links();
-    void check_add_local_links(RoomMap*, DeltaFrame*);
-
-private:
-    StickyLevel sticky_;
 };
 
-/** A different type of block which forms "chains", represented by a diamond
- */
-class SnakeBlock: public Block {
+class WeakBlock: public Block {
 public:
-    SnakeBlock(int x, int y);
-    SnakeBlock(int x, int y, unsigned char color, bool is_car, unsigned int ends);
-    virtual ~SnakeBlock();
-    virtual ObjCode obj_code();
-    void serialize(std::ofstream& file);
-    static GameObject* deserialize(unsigned char* buffer);
-    bool relation_check();
-    void relation_serialize(std::ofstream& file);
+    WeakBlock(Point3 pos, unsigned char color, bool is_car);
+    ~WeakBlock();
+    ObjCode obj_code();
+    static GameObject* deserialize(MapFileI& file);
 
-    bool push_recheck(MoveProcessor*);
-    unsigned int ends();
-    int distance();
-    void reset_target();
-    const BlockSet& get_strong_links();
-    const BlockSet& get_weak_links();
-    void draw(GraphicsManager*);
-    bool available();
-    bool confused(RoomMap*);
-    void check_add_local_links(RoomMap*, DeltaFrame*);
-    void collect_unlinked_neighbors(RoomMap*, std::unordered_set<SnakeBlock*>&);
-    void post_move_reset();
+    bool sticky();
+    void get_weak_links(RoomMap*, std::vector<Block*>& links);
 
-private:
-    unsigned int ends_;
-    int distance_;
-    SnakeBlock* target_;
-
-    friend class SnakePuller;
+    //void draw(GraphicsManager*);
 };
 
-class SnakePuller {
+class StickyBlock: public Block {
 public:
-    SnakePuller(RoomMap*, DeltaFrame*, std::unordered_set<SnakeBlock*>&, PointSet&, Point);
-    ~SnakePuller();
-    void prepare_pull(SnakeBlock*);
-    void pull(SnakeBlock*);
+    StickyBlock(Point3 pos, unsigned char color, bool is_car);
+    ~StickyBlock();
+    ObjCode obj_code();
+    static GameObject* deserialize(MapFileI& file);
 
-private:
-    RoomMap* room_map_;
-    DeltaFrame* delta_frame_;
-    std::unordered_set<SnakeBlock*>& check_;
-    PointSet& floor_check_;
-    Point dir_;
+    bool sticky();
+    void get_weak_links(RoomMap*, std::vector<Block*>& links);
+
+    //void draw(GraphicsManager*);
+
+    std::unique_ptr<Component> make_strong_component(RoomMap*);
 };
 
 #endif // BLOCK_H

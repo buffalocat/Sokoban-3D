@@ -8,7 +8,6 @@ class RoomMap;
 class GameObject;
 class Block;
 class PushBlock;
-class TwoColorBlock;
 class SnakeBlock;
 class Switchable;
 class Switch;
@@ -57,12 +56,12 @@ private:
 
 class CreationDelta: public Delta {
 public:
-    CreationDelta(GameObject* object, RoomMap* room_map);
+    CreationDelta(Point3 pos, RoomMap* room_map);
     ~CreationDelta();
     void revert();
 
 private:
-    GameObject* object_;
+    Point3 pos_;
     RoomMap* room_map_;
 };
 
@@ -81,51 +80,51 @@ private:
 
 class MotionDelta: public Delta {
 public:
-    MotionDelta(GameObject* object, Point p, RoomMap* room_map);
+    MotionDelta(GameObject* object, Point3 p, RoomMap* room_map);
     ~MotionDelta();
     void revert();
 
 private:
     GameObject* object_;
-    Point p_; // The previous position
+    Point3 p_; // The previous position
     RoomMap* room_map_;
 };
 
 
 class AddLinkDelta: public Delta {
 public:
-    AddLinkDelta(Block* a, Block* b);
+    AddLinkDelta(SnakeBlock* a, SnakeBlock* b);
     ~AddLinkDelta();
     void revert();
 
 private:
-    Block* a_;
-    Block* b_;
+    SnakeBlock* a_;
+    SnakeBlock* b_;
 };
 
 
 class RemoveLinkDelta: public Delta {
 public:
-    RemoveLinkDelta(Block* a, Block* b);
+    RemoveLinkDelta(SnakeBlock* a, SnakeBlock* b);
     ~RemoveLinkDelta();
     void revert();
 
 private:
-    Block* a_;
-    Block* b_;
+    SnakeBlock* a_;
+    SnakeBlock* b_;
 };
 
 
 class DoorMoveDelta: public Delta {
 public:
-    DoorMoveDelta(PlayingState* state, Room* room, Point pos);
+    DoorMoveDelta(PlayingState* state, Room* room, Point3 pos);
     ~DoorMoveDelta();
     void revert();
 
 private:
     PlayingState* state_;
     Room* room_;
-    Point pos_;
+    Point3 pos_;
 };
 
 
@@ -175,14 +174,14 @@ private:
 };
 
 
-class ColorSwapDelta: public Delta {
+class ColorChangeDelta: public Delta {
 public:
-    ColorSwapDelta(TwoColorBlock* obj);
-    ~ColorSwapDelta();
+    ColorChangeDelta(Block* obj);
+    ~ColorChangeDelta();
     void revert();
 
 private:
-    TwoColorBlock* obj_;
+    Block* obj_;
 };
 
 #endif // DELTA_H

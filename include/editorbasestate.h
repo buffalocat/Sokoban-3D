@@ -25,8 +25,8 @@ protected:
 
     Point get_pos_from_mouse(Point cam_pos);
     void handle_mouse_input(Point, Room*);
-    void handle_keyboard_input(Point&, Room*);
-    void clamp_to_room(Point&, Room*);
+    void handle_keyboard_input(Point3&, Room*);
+    void clamp_to_room(Point3&, Room*);
 
     virtual void handle_left_click(Point) = 0;
     virtual void handle_right_click(Point) = 0;

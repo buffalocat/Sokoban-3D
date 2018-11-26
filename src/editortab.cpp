@@ -6,6 +6,6 @@ EditorTab::~EditorTab() {}
 
 void EditorTab::init() {}
 
-void EditorTab::handle_left_click(EditorRoom* eroom, Point pos) {}
+void EditorTab::handle_left_click(EditorRoom* eroom, Point3 pos) {}
 
-void EditorTab::handle_right_click(EditorRoom* eroom, Point pos) {}
+void EditorTab::handle_right_click(EditorRoom* eroom, Point3 pos) {}

@@ -4,13 +4,14 @@
 
 #include "gameobject.h"
 #include "block.h"
-#include "multicolorblock.h"
+#include "player.h"
 #include "room.h"
 #include "roommap.h"
 #include "moveprocessor.h"
 #include "door.h"
+#include "mapfile.h"
 
-PlayingState::PlayingState(std::string name, Point pos, bool testing):
+PlayingState::PlayingState(std::string name, Point3 pos, bool testing):
 GameState(), loaded_rooms_ {}, room_ {}, player_ {},
 undo_stack_ {MAX_UNDO_DEPTH},
 keyboard_cooldown_ {0}, testing_ {testing} {
@@ -20,11 +21,11 @@ keyboard_cooldown_ {0}, testing_ {testing} {
 
 PlayingState::~PlayingState() = default;
 
-void PlayingState::init_player(Point pos) {
+void PlayingState::init_player(Point3 pos) {
     RidingState rs;
-    Block* block = dynamic_cast<Block*>(room_->room_map()->view(pos, Layer::Solid));
+    Block* block = dynamic_cast<Block*>(room_->room_map()->view({pos.x, pos.y, pos.z - 1}));
     if (block) {
-        if (block->is_car()) {
+        if (block->car()) {
             rs = RidingState::Riding;
         } else {
             rs = RidingState::Bound;
@@ -32,7 +33,7 @@ void PlayingState::init_player(Point pos) {
     } else {
         rs = RidingState::Free;
     }
-    auto player = std::make_unique<Player>(pos.x, pos.y, rs);
+    auto player = std::make_unique<Player>(pos, rs);
     player_ = player.get();
     room_->room_map()->put_quiet(std::move(player));
 }
@@ -55,7 +56,7 @@ void PlayingState::handle_input(DeltaFrame* delta_frame) {
     for (auto p : MOVEMENT_KEYS) {
         if (glfwGetKey(window_, p.first) == GLFW_PRESS) {
             MoveProcessor(player_, room_map, p.second).try_move(delta_frame);
-            Door* door = static_cast<Door*>(room_map->view(player_->pos(), ObjCode::Door));
+            Door* door = static_cast<Door*>(room_map->view(player_->shifted_pos({0,0,-1})));
             // When doors are switchable, check for state too!
             if (door && door->dest() && door->state()) {
                 use_door(door->dest(), delta_frame);
@@ -74,12 +75,11 @@ void PlayingState::handle_input(DeltaFrame* delta_frame) {
         player_->toggle_riding(room_map, delta_frame);
         return;
     } else if (glfwGetKey(window_, GLFW_KEY_C) == GLFW_PRESS) {
-        auto car = dynamic_cast<TwoColorPushBlock*>(player_->get_car(room_map, false));
+        Block* car = player_->get_car(room_map, false);
         if (car) {
-            car->swap_colors();
-            delta_frame->push(std::make_unique<ColorSwapDelta>(car));
-            car->check_remove_local_links(room_map, delta_frame);
-            car->check_add_local_links(room_map, delta_frame);
+            if (car->cycle_color(false)) {
+                delta_frame->push(std::make_unique<ColorChangeDelta>(car));
+            }
             return;
         }
     }
@@ -106,11 +106,9 @@ bool PlayingState::load_room(std::string name) {
             return false;
         }
     }
-    std::ifstream file;
-    file.open(path, std::ios::in | std::ios::binary);
+    MapFileI file {path};
     auto room = std::make_unique<Room>(name);
     room->load_from_file(file);
-    file.close();
     // Load dynamic component!
     room->room_map()->set_initial_state(false);
     loaded_rooms_[name] = std::move(room);
@@ -124,15 +122,14 @@ void PlayingState::use_door(MapLocation* dest, DeltaFrame* delta_frame) {
     Room* dest_room = loaded_rooms_[dest->name].get();
     RoomMap* cur_map = room_->room_map();
     RoomMap* dest_map = dest_room->room_map();
-    if (dest_map->view(dest->pos, Layer::Player)) {
+    if (dest_map->view(dest->pos)) {
         return;
     }
     Block* car = player_->get_car(cur_map, true);
     if (car) {
-        if (dest_map->view(dest->pos, Layer::Solid)) {
+        if (dest_map->view(dest->pos)) {
             return;
         }
-        car->remove_all_links(delta_frame);
     }
     delta_frame->push(std::make_unique<DoorMoveDelta>(this, room_, player_->pos()));
     room_ = dest_room;
@@ -141,7 +138,6 @@ void PlayingState::use_door(MapLocation* dest, DeltaFrame* delta_frame) {
         auto car_unique = cur_map->take_quiet(car);
         car->set_pos(dest->pos);
         dest_map->put_quiet(std::move(car_unique));
-        car->check_add_local_links(dest_map, delta_frame);
     }
     player_->set_pos(dest->pos);
     dest_map->put_quiet(std::move(player_unique));

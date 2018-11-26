@@ -7,24 +7,23 @@
 class RoomMap;
 
 struct MapLocation {
-    Point pos;
+    Point3 pos;
     std::string name;
-    MapLocation(Point p, std::string room_name);
+    MapLocation(Point3 p, std::string room_name);
 };
 
 class Door: public Switchable {
 public:
-    Door(int x, int y, bool def);
+    Door(Point3 pos, bool def);
     ~Door();
     ObjCode obj_code();
-    Layer layer();
-    void serialize(std::ofstream& file);
-    static GameObject* deserialize(unsigned char* buffer);
+    void serialize(MapFileO& file);
+    static GameObject* deserialize(MapFileI& file);
     bool relation_check();
-    void relation_serialize(std::ofstream& file);
+    void relation_serialize(MapFileO& file);
     bool can_set_state(bool state, RoomMap*);
 
-    void set_dest(Point, std::string);
+    void set_dest(Point3, std::string);
     MapLocation* dest();
 
     void draw(GraphicsManager*);

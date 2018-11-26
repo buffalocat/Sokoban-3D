@@ -4,6 +4,7 @@
 #include "roommap.h"
 #include "gameobject.h"
 #include "editorstate.h"
+#include "player.h"
 
 SaveLoadTab::SaveLoadTab(EditorState* editor, GraphicsManager* gfx): EditorTab(editor, gfx) {}
 
@@ -56,10 +57,10 @@ void SaveLoadTab::main_loop(EditorRoom* eroom) {
     }
 }
 
-void SaveLoadTab::handle_left_click(EditorRoom* eroom, Point pos) {
+void SaveLoadTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
     RoomMap* room_map = eroom->room->room_map();
-    if (!room_map->view(pos, Layer::Player)) {
-        Player* player = static_cast<Player*>(room_map->view(eroom->start_pos, ObjCode::Player));
+    if (!room_map->view(pos)) {
+        Player* player = static_cast<Player*>(room_map->view(eroom->start_pos));
         auto player_unique = room_map->take_quiet(player);
         player->set_pos(pos);
         eroom->start_pos = pos;

@@ -70,6 +70,7 @@
 		<Unit filename="include/block.h" />
 		<Unit filename="include/camera.h" />
 		<Unit filename="include/common.h" />
+		<Unit filename="include/component.h" />
 		<Unit filename="include/dear/imgui.cpp" />
 		<Unit filename="include/dear/imgui_demo.cpp" />
 		<Unit filename="include/dear/imgui_draw.cpp" />
@@ -88,14 +89,17 @@
 		<Unit filename="include/gamestate.h" />
 		<Unit filename="include/graphicsmanager.h" />
 		<Unit filename="include/mainmenustate.h" />
+		<Unit filename="include/mapfile.h" />
+		<Unit filename="include/maplayer.h" />
 		<Unit filename="include/moveprocessor.h" />
-		<Unit filename="include/multicolorblock.h" />
 		<Unit filename="include/objecttab.h" />
+		<Unit filename="include/player.h" />
 		<Unit filename="include/playingstate.h" />
 		<Unit filename="include/room.h" />
 		<Unit filename="include/roommap.h" />
 		<Unit filename="include/saveloadtab.h" />
 		<Unit filename="include/shader.h" />
+		<Unit filename="include/snakeblock.h" />
 		<Unit filename="include/stb_image.h" />
 		<Unit filename="include/switch.h" />
 		<Unit filename="include/switchtab.h" />
@@ -107,6 +111,7 @@
 		</Unit>
 		<Unit filename="src/camera.cpp" />
 		<Unit filename="src/common.cpp" />
+		<Unit filename="src/component.cpp" />
 		<Unit filename="src/delta.cpp" />
 		<Unit filename="src/door.cpp">
 			<Option virtualFolder="GameObjects/" />
@@ -137,12 +142,14 @@
 		<Unit filename="src/mainmenustate.cpp">
 			<Option virtualFolder="GameStates/" />
 		</Unit>
+		<Unit filename="src/mapfile.cpp" />
+		<Unit filename="src/maplayer.cpp" />
 		<Unit filename="src/moveprocessor.cpp" />
-		<Unit filename="src/multicolorblock.cpp">
-			<Option virtualFolder="GameObjects/" />
-		</Unit>
 		<Unit filename="src/objecttab.cpp">
 			<Option virtualFolder="GameStates/EditorTabs/" />
+		</Unit>
+		<Unit filename="src/player.cpp">
+			<Option virtualFolder="GameObjects/" />
 		</Unit>
 		<Unit filename="src/playingstate.cpp">
 			<Option virtualFolder="GameStates/" />
@@ -153,6 +160,9 @@
 			<Option virtualFolder="GameStates/EditorTabs/" />
 		</Unit>
 		<Unit filename="src/shader.cpp" />
+		<Unit filename="src/snakeblock.cpp">
+			<Option virtualFolder="GameObjects/" />
+		</Unit>
 		<Unit filename="src/switch.cpp">
 			<Option virtualFolder="GameObjects/" />
 		</Unit>

@@ -18,8 +18,8 @@ public:
     virtual ~EditorTab();
     virtual void init();
     virtual void main_loop(EditorRoom*) = 0;
-    virtual void handle_left_click(EditorRoom*, Point);
-    virtual void handle_right_click(EditorRoom*, Point);
+    virtual void handle_left_click(EditorRoom*, Point3);
+    virtual void handle_right_click(EditorRoom*, Point3);
 
 protected:
     EditorState* editor_;

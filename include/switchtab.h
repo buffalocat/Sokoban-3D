@@ -12,8 +12,8 @@ public:
     SwitchTab(EditorState*, GraphicsManager*);
     virtual ~SwitchTab();
     void main_loop(EditorRoom*);
-    void handle_left_click(EditorRoom*, Point);
-    void handle_right_click(EditorRoom*, Point);
+    void handle_left_click(EditorRoom*, Point3);
+    void handle_right_click(EditorRoom*, Point3);
 
 private:
     std::unordered_set<Switchable*> switchables_;

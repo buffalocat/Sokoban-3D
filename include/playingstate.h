@@ -13,9 +13,9 @@ struct MapLocation;
 
 class PlayingState: public GameState {
 public:
-    PlayingState(std::string name, Point pos, bool testing);
+    PlayingState(std::string name, Point3 pos, bool testing);
     virtual ~PlayingState();
-    void init_player(Point);
+    void init_player(Point3);
     void main_loop();
     void handle_input(DeltaFrame*);
     bool activate_room(std::string);

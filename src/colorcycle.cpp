@@ -1,10 +1,11 @@
 #include "colorcycle.h"
+#include <iostream>
 
 ColorCycle::ColorCycle(unsigned char color): color_ {color}, size_ {1}, index_ {0} {}
 
 ColorCycle::ColorCycle(unsigned char* b): color_ {}, size_ {b[0]}, index_ {b[1]} {
     for (int i = 0; i < size_; ++i) {
-        color_[i] = b[i];
+        color_[i] = b[i+2];
     }
 }
 

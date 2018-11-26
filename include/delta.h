@@ -80,13 +80,13 @@ private:
 
 class MotionDelta: public Delta {
 public:
-    MotionDelta(GameObject* object, Point3 p, RoomMap* room_map);
+    MotionDelta(std::vector<GameObject*> objs, Point3 d, RoomMap* room_map);
     ~MotionDelta();
     void revert();
 
 private:
-    GameObject* object_;
-    Point3 p_; // The previous position
+    std::vector<GameObject*> objs_;
+    Point3 d_;
     RoomMap* room_map_;
 };
 

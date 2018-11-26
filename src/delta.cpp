@@ -80,12 +80,20 @@ void CreationDelta::revert() {
 }
 
 
-MotionDelta::MotionDelta(GameObject* object, Point3 p, RoomMap* room_map): object_ {object}, p_ {p}, room_map_ {room_map} {}
+MotionDelta::MotionDelta(std::vector<GameObject*> objs, Point3 d, RoomMap* room_map):
+objs_ {objs}, d_ {Point3{-d.x, -d.y, -d.z}}, room_map_ {room_map} {}
 
 MotionDelta::~MotionDelta() {}
 
 void MotionDelta::revert() {
-    object_->set_pos_auto(p_, room_map_, nullptr);
+    std::vector<std::unique_ptr<GameObject>> objs_unique {};
+    for (GameObject* obj : objs_) {
+        objs_unique.push_back(room_map_->take_quiet(obj));
+        obj->shift_pos(d_);
+    }
+    for (auto& obj_unique : objs_unique) {
+        room_map_->put_quiet(std::move(obj_unique));
+    }
 }
 
 

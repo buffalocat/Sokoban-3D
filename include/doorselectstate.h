@@ -19,8 +19,8 @@ private:
     Point3* door_pos_;
     Door** door_;
 
-    virtual void handle_left_click(Point);
-    virtual void handle_right_click(Point);
+    virtual void handle_left_click(Point3);
+    virtual void handle_right_click(Point3);
 };
 
 #endif // DOORSELECTSTATE_H

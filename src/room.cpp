@@ -38,7 +38,7 @@ void Room::set_cam_target(Point3 pos) {
     camera_->set_target(pos);
 }
 
-bool Room::valid(Point pos) {
+bool Room::valid(Point3 pos) {
     return (map_ && map_->valid(pos));
 }
 
@@ -51,10 +51,10 @@ void Room::draw(GraphicsManager* gfx, Point3 cam_pos, bool ortho) {
 
     if (ortho) {
         camera_->set_current_pos(cam_pos);
-        view = glm::lookAt(glm::vec3(cam_pos.x, 2.0f, cam_pos.y),
-                           glm::vec3(cam_pos.x, 0.0f, cam_pos.y),
+        view = glm::lookAt(glm::vec3(cam_pos.x, cam_pos.z + 1.0f, cam_pos.y),
+                           glm::vec3(cam_pos.x, cam_pos.z, cam_pos.y),
                            glm::vec3(0.0f, 0.0f, -1.0f));
-        projection = glm::ortho(-ORTHO_WIDTH/2.0f, ORTHO_WIDTH/2.0f, -ORTHO_HEIGHT/2.0f, ORTHO_HEIGHT/2.0f, 0.0f, 3.0f);
+        projection = glm::ortho(-ORTHO_WIDTH/2.0f, ORTHO_WIDTH/2.0f, -ORTHO_HEIGHT/2.0f, ORTHO_HEIGHT/2.0f, -2.0f, 3.0f);
     } else {
         camera_->set_target(cam_pos);
         camera_->update();
@@ -80,14 +80,6 @@ void Room::draw(GraphicsManager* gfx, Point3 cam_pos, bool ortho) {
     gfx->set_projection(projection);
 
     map_->draw(gfx);
-
-    // Draw the floor
-    model = glm::translate(glm::mat4(), glm::vec3(-0.5, -0.1, -0.5));
-    model = glm::scale(model, glm::vec3(map_->width(), 0.1, map_->height()));
-    model = glm::translate(model, glm::vec3(0.5, -0.1, 0.5));
-    gfx->set_model(model);
-    gfx->set_color(COLORS[YELLOW]);
-    gfx->draw_cube();
 }
 
 void Room::write_to_file(MapFileO& file, Point3 start_pos) {

@@ -5,7 +5,7 @@
 #include "graphicsmanager.h"
 #include "mapfile.h"
 
-Player::Player(Point3 pos, RidingState state): Block(pos, 0, false), state_ {state} {}
+Player::Player(Point3 pos, RidingState state): Block(pos, ColorCycle(PINK), false), state_ {state} {}
 
 Player::~Player() {}
 

@@ -23,13 +23,13 @@ protected:
     bool want_capture_keyboard();
     bool want_capture_mouse();
 
-    Point get_pos_from_mouse(Point cam_pos);
-    void handle_mouse_input(Point, Room*);
+    Point3 get_pos_from_mouse(Point3 cam_pos);
+    void handle_mouse_input(Point3, Room*);
     void handle_keyboard_input(Point3&, Room*);
     void clamp_to_room(Point3&, Room*);
 
-    virtual void handle_left_click(Point) = 0;
-    virtual void handle_right_click(Point) = 0;
+    virtual void handle_left_click(Point3) = 0;
+    virtual void handle_right_click(Point3) = 0;
 };
 
 #endif // EDITORBASESTATE_H

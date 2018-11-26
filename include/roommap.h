@@ -16,9 +16,10 @@ class RoomMap {
 public:
     RoomMap(int width, int height);
     ~RoomMap() = default;
-    bool valid(Point pos);
-    int width() const;
-    int height() const;
+    bool valid(Point3 pos);
+    int width();
+    int height();
+    int depth();
     void push_full();
     void push_sparse();
 

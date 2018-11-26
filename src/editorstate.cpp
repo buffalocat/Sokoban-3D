@@ -47,8 +47,9 @@ void EditorState::main_loop() {
 
     if (active_room_) {
         ImGui::Text(("Current Room: " + active_room_->room->name()).c_str());
+        ImGui::Text("Current Height: %d", active_room_->cam_pos.z);
         active_room_->changed = true;
-        handle_mouse_input(active_room_->cam_pos.h(), active_room_->room.get());
+        handle_mouse_input(active_room_->cam_pos, active_room_->room.get());
         handle_keyboard_input(active_room_->cam_pos, active_room_->room.get());
         active_room_->room->draw(gfx_, active_room_->cam_pos, ortho_cam_);
     }
@@ -103,9 +104,12 @@ void EditorState::new_room(std::string name, int w, int h) {
         return;
     }
     auto room = std::make_unique<Room>(name, w, h);
-    room->room_map()->put_quiet(std::make_unique<Player>(Point3 {0,0,0}, RidingState::Free));
-    room->set_cam_pos({0,0,0});
-    rooms_[name] = std::make_unique<EditorRoom>(std::move(room), Point3 {0,0,0});
+    room->room_map()->push_full();
+    room->room_map()->push_full();
+    room->room_map()->push_sparse();
+    room->room_map()->put_quiet(std::make_unique<Player>(Point3 {0,0,2}, RidingState::Free));
+    room->set_cam_pos({0,0,2});
+    rooms_[name] = std::make_unique<EditorRoom>(std::move(room), Point3 {0,0,2});
     set_active_room(name);
 }
 
@@ -115,7 +119,7 @@ bool EditorState::load_room(std::string name) {
         return false;
     }
     MapFileI file {path};
-    Point3 start_pos {0,0,0};
+    Point3 start_pos {0,0,2};
     std::unique_ptr<Room> room = std::make_unique<Room>(name);
     room->load_from_file(file, &start_pos);
 
@@ -174,10 +178,10 @@ void EditorState::begin_test() {
     create_child(std::move(playing_state));
 }
 
-void EditorState::handle_left_click(Point pos) {
-    active_tab_->handle_left_click(active_room_, Point3 {pos.x, pos.y, active_room_->cam_pos.z});
+void EditorState::handle_left_click(Point3 pos) {
+    active_tab_->handle_left_click(active_room_, pos);
 }
 
-void EditorState::handle_right_click(Point pos) {
-    active_tab_->handle_right_click(active_room_, Point3 {pos.x, pos.y, active_room_->cam_pos.z});
+void EditorState::handle_right_click(Point3 pos) {
+    active_tab_->handle_right_click(active_room_, pos);
 }

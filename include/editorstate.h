@@ -61,8 +61,8 @@ private:
     std::map<std::string, std::unique_ptr<EditorTab>> tabs_;
     EditorTab* active_tab_;
 
-    void handle_left_click(Point);
-    void handle_right_click(Point);
+    void handle_left_click(Point3);
+    void handle_right_click(Point3);
 };
 
 #endif // EDITORSTATE_H

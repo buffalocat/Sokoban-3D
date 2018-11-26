@@ -17,7 +17,7 @@ public:
     void initialize(int w, int h);
     void set_cam_pos(Point3);
     void set_cam_target(Point3);
-    bool valid(Point pos);
+    bool valid(Point3);
     RoomMap* room_map();
 
     void write_to_file(MapFileO& file, Point3 start_pos);

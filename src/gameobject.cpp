@@ -33,15 +33,6 @@ void GameObject::set_pos(Point3 p) {
     pos_ = p;
 }
 
-void GameObject::set_pos_auto(Point3 p, RoomMap* room_map, DeltaFrame* delta_frame) {
-    auto self_unique = room_map->take_quiet(this);
-    if (delta_frame) {
-        delta_frame->push(std::make_unique<MotionDelta>(this, pos_, room_map));
-    }
-    pos_ = p;
-    room_map->put_quiet(std::move(self_unique));
-}
-
 void GameObject::shift_pos(Point3 d) {
     pos_ += d;
 }
@@ -49,7 +40,7 @@ void GameObject::shift_pos(Point3 d) {
 void GameObject::shift_pos_auto(Point3 d, RoomMap* room_map, DeltaFrame* delta_frame) {
     auto self_unique = room_map->take_quiet(this);
     if (delta_frame) {
-        delta_frame->push(std::make_unique<MotionDelta>(this, pos_, room_map));
+        delta_frame->push(std::make_unique<MotionDelta>(std::vector<GameObject*> {this}, d, room_map));
     }
     pos_ += d;
     room_map->put_quiet(std::move(self_unique));

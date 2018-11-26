@@ -26,7 +26,7 @@ public:
     virtual std::vector<Point3> to_push(Point3 d) = 0;
     virtual std::vector<Block*> get_weak_links(RoomMap*) = 0;
     virtual void resolve_contingent() = 0;
-    virtual void clean_up(std::vector<Block*>&) = 0;
+    virtual void clean_up(std::vector<GameObject*>&) = 0;
     const std::vector<Block*>& blocks();
 
 protected:
@@ -43,7 +43,7 @@ public:
     std::vector<Point3> to_push(Point3 d);
     std::vector<Block*> get_weak_links(RoomMap*);
     void resolve_contingent();
-    void clean_up(std::vector<Block*>&);
+    void clean_up(std::vector<GameObject*>&);
 
 private:
     std::vector<Block*> blocks_;
@@ -58,7 +58,7 @@ public:
     std::vector<Point3> to_push(Point3 d);
     std::vector<Block*> get_weak_links(RoomMap*);
     void resolve_contingent();
-    void clean_up(std::vector<Block*>&);
+    void clean_up(std::vector<GameObject*>&);
 
 protected:
     Block* block_;

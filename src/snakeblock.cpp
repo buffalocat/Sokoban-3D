@@ -2,7 +2,7 @@
 #include "graphicsmanager.h"
 #include "mapfile.h"
 
-SnakeBlock::SnakeBlock(Point3 pos, unsigned char color, bool is_car, unsigned char ends):
+SnakeBlock::SnakeBlock(Point3 pos, ColorCycle color, bool is_car, unsigned char ends):
 Block(pos, color, is_car), ends_ {ends}, links_ {} {}
 
 SnakeBlock::~SnakeBlock() {}
@@ -34,8 +34,10 @@ void SnakeBlock::serialize(MapFileO& file) {
 
 GameObject* SnakeBlock::deserialize(MapFileI& file) {
     Point3 pos {file.read_point3()};
-    //ColorCycle color {file.read_color()};
-    return new SnakeBlock(pos, 0, false, 2);
+    ColorCycle color {file.read_color_cycle()};
+    unsigned char b[2];
+    file.read(b, 2);
+    return new SnakeBlock(pos, color, b[0], b[1]);
 }
 
 bool SnakeBlock::relation_check() {

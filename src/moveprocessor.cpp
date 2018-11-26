@@ -48,17 +48,28 @@ void MoveProcessor::move_general(DeltaFrame* delta_frame) {
     for (Component* comp : roots) {
         move_component(comp);
     }
+    // Later there may be more "dependent pairs"
+    if (car && (car->comp()->bad() || player_->comp()->bad())) {
+        player_->comp()->set_bad();
+        car->comp()->set_bad();
+    }
     for (Component* comp : roots) {
         comp->resolve_contingent();
     }
-    if (car && !(car->comp()->good() && player_->comp()->good())) {
-        // Depending on what objects are in play,
-        // some things may still move... but not for now
-        return;
-    }
-    std::vector<Block*> to_move {};
+    std::vector<GameObject*> to_move {};
     for (auto& comp : comps_) {
         comp->clean_up(to_move);
+    }
+    std::vector<std::unique_ptr<GameObject>> move_unique {};
+    for (auto obj : to_move) {
+        move_unique.push_back(map_->take_quiet(obj));
+        obj->shift_pos(dir_);
+    }
+    for (auto& obj : move_unique) {
+        map_->put_quiet(std::move(obj));
+    }
+    if (!to_move.empty()) {
+        delta_frame->push(std::make_unique<MotionDelta>(std::move(to_move), dir_, map_));
     }
 }
 
@@ -83,7 +94,7 @@ bool MoveProcessor::move_component(Component* comp) {
 }
 
 bool MoveProcessor::try_push(Component* comp, Point3 pos) {
-    if (!map_->valid(pos.h())) {
+    if (!map_->valid(pos)) {
         return false;
     }
     GameObject* obj = map_->view(pos);

@@ -16,7 +16,7 @@ void DoorSelectState::main_loop() {
         return;
     }
 
-    handle_mouse_input(cam_pos_.h(), room_);
+    handle_mouse_input(cam_pos_, room_);
     handle_keyboard_input(cam_pos_, room_);
     room_->draw(gfx_, cam_pos_, true);
 
@@ -30,9 +30,9 @@ void DoorSelectState::main_loop() {
     ImGui::End();
 }
 
-void DoorSelectState::handle_left_click(Point pos) {
-    *door_pos_ = {pos.x, pos.y, cam_pos_.z};
+void DoorSelectState::handle_left_click(Point3 pos) {
+    *door_pos_ = pos;
     *door_ = static_cast<Door*>(room_->room_map()->view(*door_pos_));
 }
 
-void DoorSelectState::handle_right_click(Point pos) {}
+void DoorSelectState::handle_right_click(Point3 pos) {}

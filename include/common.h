@@ -143,7 +143,7 @@ const Point3 H_DIRECTIONS[6] = {{-1,0,0}, {0,-1,0}, {1,0,0}, {0,1,0}};
 
 const int MAX_ROOM_DIMS = 255;
 
-//#define SOKOBAN_LARGE_WINDOW
+#define SOKOBAN_LARGE_WINDOW
 #ifdef SOKOBAN_LARGE_WINDOW
 const int SCREEN_WIDTH = 1200;
 const int SCREEN_HEIGHT = 900;
@@ -190,6 +190,15 @@ const std::unordered_map<int, Point3> MOVEMENT_KEYS {
     {GLFW_KEY_LEFT,  {-1,0, 0}},
     {GLFW_KEY_DOWN,  {0, 1, 0}},
     {GLFW_KEY_UP,    {0,-1, 0}},
+};
+
+const std::unordered_map<int, Point3> EDITOR_MOVEMENT_KEYS {
+    {GLFW_KEY_D, {1, 0, 0}},
+    {GLFW_KEY_A, {-1,0, 0}},
+    {GLFW_KEY_S, {0, 1, 0}},
+    {GLFW_KEY_W, {0,-1, 0}},
+    {GLFW_KEY_E, {0, 0, 1}},
+    {GLFW_KEY_Q, {0, 0,-1}},
 };
 
 #endif // COMMON_H

@@ -9,8 +9,8 @@
 #include "graphicsmanager.h"
 
 
-Block::Block(Point3 pos, unsigned char color, bool car):
-GameObject(pos), comp_ {}, color_ {color}, car_ {car} {}
+Block::Block(Point3 pos, ColorCycle color, bool car):
+GameObject(pos), comp_ {}, car_ {car}, color_ {color} {}
 
 Block::~Block() {}
 
@@ -58,9 +58,16 @@ bool Block::car() {
     return car_;
 }
 
+void Block::draw(GraphicsManager* gfx) {
+    Point3 p = pos_;
+    gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
+    gfx->set_color(COLORS[color()]);
+    gfx->draw_cube();
+}
+
 void Block::get_weak_links(RoomMap*, std::vector<Block*>&) {}
 
-NonStickBlock::NonStickBlock(Point3 pos, unsigned char color, bool is_car): Block(pos, color, is_car) {}
+NonStickBlock::NonStickBlock(Point3 pos, ColorCycle color, bool car): Block(pos, color, car) {}
 
 NonStickBlock::~NonStickBlock() {}
 
@@ -69,21 +76,21 @@ ObjCode NonStickBlock::obj_code() {
 }
 
 GameObject* NonStickBlock::deserialize(MapFileI& file) {
-    return nullptr;
+    Point3 pos {file.read_point3()};
+    ColorCycle color {file.read_color_cycle()};
+    unsigned char b[1];
+    file.read(b,1);
+    return new NonStickBlock(pos, color, b[0]);
 }
 
 void NonStickBlock::draw(GraphicsManager* gfx) {
-    Point3 p = pos();
-    gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
-    gfx->set_color(COLORS[color()]);
     gfx->set_tex(glm::vec2(2,0));
-    gfx->draw_cube();
+    Block::draw(gfx);
     gfx->set_tex(glm::vec2(0,0));
-    //Block::draw(gfx);
 }
 
-WeakBlock::WeakBlock(Point3 pos, unsigned char color, bool is_car):
-Block(pos, color, is_car) {}
+WeakBlock::WeakBlock(Point3 pos, ColorCycle color, bool car):
+Block(pos, color, car) {}
 
 WeakBlock::~WeakBlock() {}
 
@@ -105,11 +112,22 @@ void WeakBlock::get_weak_links(RoomMap* room_map, std::vector<Block*>& links) {
 }
 
 GameObject* WeakBlock::deserialize(MapFileI& file) {
-    return nullptr;
+    Point3 pos {file.read_point3()};
+    ColorCycle color {file.read_color_cycle()};
+    unsigned char b[1];
+    file.read(b,1);
+    return new WeakBlock(pos, color, b[0]);
 }
 
-StickyBlock::StickyBlock(Point3 pos, unsigned char color, bool is_car):
-Block(pos, color, is_car) {}
+void WeakBlock::draw(GraphicsManager* gfx) {
+    gfx->set_tex(glm::vec2(1,0));
+    Block::draw(gfx);
+    gfx->set_tex(glm::vec2(0,0));
+}
+
+
+StickyBlock::StickyBlock(Point3 pos, ColorCycle color, bool car):
+Block(pos, color, car) {}
 
 StickyBlock::~StickyBlock() {}
 
@@ -118,22 +136,22 @@ ObjCode StickyBlock::obj_code() {
 }
 
 std::unique_ptr<Component> StickyBlock::make_strong_component(RoomMap* room_map) {
-    auto comp = std::make_unique<ComplexComponent>();
-    comp_ = comp.get();
+    auto unique_comp = std::make_unique<ComplexComponent>();
+    comp_ = unique_comp.get();
     std::vector<StickyBlock*> to_check {this};
     while (!to_check.empty()) {
         StickyBlock* cur = to_check.back();
         to_check.pop_back();
         comp_->add_block(cur);
-        cur->comp_ = comp_;
         for (Point3 d : DIRECTIONS) {
             StickyBlock* adj = dynamic_cast<StickyBlock*>(room_map->view(cur->shifted_pos(d)));
             if (adj && !adj->comp_ && color() == adj->color()) {
+                adj->comp_ = comp_;
                 to_check.push_back(adj);
             }
         }
     }
-    return std::move(comp);
+    return std::move(unique_comp);
 }
 
 void StickyBlock::get_weak_links(RoomMap* room_map, std::vector<Block*>& links) {
@@ -151,5 +169,9 @@ bool StickyBlock::sticky() {
 }
 
 GameObject* StickyBlock::deserialize(MapFileI& file) {
-    return nullptr;
+    Point3 pos {file.read_point3()};
+    ColorCycle color {file.read_color_cycle()};
+    unsigned char b[1];
+    file.read(b,1);
+    return new StickyBlock(pos, color, b[0]);
 }

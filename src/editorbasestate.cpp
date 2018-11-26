@@ -16,15 +16,15 @@ bool EditorBaseState::want_capture_mouse() {
     return ImGui::GetIO().WantCaptureMouse;
 }
 
-Point EditorBaseState::get_pos_from_mouse(Point cam_pos) {
+Point3 EditorBaseState::get_pos_from_mouse(Point3 cam_pos) {
     double xpos, ypos;
     glfwGetCursorPos(window_, &xpos, &ypos);
     if (xpos >= 0 && xpos < SCREEN_WIDTH && ypos >= 0 && ypos < SCREEN_HEIGHT) {
         int x = ((int)xpos + MESH_SIZE*cam_pos.x - (SCREEN_WIDTH - MESH_SIZE) / 2) / MESH_SIZE;
         int y = ((int)ypos + MESH_SIZE*cam_pos.y - (SCREEN_HEIGHT - MESH_SIZE) / 2) / MESH_SIZE;
-        return Point{x, y};
+        return {x, y, cam_pos.z};
     }
-    return Point{-1, -1};
+    return {-1,-1,-1};
 }
 
 void EditorBaseState::clamp_to_room(Point3& pos, Room* room) {
@@ -32,15 +32,15 @@ void EditorBaseState::clamp_to_room(Point3& pos, Room* room) {
     pos = {
         std::max(0, std::min(cur_map->width() - 1, pos.x)),
         std::max(0, std::min(cur_map->height() - 1, pos.y)),
-        pos.z
+        std::max(0, std::min(cur_map->depth() - 1, pos.z))
     };
 }
 
-void EditorBaseState::handle_mouse_input(Point cam_pos, Room* room) {
+void EditorBaseState::handle_mouse_input(Point3 cam_pos, Room* room) {
     if (want_capture_mouse() || !ortho_cam_) {
         return;
     }
-    Point mouse_pos = get_pos_from_mouse(cam_pos);
+    Point3 mouse_pos = get_pos_from_mouse(cam_pos);
     if (!room->valid(mouse_pos)) {
         return;
     }
@@ -60,7 +60,7 @@ void EditorBaseState::handle_keyboard_input(Point3& cam_pos, Room* room) {
         return;
     }
     keyboard_cooldown_ = MAX_COOLDOWN;
-    for (auto p : MOVEMENT_KEYS) {
+    for (auto p : EDITOR_MOVEMENT_KEYS) {
         if (glfwGetKey(window_, p.first) == GLFW_PRESS) {
             if (glfwGetKey(window_, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
                 cam_pos += FAST_MAP_MOVE * p.second;

@@ -8,16 +8,20 @@
 
 RoomMap::RoomMap(int width, int height): width_ {width}, height_ {height}, layers_ {} {}
 
-bool RoomMap::valid(Point pos) {
-    return (0 <= pos.x) && (pos.x < width_) && (0 <= pos.y) && (pos.y < height_);
+bool RoomMap::valid(Point3 pos) {
+    return (0 <= pos.x) && (pos.x < width_) && (0 <= pos.y) && (pos.y < height_) && (0 <= pos.z) && (pos.z < layers_.size());
 }
 
-int RoomMap::width() const {
+int RoomMap::width() {
     return width_;
 }
 
-int RoomMap::height() const {
+int RoomMap::height() {
     return height_;
+}
+
+int RoomMap::depth() {
+    return layers_.size();
 }
 
 void RoomMap::push_full() {
@@ -47,7 +51,7 @@ void RoomMap::serialize(MapFileO& file) const {
 }
 
 GameObject* RoomMap::view(Point3 pos) {
-    return valid(pos.h()) ? layers_[pos.z]->view(pos.h()) : nullptr;
+    return valid(pos) ? layers_[pos.z]->view(pos.h()) : nullptr;
 }
 
 void RoomMap::take(Point3 pos, DeltaFrame* delta_frame) {

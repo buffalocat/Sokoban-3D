@@ -8,7 +8,7 @@
  */
 class SnakeBlock: public Block {
 public:
-    SnakeBlock(Point3 pos, unsigned char color, bool is_car, unsigned char ends);
+    SnakeBlock(Point3 pos, ColorCycle color, bool is_car, unsigned char ends);
     virtual ~SnakeBlock();
     virtual ObjCode obj_code();
     void serialize(MapFileO& file);

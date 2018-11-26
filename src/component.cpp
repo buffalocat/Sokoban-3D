@@ -41,7 +41,7 @@ void ComplexComponent::resolve_contingent() {
     }
 }
 
-void ComplexComponent::clean_up(std::vector<Block*>& to_move) {
+void ComplexComponent::clean_up(std::vector<GameObject*>& to_move) {
     if (state_ == ComponentState::Good) {
         for (Block* block : blocks_) {
             block->reset_comp();
@@ -101,14 +101,16 @@ std::vector<Block*> SingletonComponent::get_weak_links(RoomMap* room_map) {
 void SingletonComponent::resolve_contingent() {
     if (state_ == ComponentState::Contingent) {
         state_ = ComponentState::Good;
-        push_->resolve_contingent();
+        if (push_) {
+            push_->resolve_contingent();
+        }
         for (auto& comp : weak_) {
             comp->resolve_contingent();
         }
     }
 }
 
-void SingletonComponent::clean_up(std::vector<Block*>& to_move) {
+void SingletonComponent::clean_up(std::vector<GameObject*>& to_move) {
     if (state_ == ComponentState::Good) {
         to_move.push_back(block_);
     }

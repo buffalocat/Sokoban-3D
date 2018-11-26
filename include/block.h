@@ -9,7 +9,7 @@ class Component;
 
 class Block: public GameObject {
 public:
-    Block(Point3 pos, unsigned char color, bool is_car);
+    Block(Point3 pos, ColorCycle color, bool car);
     virtual ~Block() = 0;
     virtual void serialize(MapFileO& file);
 
@@ -26,6 +26,8 @@ public:
 
     bool car();
 
+    virtual void draw(GraphicsManager*);
+
 protected:
     Component* comp_;
     bool car_;
@@ -36,7 +38,7 @@ private:
 
 class NonStickBlock: public Block {
 public:
-    NonStickBlock(Point3 pos, unsigned char color, bool is_car);
+    NonStickBlock(Point3 pos, ColorCycle color, bool car);
     ~NonStickBlock();
     ObjCode obj_code();
     static GameObject* deserialize(MapFileI& file);
@@ -46,7 +48,7 @@ public:
 
 class WeakBlock: public Block {
 public:
-    WeakBlock(Point3 pos, unsigned char color, bool is_car);
+    WeakBlock(Point3 pos, ColorCycle color, bool car);
     ~WeakBlock();
     ObjCode obj_code();
     static GameObject* deserialize(MapFileI& file);
@@ -54,20 +56,18 @@ public:
     bool sticky();
     void get_weak_links(RoomMap*, std::vector<Block*>& links);
 
-    //void draw(GraphicsManager*);
+    void draw(GraphicsManager*);
 };
 
 class StickyBlock: public Block {
 public:
-    StickyBlock(Point3 pos, unsigned char color, bool is_car);
+    StickyBlock(Point3 pos, ColorCycle color, bool car);
     ~StickyBlock();
     ObjCode obj_code();
     static GameObject* deserialize(MapFileI& file);
 
     bool sticky();
     void get_weak_links(RoomMap*, std::vector<Block*>& links);
-
-    //void draw(GraphicsManager*);
 
     std::unique_ptr<Component> make_strong_component(RoomMap*);
 };

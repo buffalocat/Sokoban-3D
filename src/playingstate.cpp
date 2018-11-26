@@ -110,7 +110,7 @@ bool PlayingState::load_room(std::string name) {
     auto room = std::make_unique<Room>(name);
     room->load_from_file(file);
     // Load dynamic component!
-    room->room_map()->set_initial_state(false);
+    //room->room_map()->set_initial_state(false);
     loaded_rooms_[name] = std::move(room);
     return true;
 }

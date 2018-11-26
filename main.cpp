@@ -21,6 +21,8 @@
 #include "graphicsmanager.h"
 #include "mainmenustate.h"
 
+#include "block.h"
+
 bool window_init(GLFWwindow*&);
 
 
@@ -29,6 +31,10 @@ int main(void) {
     if (!window_init(window)) {
         return -1;
     }
+
+    std::cout << sizeof(ColorCycle) << std::endl;
+    std::cout << sizeof(GameObject) << std::endl;
+    std::cout << sizeof(Block) << std::endl;
 
     GraphicsManager gfx(window);
 

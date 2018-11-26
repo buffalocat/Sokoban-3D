@@ -19,6 +19,8 @@ public:
     bool valid(Point pos);
     int width() const;
     int height() const;
+    void push_full();
+    void push_sparse();
 
     GameObject* view(Point3 pos);
     void take(Point3, DeltaFrame*);

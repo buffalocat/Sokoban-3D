@@ -60,7 +60,6 @@ void MoveProcessor::move_general(DeltaFrame* delta_frame) {
     for (auto& comp : comps_) {
         comp->clean_up(to_move);
     }
-
 }
 
 bool MoveProcessor::move_component(Component* comp) {

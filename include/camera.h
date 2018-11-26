@@ -10,10 +10,12 @@ class MapFileO;
 class CameraContext {
 public:
     CameraContext(int x, int y, int w, int h, int priority);
-    virtual ~CameraContext();
+    virtual ~CameraContext() = 0;
     virtual bool is_null();
-    virtual FPoint3 center(Point3) = 0;
-    virtual float radius(Point3) = 0;
+    virtual FPoint3 center(Point3);
+    virtual float radius(Point3);
+    virtual float tilt(Point3);
+    virtual float rotation(Point3);
     virtual void serialize(MapFileO& file);
 
 protected:
@@ -28,43 +30,53 @@ protected:
 
 class FreeCameraContext: public CameraContext {
 public:
-    FreeCameraContext(int x, int y, int w, int h, int priority, float radius);
+    FreeCameraContext(int x, int y, int w, int h, int priority, float radius, float tilt, float rotation);
     ~FreeCameraContext();
     FPoint3 center(Point3);
     float radius(Point3);
+    float tilt(Point3);
+    float rotation(Point3);
     void serialize(MapFileO& file);
-    //static CameraContext* deserialize(unsigned char* buffer);
+    static CameraContext* deserialize(MapFileI& file);
 
 private:
     float radius_;
+    float tilt_;
+    float rotation_;
 };
 
 class FixedCameraContext: public CameraContext {
 public:
-    FixedCameraContext(int x, int y, int w, int h, int priority, float radius, FPoint3);
+    FixedCameraContext(int x, int y, int w, int h, int priority, float radius, float tilt, float rotation, FPoint3 center);
     ~FixedCameraContext();
     FPoint3 center(Point3);
     float radius(Point3);
+    float tilt(Point3);
+    float rotation(Point3);
     void serialize(MapFileO& file);
-    //static CameraContext* deserialize(MapFileI& file);
+    static CameraContext* deserialize(MapFileI& file);
 
 private:
     float radius_;
+    float tilt_;
+    float rotation_;
     FPoint3 center_;
     friend class Camera;
 };
 
 class ClampedCameraContext: public CameraContext {
 public:
-    ClampedCameraContext(int x, int y, int w, int h, int priority, float radius, int xpad, int ypad);
+    ClampedCameraContext(int x, int y, int w, int h, int priority, float radius, float tilt, int xpad, int ypad);
     ~ClampedCameraContext();
     FPoint3 center(Point3);
     float radius(Point3);
+    float tilt(Point3);
     void serialize(MapFileO& file);
-    //static CameraContext* deserialize(unsigned char* buffer);
+    static CameraContext* deserialize(MapFileI& file);
 
 private:
     float radius_;
+    float tilt_;
     int xpad_;
     int ypad_;
 };
@@ -74,10 +86,8 @@ public:
     NullCameraContext(int x, int y, int w, int h, int priority);
     ~NullCameraContext();
     bool is_null();
-    FPoint3 center(Point3);
-    float radius(Point3);
     void serialize(MapFileO& file);
-    //static CameraContext* deserialize(unsigned char* buffer);
+    static CameraContext* deserialize(MapFileI& file);
 };
 
 class Camera {
@@ -98,10 +108,14 @@ private:
     CameraContext* context_;
     std::vector<std::unique_ptr<CameraContext>> loaded_contexts_;
     std::vector<std::vector<CameraContext*>> context_map_;
-    float target_rad_;
-    float cur_rad_;
     FPoint3 target_pos_;
     FPoint3 cur_pos_;
+    float target_rad_;
+    float cur_rad_;
+    float target_tilt_;
+    float cur_tilt_;
+    float target_rotation_;
+    float cur_rotation_;
 };
 
 float damp_avg(float target, float cur);

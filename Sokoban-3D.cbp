@@ -69,6 +69,7 @@
 		</Unit>
 		<Unit filename="include/block.h" />
 		<Unit filename="include/camera.h" />
+		<Unit filename="include/colorcycle.h" />
 		<Unit filename="include/common.h" />
 		<Unit filename="include/component.h" />
 		<Unit filename="include/dear/imgui.cpp" />
@@ -81,7 +82,6 @@
 		<Unit filename="include/door.h" />
 		<Unit filename="include/doorselectstate.h" />
 		<Unit filename="include/doortab.h" />
-		<Unit filename="include/editor.h" />
 		<Unit filename="include/editorbasestate.h" />
 		<Unit filename="include/editorstate.h" />
 		<Unit filename="include/editortab.h" />
@@ -110,6 +110,7 @@
 			<Option virtualFolder="GameObjects/" />
 		</Unit>
 		<Unit filename="src/camera.cpp" />
+		<Unit filename="src/colorcycle.cpp" />
 		<Unit filename="src/common.cpp" />
 		<Unit filename="src/component.cpp" />
 		<Unit filename="src/delta.cpp" />
@@ -122,7 +123,6 @@
 		<Unit filename="src/doortab.cpp">
 			<Option virtualFolder="GameStates/EditorTabs/" />
 		</Unit>
-		<Unit filename="src/editor.cpp" />
 		<Unit filename="src/editorbasestate.cpp">
 			<Option virtualFolder="GameStates/" />
 		</Unit>

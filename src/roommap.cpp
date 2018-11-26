@@ -20,33 +20,30 @@ int RoomMap::height() const {
     return height_;
 }
 
+void RoomMap::push_full() {
+    layers_.push_back(std::make_unique<FullMapLayer>(this, width_, height_));
+}
+
+void RoomMap::push_sparse() {
+    layers_.push_back(std::make_unique<SparseMapLayer>(this));
+}
+
 void RoomMap::serialize(MapFileO& file) const {
-    /*std::vector<GameObject*> rel_check;
+    // Serialize layer types
+    for (auto& layer : layers_) {
+        file << layer->type();
+    }
     // Serialize raw object data
+    std::vector<GameObject*> rel_check;
     file << static_cast<unsigned char>(MapCode::Objects);
     for (auto& layer : layers_) {
-        for (int x = 0; x != width_; ++x) {
-            for (int y = 0; y != height_; ++y) {
-                for (auto& object : map_[x][y]) {
-                    if (object->obj_code() == ObjCode::Player) {
-                        continue;
-                    }
-                    file << static_cast<unsigned char>(object->obj_code());
-                    file << static_cast<unsigned char>(x);
-                    file << static_cast<unsigned char>(y);
-                    object->serialize(file);
-                    if (object->relation_check()) {
-                        rel_check.push_back(object.get());
-                    }
-                }
-            }
-        }
+        layer->serialize(file, rel_check);
     }
     file << static_cast<unsigned char>(ObjCode::NONE);
     // Serialize relational data
     for (auto& object : rel_check) {
         object->relation_serialize(file);
-    }*/
+    }
 }
 
 GameObject* RoomMap::view(Point3 pos) {
@@ -76,7 +73,7 @@ void RoomMap::put_quiet(std::unique_ptr<GameObject> obj) {
 
 void RoomMap::draw(GraphicsManager* gfx) {
     for (auto& layer : layers_) {
-        //layer.draw(gfx);
+        layer->draw(gfx);
     }
 }
 

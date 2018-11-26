@@ -2,18 +2,23 @@
 #define MAPFILE_H
 
 #include "common.h"
+#include "colorcycle.h"
 
-class ColorCycle;
+namespace Deser {
+    float f(unsigned char* b);
+    Point3 p3(unsigned char* b);
+    FPoint3 fp3(unsigned char* b);
+}
 
 class MapFileI {
 public:
     MapFileI(std::string path);
     virtual ~MapFileI();
     void read(unsigned char* b, int n);
-    void read_str(char* b, int n);
-    float read_float();
+
     Point3 read_point3();
-    FPoint3 read_fpoint3();
+    std::string read_str();
+    ColorCycle read_color_cycle();
 
 private:
     std::ifstream file_;

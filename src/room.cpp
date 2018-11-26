@@ -140,6 +140,12 @@ void Room::load_from_file(MapFileI& file, Point3* start_pos) {
         case MapCode::Signaler:
             read_signaler(file);
             break;
+        case MapCode::FullLayer:
+            map_->push_full();
+            break;
+        case MapCode::SparseLayer:
+            map_->push_sparse();
+            break;
         case MapCode::End:
             reading_file = false;
             break;
@@ -192,7 +198,7 @@ case CameraCode::CLASS:\
 
 void Room::read_camera_rects(MapFileI& file) {
     unsigned char b[1];
-    /*while (true) {
+    while (true) {
         file.read(b, 1);
         CameraCode code = static_cast<CameraCode>(b[0]);
         switch (code) {
@@ -206,7 +212,7 @@ void Room::read_camera_rects(MapFileI& file) {
             throw std::runtime_error("Unknown Camera code encountered in .map file (it's probably corrupt/an old version)");
             return;
         }
-    }*/
+    }
 }
 
 #undef CASE_CAMCODE
@@ -226,24 +232,20 @@ void Room::read_snake_link(MapFileI& file) {
 }
 
 void Room::read_door_dest(MapFileI& file) {
-    unsigned char b[7];
-    file.read(b, 7);
-    auto door = static_cast<Door*>(map_->view({b[0],b[1],b[2]}));
-    char name[256];
-    file.read_str(name, b[6]);
-    door->set_dest({b[3],b[4],b[5]}, std::string(name, b[6]));
+    Point3 pos {file.read_point3()};
+    Point3 exit_pos {file.read_point3()};
+    auto door = static_cast<Door*>(map_->view(pos));
+    door->set_dest(exit_pos, file.read_str());
 }
 
 void Room::read_signaler(MapFileI& file) {
     unsigned char b[4];
     file.read(b, 4);
     auto signaler = std::make_unique<Signaler>(b[0], b[1] & 1, b[1] & 2);
-    int switches = b[2];
-    int switchables = b[3];
-    for (int i = 0; i < switches; ++i) {
+    for (int i = 0; i < b[2]; ++i) {
         signaler->push_switch(static_cast<Switch*>(map_->view(file.read_point3())));
     }
-    for (int i = 0; i < switchables; ++i) {
+    for (int i = 0; i < b[3]; ++i) {
         signaler->push_switchable(static_cast<Switchable*>(map_->view(file.read_point3())));
     }
     push_signaler(std::move(signaler));

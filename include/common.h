@@ -164,6 +164,8 @@ const int MAX_COOLDOWN = 5;
 const int MAX_UNDO_DEPTH = 1000;
 
 const float DEFAULT_CAM_RADIUS = 16.0;
+const float DEFAULT_CAM_TILT = 0.3;
+const float DEFAULT_CAM_ROTATION = 0.0;
 
 const int FAST_MAP_MOVE = 10;
 
@@ -178,6 +180,8 @@ enum class MapCode {
     SnakeLink = 5, // Link two snakes (1 = Right, 2 = Down)
     DoorDest = 6, // Give a door a destination Map + Pos
     Signaler = 7, // List of Switches and Switchables linked to a Signaler
+    FullLayer = 8, // Create a new full layer
+    SparseLayer = 9, // Create a new sparse layer
     End = 255,
 };
 

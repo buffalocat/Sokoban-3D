@@ -2,6 +2,8 @@
 
 #include "delta.h"
 #include "gameobject.h"
+#include "mapfile.h"
+#include "graphicsmanager.h"
 
 
 MapLayer::MapLayer(RoomMap* room_map): parent_map_ {room_map} {}
@@ -43,6 +45,36 @@ void FullMapLayer::put_quiet(std::unique_ptr<GameObject> obj) {
     map_[pos.x][pos.y] = std::move(obj);
 }
 
+MapCode FullMapLayer::type() {
+    return MapCode::FullLayer;
+}
+
+void FullMapLayer::serialize(MapFileO& file, std::vector<GameObject*>& rel_check) {
+    for (auto& col : map_) {
+        for (auto& obj : col) {
+            if (!obj || obj->obj_code() == ObjCode::Player) {
+                continue;
+            }
+            file << obj->obj_code();
+            file << obj->pos();
+            obj->serialize(file);
+            if (obj->relation_check()) {
+                rel_check.push_back(obj.get());
+            }
+        }
+    }
+}
+
+void FullMapLayer::draw(GraphicsManager* gfx) {
+    for (auto& col : map_) {
+        for (auto& obj : col) {
+            if (obj) {
+                obj->draw(gfx);
+            }
+        }
+    }
+}
+
 
 SparseMapLayer::SparseMapLayer(RoomMap* room_map): MapLayer(room_map), map_ {} {}
 
@@ -71,4 +103,32 @@ void SparseMapLayer::put(std::unique_ptr<GameObject> obj, DeltaFrame* delta_fram
 
 void SparseMapLayer::put_quiet(std::unique_ptr<GameObject> obj) {
     map_[obj->pos().h()] = std::move(obj);
+}
+
+MapCode SparseMapLayer::type() {
+    return MapCode::SparseLayer;
+}
+
+void SparseMapLayer::serialize(MapFileO& file, std::vector<GameObject*>& rel_check) {
+    for (auto& p : map_) {
+        GameObject* obj = p.second.get();
+        if (!obj || obj->obj_code() == ObjCode::Player) {
+            continue;
+        }
+        file << obj->obj_code();
+        file << obj->pos();
+        obj->serialize(file);
+        if (obj->relation_check()) {
+            rel_check.push_back(obj);
+        }
+    }
+}
+
+void SparseMapLayer::draw(GraphicsManager* gfx) {
+    for (auto& p : map_) {
+        GameObject* obj = p.second.get();
+        if (obj) {
+            obj->draw(gfx);
+        }
+    }
 }

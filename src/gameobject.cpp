@@ -66,8 +66,7 @@ ObjCode Wall::obj_code() {
 
 void Wall::draw(GraphicsManager* gfx) {
     Point3 p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, 0.5f, p.y));
-    gfx->set_model(model);
+    gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
     gfx->set_color(COLORS[BLACK]);
     gfx->draw_cube();
 }

@@ -9,32 +9,46 @@ MapFileI::~MapFileI() {
     file_.close();
 }
 
+
 void MapFileI::read(unsigned char* b, int n) {
     file_.read((char *)b, n);
-}
-
-void MapFileI::read_str(char* b, int n) {
-    file_.read(b, n);
-}
-
-float MapFileI::read_float() {
-    unsigned char b[2];
-    file_.read((char *)b, 2);
-    return (float)b[0] + (float)b[1]/256.0;
 }
 
 Point3 MapFileI::read_point3() {
     unsigned char b[3];
     file_.read((char *)b, 3);
+    return Deser::p3(b);
+}
+
+std::string MapFileI::read_str() {
+    unsigned char n[1];
+    char b[256];
+    file_.read((char *)n, 1);
+    file_.read(b, n[0]);
+    return std::string(b, n[0]);
+}
+
+ColorCycle MapFileI::read_color_cycle() {
+    unsigned char b[8];
+    file_.read((char *)b, 2);
+    file_.read((char *)(b+2), b[0]);
+    return ColorCycle {b};
+}
+
+
+float Deser::f(unsigned char* b) {
+    return (float)b[0] + (float)b[1]/256.0;
+}
+
+Point3 Deser::p3(unsigned char* b) {
     return {b[0], b[1], b[2]};
 }
 
-FPoint3 MapFileI::read_fpoint3() {
-    float x = read_float();
-    float y = read_float();
-    float z = read_float();
-    return {x,y,z};
+FPoint3 Deser::fp3(unsigned char* b) {
+    return {Deser::f(b), Deser::f(b+2), Deser::f(b+4)};
 }
+
+
 
 MapFileO::MapFileO(std::string path): file_ {} {
     file_.open(path, std::ios::out | std::ios::binary);

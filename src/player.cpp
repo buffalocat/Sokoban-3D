@@ -57,8 +57,7 @@ void Player::serialize(MapFileO& file) {
 }
 
 GameObject* Player::deserialize(MapFileI& file) {
-    Point3 pos {file.read_point3()};
-    unsigned char b[1];
-    file.read(b,1);
-    return new Player(pos, static_cast<RidingState>(b[0]));
+    unsigned char b[4];
+    file.read(b, 4);
+    return new Player(Deser::p3(b), static_cast<RidingState>(b[3]));
 }

@@ -60,10 +60,9 @@ void SaveLoadTab::main_loop(EditorRoom* eroom) {
 void SaveLoadTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
     RoomMap* room_map = eroom->room->room_map();
     if (!room_map->view(pos)) {
-        Player* player = static_cast<Player*>(room_map->view(eroom->start_pos));
-        auto player_unique = room_map->take_quiet(player);
+        auto player = room_map->take_quiet(eroom->start_pos);
         player->set_pos(pos);
         eroom->start_pos = pos;
-        room_map->put_quiet(std::move(player_unique));
+        room_map->put_quiet(std::move(player));
     }
 }

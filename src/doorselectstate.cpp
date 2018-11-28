@@ -32,7 +32,7 @@ void DoorSelectState::main_loop() {
 
 void DoorSelectState::handle_left_click(Point3 pos) {
     *door_pos_ = pos;
-    *door_ = static_cast<Door*>(room_->room_map()->view(*door_pos_));
+    *door_ = dynamic_cast<Door*>(room_->room_map()->view(*door_pos_));
 }
 
 void DoorSelectState::handle_right_click(Point3 pos) {}

@@ -80,13 +80,25 @@ private:
 
 class MotionDelta: public Delta {
 public:
-    MotionDelta(std::vector<GameObject*> objs, Point3 d, RoomMap* room_map);
+    MotionDelta(std::vector<Block*> objs, Point3 d, RoomMap* room_map);
     ~MotionDelta();
     void revert();
 
 private:
-    std::vector<GameObject*> objs_;
+    std::vector<Block*> objs_;
     Point3 d_;
+    RoomMap* room_map_;
+};
+
+
+class FallDelta: public Delta {
+public:
+    FallDelta(std::vector<std::pair<Block*, int>> pairs, RoomMap* room_map);
+    ~FallDelta();
+    void revert();
+
+private:
+    std::vector<std::pair<Block*, int>> pairs_;
     RoomMap* room_map_;
 };
 

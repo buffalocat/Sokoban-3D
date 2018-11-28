@@ -182,11 +182,11 @@ Camera::Camera(int w, int h): width_ {w}, height_ {h},
 }
 
 void Camera::serialize(MapFileO& file) {
-    file << static_cast<unsigned char>(MapCode::CameraRect);
+    file << MapCode::CameraRect;
     for (auto& context : loaded_contexts_) {
         context->serialize(file);
     }
-    file << static_cast<unsigned char>(CameraCode::NONE);
+    file << CameraCode::NONE;
 }
 
 void Camera::push_context(std::unique_ptr<CameraContext> context) {
@@ -203,7 +203,6 @@ void Camera::push_context(std::unique_ptr<CameraContext> context) {
         }
     }
     loaded_contexts_.push_back(std::move(context));
-    auto c = static_cast<FixedCameraContext*>(loaded_contexts_.back().get());
 }
 
 

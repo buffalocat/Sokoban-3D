@@ -98,7 +98,7 @@ void Room::write_to_file(MapFileO& file, Point3 start_pos) {
         signaler->serialize(file);
     }
 
-    file << static_cast<unsigned char>(MapCode::End);
+    file << MapCode::End;
 }
 
 void Room::load_from_file(MapFileI& file, Point3* start_pos) {
@@ -158,8 +158,7 @@ void Room::read_objects(MapFileI& file) {
     unsigned char b[1];
     while (true) {
         file.read(b, 1);
-        ObjCode code = static_cast<ObjCode>(b[0]);
-        switch (code) {
+        switch (static_cast<ObjCode>(b[0])) {
         CASE_OBJCODE(Wall)
         CASE_OBJCODE(NonStickBlock)
         CASE_OBJCODE(WeakBlock)

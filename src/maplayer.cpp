@@ -98,11 +98,11 @@ std::unique_ptr<GameObject> SparseMapLayer::take_quiet(Point pos) {
 
 void SparseMapLayer::put(std::unique_ptr<GameObject> obj, DeltaFrame* delta_frame) {
     delta_frame->push(std::make_unique<CreationDelta>(obj->pos(), parent_map_));
-    map_[obj->pos().h()] = std::move(obj);
+    map_[obj->posh()] = std::move(obj);
 }
 
 void SparseMapLayer::put_quiet(std::unique_ptr<GameObject> obj) {
-    map_[obj->pos().h()] = std::move(obj);
+    map_[obj->posh()] = std::move(obj);
 }
 
 MapCode SparseMapLayer::type() {

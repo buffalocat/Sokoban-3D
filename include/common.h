@@ -63,6 +63,8 @@ Point3 operator*(const int, const Point3&);
 
 std::ostream& operator<<(std::ostream& os, const Point& p);
 
+std::ostream& operator<<(std::ostream& os, const Point3& p);
+
 struct PointHash {
     std::size_t operator()(const Point& p) const;
 };

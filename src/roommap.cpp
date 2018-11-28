@@ -39,11 +39,11 @@ void RoomMap::serialize(MapFileO& file) const {
     }
     // Serialize raw object data
     std::vector<GameObject*> rel_check;
-    file << static_cast<unsigned char>(MapCode::Objects);
+    file << MapCode::Objects;
     for (auto& layer : layers_) {
         layer->serialize(file, rel_check);
     }
-    file << static_cast<unsigned char>(ObjCode::NONE);
+    file << ObjCode::NONE;
     // Serialize relational data
     for (auto& object : rel_check) {
         object->relation_serialize(file);
@@ -64,15 +64,15 @@ std::unique_ptr<GameObject> RoomMap::take_quiet(Point3 pos) {
 
 std::unique_ptr<GameObject> RoomMap::take_quiet(GameObject* obj) {
     Point3 pos {obj->pos()};
-    return layers_[obj->pos().z]->take_quiet(pos.h());
+    return layers_[obj->z()]->take_quiet(pos.h());
 }
 
 void RoomMap::put(std::unique_ptr<GameObject> obj, DeltaFrame* delta_frame) {
-    layers_[obj->pos().z]->put(std::move(obj), delta_frame);
+    layers_[obj->z()]->put(std::move(obj), delta_frame);
 }
 
 void RoomMap::put_quiet(std::unique_ptr<GameObject> obj) {
-    layers_[obj->pos().z]->put_quiet(std::move(obj));
+    layers_[obj->z()]->put_quiet(std::move(obj));
 }
 
 void RoomMap::draw(GraphicsManager* gfx) {

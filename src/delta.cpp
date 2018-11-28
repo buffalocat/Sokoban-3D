@@ -61,6 +61,7 @@ void UndoStack::reset() {
     size_ = 0;
 }
 
+
 DeletionDelta::DeletionDelta(std::unique_ptr<GameObject> object, RoomMap* room_map): object_ {std::move(object)}, room_map_ {room_map} {}
 
 DeletionDelta::~DeletionDelta() {}
@@ -80,16 +81,33 @@ void CreationDelta::revert() {
 }
 
 
-MotionDelta::MotionDelta(std::vector<GameObject*> objs, Point3 d, RoomMap* room_map):
+MotionDelta::MotionDelta(std::vector<Block*> objs, Point3 d, RoomMap* room_map):
 objs_ {objs}, d_ {Point3{-d.x, -d.y, -d.z}}, room_map_ {room_map} {}
 
 MotionDelta::~MotionDelta() {}
 
 void MotionDelta::revert() {
     std::vector<std::unique_ptr<GameObject>> objs_unique {};
-    for (GameObject* obj : objs_) {
+    for (Block* obj : objs_) {
         objs_unique.push_back(room_map_->take_quiet(obj));
         obj->shift_pos(d_);
+    }
+    for (auto& obj_unique : objs_unique) {
+        room_map_->put_quiet(std::move(obj_unique));
+    }
+}
+
+
+FallDelta::FallDelta(std::vector<std::pair<Block*, int>> pairs, RoomMap* room_map):
+pairs_ {pairs}, room_map_ {room_map} {}
+
+FallDelta::~FallDelta() {}
+
+void FallDelta::revert() {
+    std::vector<std::unique_ptr<GameObject>> objs_unique {};
+    for (auto& p : pairs_) {
+        objs_unique.push_back(room_map_->take_quiet(p.first));
+        p.first->set_z(p.second);
     }
     for (auto& obj_unique : objs_unique) {
         room_map_->put_quiet(std::move(obj_unique));

@@ -24,6 +24,14 @@ Point3 GameObject::pos() {
     return pos_;
 }
 
+Point2 GameObject::posh() {
+    return {pos_.x, pos_.y};
+}
+
+int GameObject::z() {
+    return pos_.z;
+}
+
 // This could maybe (?) be optimized by instead taking a Direction enum, for the 6 directions
 Point3 GameObject::shifted_pos(Point3 d) {
     return {pos_.x + d.x, pos_.y + d.y, pos_.z + d.z};
@@ -37,14 +45,7 @@ void GameObject::shift_pos(Point3 d) {
     pos_ += d;
 }
 
-void GameObject::shift_pos_auto(Point3 d, RoomMap* room_map, DeltaFrame* delta_frame) {
-    auto self_unique = room_map->take_quiet(this);
-    if (delta_frame) {
-        delta_frame->push(std::make_unique<MotionDelta>(std::vector<GameObject*> {this}, d, room_map));
-    }
-    pos_ += d;
-    room_map->put_quiet(std::move(self_unique));
-}
+
 
 
 Wall::Wall(Point3 pos): GameObject(pos) {}

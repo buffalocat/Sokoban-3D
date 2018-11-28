@@ -39,7 +39,7 @@ Block* Player::get_car(RoomMap* room_map, bool strict) {
         return nullptr;
     } else {
         GameObject* car = room_map->view(shifted_pos({0,0,-1}));
-        return static_cast<Block*>(car);
+        return dynamic_cast<Block*>(car);
     }
 }
 
@@ -48,7 +48,17 @@ void Player::draw(GraphicsManager* gfx) {
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z + 0.5f * (state_ == RidingState::Bound), p.y));
     model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
     gfx->set_model(model);
-    gfx->set_color(COLORS[PINK]);
+    switch (state_) {
+    case RidingState::Free:
+        gfx->set_color(COLORS[BLUE]);
+        break;
+    case RidingState::Bound:
+        gfx->set_color(COLORS[PINK]);
+        break;
+    case RidingState::Riding:
+        gfx->set_color(COLORS[RED]);
+        break;
+    }
     gfx->draw_cube();
 }
 

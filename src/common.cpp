@@ -25,6 +25,11 @@ std::ostream& operator<<(std::ostream& os, const Point& p) {
     return os;
 }
 
+std::ostream& operator<<(std::ostream& os, const Point3& p) {
+    os << "(" <<  p.x << "," << p.y << "," << p.z << ")";
+    return os;
+}
+
 std::size_t PointHash::operator()(const Point& p) const {
     return (p.x << 8) + p.y;
 }

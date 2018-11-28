@@ -24,11 +24,11 @@ public:
 
     Point3 pos();
     Point2 posh();
+    int z();
+
     Point3 shifted_pos(Point3 d);
     void set_pos(Point3 p);
-    void set_pos_auto(Point3 p, RoomMap*, DeltaFrame*);
     void shift_pos(Point3 d);
-    void shift_pos_auto(Point3 d, RoomMap*, DeltaFrame*);
 
     virtual void draw(GraphicsManager*) = 0;
 

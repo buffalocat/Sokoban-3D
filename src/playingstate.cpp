@@ -55,8 +55,8 @@ void PlayingState::handle_input(DeltaFrame* delta_frame) {
     RoomMap* room_map = room_->room_map();
     for (auto p : MOVEMENT_KEYS) {
         if (glfwGetKey(window_, p.first) == GLFW_PRESS) {
-            MoveProcessor(player_, room_map, p.second).try_move(delta_frame);
-            Door* door = static_cast<Door*>(room_map->view(player_->shifted_pos({0,0,-1})));
+            MoveProcessor(player_, room_map, p.second, delta_frame).try_move();
+            Door* door = dynamic_cast<Door*>(room_map->view(player_->shifted_pos({0,0,-1})));
             // When doors are switchable, check for state too!
             if (door && door->dest() && door->state()) {
                 use_door(door->dest(), delta_frame);
@@ -97,9 +97,8 @@ bool PlayingState::activate_room(std::string name) {
 }
 
 bool PlayingState::load_room(std::string name) {
-    std::string path;
     // This will be much more complicated when save files are a thing
-    path = MAPS_TEMP + name + ".map";
+    std::string path = MAPS_TEMP + name + ".map";
     if (access(path.c_str(), F_OK) == -1) {
         path = MAPS_MAIN + name + ".map";
         if (access(path.c_str(), F_OK) == -1) {

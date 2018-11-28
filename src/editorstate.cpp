@@ -104,9 +104,9 @@ void EditorState::new_room(std::string name, int w, int h) {
         return;
     }
     auto room = std::make_unique<Room>(name, w, h);
-    room->room_map()->push_full();
-    room->room_map()->push_full();
-    room->room_map()->push_sparse();
+    for (int i = 0; i < 16; ++i) {
+        room->room_map()->push_full();
+    }
     room->room_map()->put_quiet(std::make_unique<Player>(Point3 {0,0,2}, RidingState::Free));
     room->set_cam_pos({0,0,2});
     rooms_[name] = std::make_unique<EditorRoom>(std::move(room), Point3 {0,0,2});

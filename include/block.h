@@ -6,6 +6,8 @@
 #include "colorcycle.h"
 
 class Component;
+class StrongComponent;
+class WeakComponent;
 
 class Block: public GameObject {
 public:
@@ -17,12 +19,17 @@ public:
     void insert_color(unsigned char color);
     bool cycle_color(bool undo);
 
-    virtual std::unique_ptr<Component> make_strong_component(RoomMap*);
-    Component* comp();
+    virtual std::unique_ptr<StrongComponent> make_strong_component(RoomMap*);
+    virtual std::unique_ptr<WeakComponent> make_weak_component(RoomMap*);
+    StrongComponent* s_comp();
+    WeakComponent* w_comp();
     void reset_comp();
+
+    void set_z(int z);
 
     virtual bool sticky();
     virtual void get_weak_links(RoomMap*, std::vector<Block*>& links);
+    virtual bool has_weak_neighbor(RoomMap* room_map);
 
     bool car();
 
@@ -69,7 +76,7 @@ public:
     bool sticky();
     void get_weak_links(RoomMap*, std::vector<Block*>& links);
 
-    std::unique_ptr<Component> make_strong_component(RoomMap*);
+    std::unique_ptr<StrongComponent> make_strong_component(RoomMap*);
 };
 
 #endif // BLOCK_H

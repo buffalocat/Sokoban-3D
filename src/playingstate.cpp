@@ -80,13 +80,8 @@ void PlayingState::handle_input(DeltaFrame* delta_frame) {
         player_->toggle_riding(room_map, delta_frame);
         return;
     } else if (glfwGetKey(window_, GLFW_KEY_C) == GLFW_PRESS) {
-        Block* car = player_->get_car(room_map, false);
-        if (car) {
-            if (car->cycle_color(false)) {
-                delta_frame->push(std::make_unique<ColorChangeDelta>(car));
-            }
-            return;
-        }
+        MoveProcessor(player_, room_map, {0,0,0}, delta_frame).color_change_check();
+        return;
     }
     keyboard_cooldown_ = 0;
 }

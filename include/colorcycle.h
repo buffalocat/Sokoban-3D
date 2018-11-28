@@ -9,10 +9,10 @@ public:
     ColorCycle(unsigned char color);
     ColorCycle(unsigned char* b);
     ~ColorCycle();
+    void insert_color(unsigned char color);
 
 private:
     unsigned char color();
-    void insert_color(unsigned char color);
     void cycle(bool undo);
     // 5 is the maximum number of colors a block will have (probably)
     // This limit won't be stored in .maps, so it can be changed

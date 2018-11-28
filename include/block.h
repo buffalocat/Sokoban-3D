@@ -77,6 +77,8 @@ public:
     void get_weak_links(RoomMap*, std::vector<Block*>& links);
 
     std::unique_ptr<StrongComponent> make_strong_component(RoomMap*);
+
+    void draw(GraphicsManager*);
 };
 
 #endif // BLOCK_H

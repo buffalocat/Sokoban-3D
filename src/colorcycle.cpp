@@ -16,7 +16,7 @@ unsigned char ColorCycle::color() {
 }
 
 void ColorCycle::insert_color(unsigned char color) {
-    color_[size_] = index_;
+    color_[size_] = color;
     ++size_;
 }
 

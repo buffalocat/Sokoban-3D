@@ -22,6 +22,7 @@ ImVec4 unpack_color(glm::vec4 v) {
 static int obj_code = (int)ObjCode::NONE;
 
 static int color = GREEN;
+static bool two_colors = false;
 static int alt_color = PINK;
 static bool is_car = false;
 static int sb_ends = 2;
@@ -31,8 +32,12 @@ static bool switchable_state = true;
 void block_options() {
     ImGui::InputInt("color##OBJECT_COLOR", &color);
     ImGui::ColorButton("##OBJECT_COLOR_BUTTON", unpack_color(COLORS[color]), 0, ImVec2(40,40));
-
-    ImGui::Checkbox("Is Rideable?##OBJECT_car", &is_car);
+    ImGui::Checkbox("Is Rideable?##OBJECT_block", &is_car);
+    ImGui::Checkbox("Second Color?##OBJECT_block", &two_colors);
+    if (two_colors) {
+        ImGui::InputInt("color##OBJECT_COLOR_2", &alt_color);
+        ImGui::ColorButton("##OBJECT_COLOR_BUTTON_2", unpack_color(COLORS[alt_color]), 0, ImVec2(40,40));
+    }
 }
 
 void ObjectTab::main_loop(EditorRoom* eroom) {
@@ -88,21 +93,25 @@ void ObjectTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
     int x = pos.x;
     int y = pos.y;
     std::unique_ptr<GameObject> obj;
+    ColorCycle color_cycle {color};
+    if (two_colors) {
+        color_cycle.insert_color(alt_color);
+    }
     switch (obj_code) {
     case (int)ObjCode::Wall :
         obj = std::make_unique<Wall>(pos);
         break;
     case (int)ObjCode::NonStickBlock :
-        obj = std::make_unique<NonStickBlock>(pos, ColorCycle(color), is_car);
+        obj = std::make_unique<NonStickBlock>(pos, color_cycle, is_car);
         break;
     case (int)ObjCode::WeakBlock :
-        obj = std::make_unique<WeakBlock>(pos, ColorCycle(color), is_car);
+        obj = std::make_unique<WeakBlock>(pos, color_cycle, is_car);
         break;
     case (int)ObjCode::StickyBlock :
-        obj = std::make_unique<StickyBlock>(pos, ColorCycle(color), is_car);
+        obj = std::make_unique<StickyBlock>(pos, color_cycle, is_car);
         break;
     case (int)ObjCode::SnakeBlock :
-        obj = std::make_unique<SnakeBlock>(pos, ColorCycle(color), is_car, sb_ends);
+        obj = std::make_unique<SnakeBlock>(pos, color_cycle, is_car, sb_ends);
         break;
     case (int)ObjCode::Door :
         obj = std::make_unique<Door>(pos, switchable_state);

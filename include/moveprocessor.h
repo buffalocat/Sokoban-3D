@@ -18,6 +18,7 @@ public:
     void try_move();
     void move_bound();
     void move_general();
+    void color_change_check();
     void init_movement_components();
     void move_components();
     void try_fall();

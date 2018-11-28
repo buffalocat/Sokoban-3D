@@ -45,6 +45,22 @@ void MoveProcessor::move_general() {
     try_fall();
 }
 
+void MoveProcessor::color_change_check() {
+    Block* car = player_->get_car(map_, false);
+    if (!(car && car->cycle_color(false))) {
+        return;
+    }
+    delta_frame_->push(std::make_unique<ColorChangeDelta>(car));
+    fall_check_.push_back(car);
+    for (Point3 d : DIRECTIONS) {
+        Block* block = dynamic_cast<Block*>(map_->view(car->shifted_pos(d)));
+        if (block) {
+            fall_check_.push_back(block);
+        }
+    }
+    try_fall();
+}
+
 void MoveProcessor::init_movement_components() {
     std::vector<StrongComponent*> roots {};
     std::vector<std::pair<StrongComponent*, StrongComponent*>> dependent_pairs {};
@@ -148,9 +164,11 @@ bool MoveProcessor::try_push(StrongComponent* comp, Point3 pos) {
 
 void MoveProcessor::try_fall() {
     while (!fall_check_.empty()) {
+        std::cout << "fall check has " << fall_check_.size() << std::endl;
         std::vector<Block*> next_check {};
         for (Block* block : fall_check_) {
             if (!block->w_comp()) {
+                std::cout << "Making a comp at " << block->pos() << std::endl;
                 fall_comps_.push_back(block->make_weak_component(map_));
                 block->w_comp()->collect_above(next_check, map_);
             }

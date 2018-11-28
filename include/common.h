@@ -123,6 +123,7 @@ enum {
     LIGHT_GREY = 8,
     ORANGE = 9,
     YELLOW = 10,
+    GREY = 11,
 };
 
 const glm::vec4 COLORS[] = {
@@ -137,6 +138,7 @@ const glm::vec4 COLORS[] = {
     glm::vec4(0.7f, 0.7f, 0.7f, 1.0f),
     glm::vec4(1.0f, 0.7f, 0.3f, 1.0f),
     glm::vec4(0.7f, 0.7f, 0.3f, 1.0f),
+    glm::vec4(0.05f, 0.05f, 0.05f, 1.0f),
 };
 
 // NOTE: the order matters here, for serialization reasons!

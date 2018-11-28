@@ -98,16 +98,16 @@ void MotionDelta::revert() {
 }
 
 
-FallDelta::FallDelta(std::vector<std::pair<Block*, int>> pairs, RoomMap* room_map):
-pairs_ {pairs}, room_map_ {room_map} {}
+FallDelta::FallDelta(std::vector<Block*> blocks, int distance, RoomMap* room_map):
+blocks_ {blocks}, room_map_ {room_map}, distance_ {distance} {}
 
 FallDelta::~FallDelta() {}
 
 void FallDelta::revert() {
     std::vector<std::unique_ptr<GameObject>> objs_unique {};
-    for (auto& p : pairs_) {
-        objs_unique.push_back(room_map_->take_quiet(p.first));
-        p.first->set_z(p.second);
+    for (Block* block : blocks_) {
+        objs_unique.push_back(room_map_->take_quiet(block));
+        block->shift_pos({0,0,distance_});
     }
     for (auto& obj_unique : objs_unique) {
         room_map_->put_quiet(std::move(obj_unique));

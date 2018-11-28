@@ -5,6 +5,7 @@
 
 class Block;
 class RoomMap;
+class DeltaFrame;
 
 enum class MoveComponentState {
     Contingent = 1,
@@ -87,16 +88,19 @@ public:
     bool falling();
 
     void check_land_first(RoomMap*);
+    void settle_first();
 
     void collect_above(std::vector<Block*>& above_list, RoomMap* room_map);
-    void collect_falling_from_map(std::vector<std::pair<std::unique_ptr<GameObject>, int>>& falling_blocks, RoomMap* room_map);
+    void collect_falling_unique(RoomMap* room_map);
     void reset_blocks_comps();
-    bool drop_check();
-    void check_land_sticky(RoomMap* room_map);
-    void settle();
+    bool drop_check(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame);
+    void check_land_sticky(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame);
+    void handle_unique_blocks(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame);
+    void settle(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame);
 
 private:
     std::vector<Block*> blocks_;
+    std::vector<std::unique_ptr<GameObject>> unique_blocks_;
     std::vector<WeakComponent*> above_;
     bool falling_;
 };

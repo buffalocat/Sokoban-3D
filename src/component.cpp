@@ -1,6 +1,7 @@
 #include "component.h"
 #include "roommap.h"
 #include "block.h"
+#include "delta.h"
 
 Component::Component() {}
 
@@ -128,7 +129,7 @@ void SingletonComponent::reset_blocks_comps() {
 
 
 WeakComponent::WeakComponent(): Component(),
-blocks_ {}, above_ {}, falling_ {true} {}
+blocks_ {}, unique_blocks_ {}, above_ {}, falling_ {true} {}
 
 WeakComponent::~WeakComponent() {}
 
@@ -149,12 +150,12 @@ void WeakComponent::collect_above(std::vector<Block*>& above_list, RoomMap* room
     }
 }
 
-void WeakComponent::collect_falling_from_map(std::vector<std::pair<std::unique_ptr<GameObject>, int>>& falling_blocks, RoomMap* room_map) {
+void WeakComponent::collect_falling_unique(RoomMap* room_map) {
     if (!falling_) {
         return;
     }
     for (Block* block : blocks_) {
-        falling_blocks.push_back(std::make_pair(std::move(room_map->take_quiet(block)), block->z()));
+        unique_blocks_.push_back(std::move(room_map->take_quiet(block)));
     }
 }
 
@@ -171,7 +172,7 @@ void WeakComponent::check_land_first(RoomMap* room_map) {
                     continue;
                 }
             }
-            settle();
+            settle_first();
             return;
         }
     }
@@ -180,11 +181,11 @@ void WeakComponent::check_land_first(RoomMap* room_map) {
     }
 }
 
-void WeakComponent::settle() {
+void WeakComponent::settle_first() {
     falling_ = false;
     for (WeakComponent* comp : above_) {
         if (comp->falling_) {
-            comp->settle();
+            comp->settle_first();
         }
     }
 }
@@ -197,7 +198,7 @@ void WeakComponent::reset_blocks_comps() {
 }
 
 // Returns whether the component is "still falling" (false if stopped or reached oblivion)
-bool WeakComponent::drop_check() {
+bool WeakComponent::drop_check(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame) {
     if (!falling_) {
         return false;
     }
@@ -208,17 +209,46 @@ bool WeakComponent::drop_check() {
             alive = true;
         }
     }
+    if (!alive) {
+        handle_unique_blocks(layers_fallen, room_map, delta_frame);
+    }
     return alive;
 }
 
-void WeakComponent::check_land_sticky(RoomMap* room_map) {
+void WeakComponent::check_land_sticky(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame) {
     for (Block* block : blocks_) {
         if (block->z() < 0) {
             continue;
         }
         if (room_map->view(block->shifted_pos({0,0,-1})) || block->has_weak_neighbor(room_map)) {
-            settle();
+            settle(layers_fallen, room_map, delta_frame);
             return;
+        }
+    }
+}
+
+void WeakComponent::handle_unique_blocks(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame) {
+    falling_ = false;
+    std::vector<Block*> live_blocks {};
+    for (auto& block : unique_blocks_) {
+        if (block->z() >= 0) {
+            live_blocks.push_back(static_cast<Block*>(block.get()));
+            room_map->put_quiet(std::move(block));
+        } else {
+            block->shift_pos({0,0,layers_fallen});
+            delta_frame->push(std::make_unique<DeletionDelta>(std::move(block), room_map));
+        }
+    }
+    if (!live_blocks.empty()) {
+        delta_frame->push(std::make_unique<FallDelta>(std::move(live_blocks), layers_fallen, room_map));
+    }
+}
+
+void WeakComponent::settle(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame) {
+    handle_unique_blocks(layers_fallen, room_map, delta_frame);
+    for (WeakComponent* comp : above_) {
+        if (comp->falling_) {
+            comp->settle(layers_fallen, room_map, delta_frame);
         }
     }
 }

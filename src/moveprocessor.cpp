@@ -160,43 +160,29 @@ void MoveProcessor::try_fall() {
     std::cout << "Made Weak Components" << std::endl;
     // Initial check for land
     check_land_first();
-    std::vector<std::pair<std::unique_ptr<GameObject>, int>> falling_blocks {};
     for (auto& comp : fall_comps_) {
-        comp->collect_falling_from_map(falling_blocks, map_);
+        comp->collect_falling_unique(map_);
         comp->reset_blocks_comps();
     }
-    for (auto& p : falling_blocks) {
-        std::cout << p.first->pos() << p.second << std::endl;
-    }
+    int layers_fallen = 0;
     while (true) {
         bool done_falling = true;
         for (auto& comp : fall_comps_) {
-            if (comp->drop_check()) {
+            if (comp->drop_check(layers_fallen, map_, delta_frame_)) {
                 done_falling = false;
             }
         }
         if (done_falling) {
             break;
         }
+        ++layers_fallen;
         for (auto& comp : fall_comps_) {
             if (comp->falling()) {
-                comp->check_land_sticky(map_);
+                comp->check_land_sticky(layers_fallen, map_, delta_frame_);
             }
         }
     }
     fall_comps_.clear();
-    std::vector<std::pair<Block*, int>> fall_delta_entries {};
-    for (auto& p : std::move(falling_blocks)) {
-        Block* block = static_cast<Block*>(p.first.get());
-        if (block->z() >= 0) {
-            map_->put_quiet(std::move(p.first));
-            fall_delta_entries.push_back(std::make_pair(block, p.second));
-        } else {
-            block->set_z(p.second);
-            delta_frame_->push(std::make_unique<DeletionDelta>(std::move(p.first), map_));
-        }
-    }
-    delta_frame_->push(std::make_unique<FallDelta>(std::move(fall_delta_entries), map_));
 }
 
 void MoveProcessor::check_land_first() {

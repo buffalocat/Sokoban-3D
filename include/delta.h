@@ -93,13 +93,14 @@ private:
 
 class FallDelta: public Delta {
 public:
-    FallDelta(std::vector<std::pair<Block*, int>> pairs, RoomMap* room_map);
+    FallDelta(std::vector<Block*> blocks, int distance, RoomMap* room_map);
     ~FallDelta();
     void revert();
 
 private:
-    std::vector<std::pair<Block*, int>> pairs_;
+    std::vector<Block*> blocks_;
     RoomMap* room_map_;
+    int distance_;
 };
 
 

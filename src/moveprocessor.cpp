@@ -117,6 +117,8 @@ bool MoveProcessor::try_move_component(StrongComponent* comp) {
         }
         if (!link->s_comp()->bad()) {
             comp->add_weak(link->s_comp());
+        } else {
+            fall_check_.push_back(link);
         }
     }
     return true;

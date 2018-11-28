@@ -146,18 +146,15 @@ bool MoveProcessor::try_push(StrongComponent* comp, Point3 pos) {
 
 void MoveProcessor::try_fall() {
     while (!fall_check_.empty()) {
-        std::cout << "Fall check wasn't empty" << std::endl;
         std::vector<Block*> next_check {};
         for (Block* block : fall_check_) {
             if (!block->w_comp()) {
-                std::cout << "Made a component for block at " << block->pos() << std::endl;
                 fall_comps_.push_back(block->make_weak_component(map_));
                 block->w_comp()->collect_above(next_check, map_);
             }
         }
         fall_check_ = std::move(next_check);
     }
-    std::cout << "Made Weak Components" << std::endl;
     // Initial check for land
     check_land_first();
     for (auto& comp : fall_comps_) {
@@ -166,6 +163,7 @@ void MoveProcessor::try_fall() {
     }
     int layers_fallen = 0;
     while (true) {
+        ++layers_fallen;
         bool done_falling = true;
         for (auto& comp : fall_comps_) {
             if (comp->drop_check(layers_fallen, map_, delta_frame_)) {
@@ -175,7 +173,6 @@ void MoveProcessor::try_fall() {
         if (done_falling) {
             break;
         }
-        ++layers_fallen;
         for (auto& comp : fall_comps_) {
             if (comp->falling()) {
                 comp->check_land_sticky(layers_fallen, map_, delta_frame_);

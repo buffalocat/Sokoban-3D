@@ -32,10 +32,6 @@ int main(void) {
         return -1;
     }
 
-    std::cout << sizeof(ColorCycle) << std::endl;
-    std::cout << sizeof(GameObject) << std::endl;
-    std::cout << sizeof(Block) << std::endl;
-
     GraphicsManager gfx(window);
 
     std::unique_ptr<GameState> current_state = std::make_unique<MainMenuState>();

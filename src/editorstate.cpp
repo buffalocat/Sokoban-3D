@@ -71,11 +71,7 @@ void EditorState::main_loop() {
 }
 
 void EditorState::set_active_room(std::string name) {
-    if (rooms_.count(name)) {
-        active_room_ = rooms_[name].get();
-    } else {
-        std::cout << "Tried to switch active room to nonexistent room. Weird!" << std::endl;
-    }
+    active_room_ = rooms_[name].get();
 }
 
 int EditorState::get_room_names(const char* room_names[]) {

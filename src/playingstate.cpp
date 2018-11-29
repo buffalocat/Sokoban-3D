@@ -17,6 +17,7 @@ undo_stack_ {MAX_UNDO_DEPTH},
 keyboard_cooldown_ {0}, testing_ {testing} {
     activate_room(name);
     init_player(pos);
+    room_->room_map()->set_initial_state(false);
 }
 
 PlayingState::~PlayingState() = default;

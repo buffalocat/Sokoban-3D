@@ -97,6 +97,8 @@ void MoveProcessor::move_components() {
         comp->collect_good(to_move);
     }
     std::vector<std::unique_ptr<GameObject>> move_unique {};
+    std::vector<Switch*> switch_release {};
+    std::vector<Switch*> switch_press {};
     for (auto block : to_move) {
         move_unique.push_back(map_->take_quiet(block));
         fall_check_.push_back(block);
@@ -104,7 +106,15 @@ void MoveProcessor::move_components() {
         if (above && !above->s_comp()) {
             fall_check_.push_back(above);
         }
+        Switch* switch_below = dynamic_cast<Switch*>(map_->view(block->shifted_pos({0,0,-1})));
+        if (switch_below) {
+            switch_release.push_back(switch_below);
+        }
         block->shift_pos(dir_);
+        switch_below = dynamic_cast<Switch*>(map_->view(block->shifted_pos({0,0,-1})));
+        if (switch_below) {
+            switch_press.push_back(switch_below);
+        }
     }
     for (auto& comp : move_comps_) {
         comp->reset_blocks_comps();
@@ -116,6 +126,14 @@ void MoveProcessor::move_components() {
     if (!to_move.empty()) {
         delta_frame_->push(std::make_unique<MotionDelta>(std::move(to_move), dir_, map_));
     }
+    //Do switch checks now! Later these will happen "at different times"
+    for (auto sw : switch_press) {
+        sw->check_send_signal(map_, delta_frame_);
+    }
+    for (auto sw : switch_release) {
+        sw->check_send_signal(map_, delta_frame_);
+    }
+    map_->check_signalers(delta_frame_);
 }
 
 bool MoveProcessor::try_move_component(StrongComponent* comp) {
@@ -164,11 +182,9 @@ bool MoveProcessor::try_push(StrongComponent* comp, Point3 pos) {
 
 void MoveProcessor::try_fall() {
     while (!fall_check_.empty()) {
-        std::cout << "fall check has " << fall_check_.size() << std::endl;
         std::vector<Block*> next_check {};
         for (Block* block : fall_check_) {
             if (!block->w_comp()) {
-                std::cout << "Making a comp at " << block->pos() << std::endl;
                 fall_comps_.push_back(block->make_weak_component(map_));
                 block->w_comp()->collect_above(next_check, map_);
             }

@@ -49,6 +49,8 @@ struct Point3 {
     Point3& operator+=(const Point3&);
 };
 
+Point3 operator+(const Point3& p, const Point3& q);
+
 struct FPoint3 {
     float x;
     float y;
@@ -93,6 +95,7 @@ enum class ObjCode {
     Player = 7,
     PressSwitch = 8,
     Gate = 9,
+    GateBody = 10,
 };
 
 enum class CameraCode {
@@ -124,6 +127,7 @@ enum {
     ORANGE = 9,
     YELLOW = 10,
     GREY = 11,
+    DARK_GREY = 12,
 };
 
 const glm::vec4 COLORS[] = {
@@ -138,7 +142,8 @@ const glm::vec4 COLORS[] = {
     glm::vec4(0.7f, 0.7f, 0.7f, 1.0f),
     glm::vec4(1.0f, 0.7f, 0.3f, 1.0f),
     glm::vec4(0.7f, 0.7f, 0.3f, 1.0f),
-    glm::vec4(0.05f, 0.05f, 0.05f, 1.0f),
+    glm::vec4(0.2f, 0.2f, 0.2f, 1.0f),
+    glm::vec4(0.1f, 0.1f, 0.1f, 1.0f),
 };
 
 // NOTE: the order matters here, for serialization reasons!

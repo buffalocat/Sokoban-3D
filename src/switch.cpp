@@ -12,8 +12,11 @@ waiting_ {(bool)(default_state ^ initial_state)} {}
 
 Switchable::~Switchable() {}
 
-void Switchable::set_aw(bool active, bool waiting) {
-    active_ = active;
+void Switchable::set_aw(bool active, bool waiting, RoomMap* room_map) {
+    if (active_ != active) {
+        active_ = active;
+        apply_state_change(room_map);
+    }
     waiting_ = waiting;
 }
 
@@ -26,24 +29,32 @@ void Switchable::receive_signal(bool signal, RoomMap* room_map, DeltaFrame* delt
         return;
     }
     if (delta_frame) {
-        delta_frame->push(std::make_unique<SwitchableDelta>(this, active_, waiting_));
+        delta_frame->push(std::make_unique<SwitchableDelta>(this, active_, waiting_, room_map));
     }
     waiting_ = !can_set_state(default_ ^ signal, room_map);
-    active_ = waiting_ ^ signal;
+    if (active_ != waiting_ ^ signal) {
+        active_ = !active_;
+        apply_state_change(room_map);
+    }
 }
+
+void Switchable::apply_state_change(RoomMap* room_map) {}
 
 void Switchable::check_waiting(RoomMap* room_map, DeltaFrame* delta_frame) {
     if (waiting_ && can_set_state(!(default_ ^ active_), room_map)) {
         if (delta_frame) {
-            delta_frame->push(std::make_unique<SwitchableDelta>(this, active_, waiting_));
+            delta_frame->push(std::make_unique<SwitchableDelta>(this, active_, waiting_, room_map));
         }
         waiting_ = false;
         active_ = !active_;
+        apply_state_change(room_map);
     }
 }
 
 // Gates should be initialized down in case they are "covered" at load time
-Gate::Gate(Point3 pos, bool def): Switchable(pos, def, false) {}
+Gate::Gate(Point3 pos, bool def): Switchable(pos, def, false), body_ {} {
+    body_ = std::make_unique<GateBody>(shifted_pos({0,0,1}));
+}
 
 Gate::~Gate() {}
 
@@ -56,8 +67,10 @@ void Gate::serialize(MapFileO& file) {
 }
 
 GameObject* Gate::deserialize(MapFileI& file) {
-    return nullptr;
-    //return new Gate(b[0], b[1], (bool)b[2]);
+    Point3 pos {file.read_point3()};
+    unsigned char b[1];
+    file.read(b, 1);
+    return new Gate(pos, b[0]);
 }
 
 bool Gate::can_set_state(bool state, RoomMap* room_map) {
@@ -66,12 +79,39 @@ bool Gate::can_set_state(bool state, RoomMap* room_map) {
     return !state || (room_map->view(shifted_pos({0,0,1})) == nullptr);
 }
 
+void Gate::apply_state_change(RoomMap* room_map) {
+    if (state()) {
+        room_map->put_quiet(std::move(body_));
+    } else {
+        body_ = room_map->take_quiet(shifted_pos({0,0,1}));
+    }
+}
+
 void Gate::draw(GraphicsManager* gfx) {
     Point3 p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, .9f * state() - 0.45f, p.y));
+    gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
+    gfx->set_color(COLORS[DARK_GREY]);
+    gfx->draw_cube();
+}
+
+GateBody::GateBody(Point3 pos): Wall(pos) {}
+
+GateBody::~GateBody() {}
+
+ObjCode GateBody::obj_code() {
+    return ObjCode::GateBody;
+}
+
+GameObject* GateBody::deserialize(MapFileI& file) {
+    return new GateBody(file.read_point3());
+}
+
+void GateBody::draw(GraphicsManager* gfx) {
+    Point3 p = pos();
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y));
     model = glm::scale(model, glm::vec3(0.7f, 1.0f, 0.7f));
     gfx->set_model(model);
-    gfx->set_color(COLORS[DARK_PURPLE]);
+    gfx->set_color(COLORS[DARK_GREY]);
     gfx->draw_cube();
 }
 
@@ -105,7 +145,9 @@ void Signaler::toggle() {
 
 void Signaler::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame) {
     if (!(active_ && persistent_) && ((count_ >= threshold_) != active_)) {
-        delta_frame->push(std::make_unique<SignalerToggleDelta>(this));
+        if (delta_frame) {
+            delta_frame->push(std::make_unique<SignalerToggleDelta>(this));
+        }
         active_ = !active_;
         for (Switchable* obj : switchables_) {
             obj->receive_signal(active_, room_map, delta_frame);
@@ -121,11 +163,9 @@ void Signaler::serialize(MapFileO& file) {
     file << switchables_.size();
     for (auto& obj : switches_) {
         file << obj->pos();
-        file << obj->obj_code();
     }
     for (auto& obj : switchables_) {
         file << obj->pos();
-        file << obj->obj_code();
     }
 }
 
@@ -166,16 +206,15 @@ GameObject* PressSwitch::deserialize(MapFileI& file) {
     return new PressSwitch(pos, b[0], b[1] & 1, b[1] & 2);
 }
 
-void PressSwitch::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame, std::unordered_set<Signaler*>& check) {
+void PressSwitch::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame) {
     if (active_ && persistent_) {
         return;
     }
     if (should_toggle(room_map)) {
-        delta_frame->push(std::make_unique<SwitchToggleDelta>(this));
-        toggle();
-        for (Signaler* signaler : signalers_) {
-            check.insert(signaler);
+        if (delta_frame) {
+            delta_frame->push(std::make_unique<SwitchToggleDelta>(this));
         }
+        toggle();
     }
 }
 
@@ -184,9 +223,12 @@ bool PressSwitch::should_toggle(RoomMap* room_map) {
 }
 
 void PressSwitch::draw(GraphicsManager* gfx) {
-    Point3 p = pos();
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, -0.4f, p.y));
-    model = glm::scale(model, glm::vec3(0.9f, 1.0f, 0.9f));
+    Point3 p = pos_;
+    gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
+    gfx->set_color(COLORS[GREY]);
+    gfx->draw_cube();
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z + 0.5, p.y));
+    model = glm::scale(model, glm::vec3(0.9f, 0.1f, 0.9f));
     gfx->set_model(model);
     gfx->set_color(COLORS[color_]);
     if (persistent_) {

@@ -46,8 +46,6 @@ void GameObject::shift_pos(Point3 d) {
 }
 
 
-
-
 Wall::Wall(Point3 pos): GameObject(pos) {}
 
 Wall::~Wall() {}

@@ -12,12 +12,11 @@
 #include "mapfile.h"
 
 Room::Room(std::string name): name_ {name},
-map_ {}, camera_ {}, signalers_ {} {}
+map_ {}, camera_ {} {}
 
 Room::Room(std::string name, int w, int h): name_ {name},
 map_ {std::make_unique<RoomMap>(w, h)},
-camera_ {std::make_unique<Camera>(w, h)},
-signalers_ {} {}
+camera_ {std::make_unique<Camera>(w, h)} {}
 
 Room::~Room() = default;
 
@@ -94,10 +93,6 @@ void Room::write_to_file(MapFileO& file, Point3 start_pos) {
 
     camera_->serialize(file);
 
-    for (auto& signaler : signalers_) {
-        signaler->serialize(file);
-    }
-
     file << MapCode::End;
 }
 
@@ -171,6 +166,7 @@ void Room::read_objects(MapFileI& file) {
         //CASE_OBJCODE(Player)
         CASE_OBJCODE(PressSwitch)
         CASE_OBJCODE(Gate)
+        CASE_OBJCODE(GateBody)
         case ObjCode::NONE:
             return;
         default :
@@ -230,6 +226,7 @@ void Room::read_door_dest(MapFileI& file) {
 }
 
 void Room::read_signaler(MapFileI& file) {
+    std::cout << "reading signaler" << std::endl;
     unsigned char b[4];
     file.read(b, 4);
     auto signaler = std::make_unique<Signaler>(b[0], b[1] & 1, b[1] & 2);
@@ -239,9 +236,5 @@ void Room::read_signaler(MapFileI& file) {
     for (int i = 0; i < b[3]; ++i) {
         signaler->push_switchable(static_cast<Switchable*>(map_->view(file.read_point3())));
     }
-    push_signaler(std::move(signaler));
-}
-
-void Room::push_signaler(std::unique_ptr<Signaler> signaler) {
-    signalers_.push_back(std::move(signaler));
+    map_->push_signaler(std::move(signaler));
 }

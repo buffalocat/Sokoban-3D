@@ -154,13 +154,13 @@ void DoorMoveDelta::revert() {
 }
 
 
-SwitchableDelta::SwitchableDelta(Switchable* obj, bool active, bool waiting):
-obj_ {obj}, active_ {active}, waiting_ {waiting} {}
+SwitchableDelta::SwitchableDelta(Switchable* obj, bool active, bool waiting, RoomMap* room_map):
+obj_ {obj}, room_map_ {room_map}, active_ {active}, waiting_ {waiting} {}
 
 SwitchableDelta::~SwitchableDelta() {}
 
 void SwitchableDelta::revert() {
-    obj_->set_aw(active_, waiting_);
+    obj_->set_aw(active_, waiting_, room_map_);
 }
 
 

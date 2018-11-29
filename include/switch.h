@@ -12,10 +12,11 @@ class Switchable: public GameObject {
 public:
     Switchable(Point3 pos, bool default_state, bool initial_state);
     virtual ~Switchable();
-    void set_aw(bool active, bool waiting);
+    void set_aw(bool active, bool waiting, RoomMap*);
     bool state();
     virtual bool can_set_state(bool state, RoomMap*) = 0;
     void receive_signal(bool signal, RoomMap*, DeltaFrame*);
+    virtual void apply_state_change(RoomMap*);
     void check_waiting(RoomMap*, DeltaFrame*);
 
 protected:
@@ -26,6 +27,16 @@ private:
     bool waiting_; // Toggle active as soon as possible
 };
 
+class GateBody: public Wall {
+public:
+    GateBody(Point3 pos);
+    ~GateBody();
+    ObjCode obj_code();
+    static GameObject* deserialize(MapFileI& file);
+
+    void draw(GraphicsManager*);
+};
+
 class Gate: public Switchable {
 public:
     Gate(Point3 pos, bool def);
@@ -34,8 +45,12 @@ public:
     void serialize(MapFileO& file);
     static GameObject* deserialize(MapFileI& file);
     bool can_set_state(bool state, RoomMap*);
+    void apply_state_change(RoomMap*);
 
     void draw(GraphicsManager*);
+
+private:
+    std::unique_ptr<GameObject> body_;
 };
 
 class Signaler {
@@ -65,7 +80,7 @@ public:
     Switch(Point3 pos, bool persistent, bool active);
     virtual ~Switch();
     void push_signaler(Signaler*);
-    virtual void check_send_signal(RoomMap*, DeltaFrame*, std::unordered_set<Signaler*>& check) = 0;
+    virtual void check_send_signal(RoomMap*, DeltaFrame*) = 0;
     virtual bool should_toggle(RoomMap*) = 0;
     void toggle();
 
@@ -83,7 +98,7 @@ public:
     void serialize(MapFileO& file);
     static GameObject* deserialize(MapFileI& file);
 
-    void check_send_signal(RoomMap*, DeltaFrame*, std::unordered_set<Signaler*>& check);
+    void check_send_signal(RoomMap*, DeltaFrame*);
     bool should_toggle(RoomMap*);
 
     void draw(GraphicsManager*);

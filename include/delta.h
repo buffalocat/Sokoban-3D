@@ -143,12 +143,13 @@ private:
 
 class SwitchableDelta: public Delta {
 public:
-    SwitchableDelta(Switchable* obj, bool active, bool waiting);
+    SwitchableDelta(Switchable* obj, bool active, bool waiting, RoomMap* room_map);
     ~SwitchableDelta();
     void revert();
 
 private:
     Switchable* obj_;
+    RoomMap* room_map_;
     bool active_;
     bool waiting_;
 };

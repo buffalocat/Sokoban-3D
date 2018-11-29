@@ -3,13 +3,12 @@
 
 #include "common.h"
 #include "maplayer.h"
+#include "switch.h"
 
 class GraphicsManager;
 class DeltaFrame;
 class GameObject;
 class SnakeBlock;
-class Switchable;
-class Switch;
 class MapFileO;
 
 class RoomMap {
@@ -36,10 +35,15 @@ public:
 
     void set_initial_state(bool editor_mode);
 
+    void push_signaler(std::unique_ptr<Signaler>);
+    void check_signalers(DeltaFrame*);
+
 private:
     int width_;
     int height_;
     std::vector<std::unique_ptr<MapLayer>> layers_;
+
+    std::vector<std::unique_ptr<Signaler>> signalers_;
 };
 
 #endif // ROOMMAP_H

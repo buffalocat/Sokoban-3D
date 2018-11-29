@@ -4,7 +4,6 @@
 #include "common.h"
 #include "roommap.h"
 #include "camera.h"
-#include "switch.h"
 
 class GraphicsManager;
 
@@ -25,14 +24,10 @@ public:
 
     void draw(GraphicsManager*, Point3 cam_pos, bool ortho);
 
-    void push_signaler(std::unique_ptr<Signaler>);
-
 private:
     std::string name_;
     std::unique_ptr<RoomMap> map_;
     std::unique_ptr<Camera> camera_;
-
-    std::vector<std::unique_ptr<Signaler>> signalers_;
 
     void read_objects(MapFileI& file);
     void read_camera_rects(MapFileI& file);

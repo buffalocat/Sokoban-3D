@@ -136,7 +136,10 @@ GameObject* NonStickBlock::deserialize(MapFileI& file) {
 void NonStickBlock::draw(GraphicsManager* gfx) {
     Block::draw(gfx);
     gfx->set_tex(glm::vec2(2,0));
-    Block::draw(gfx);
+    Point3 p = pos_;
+    gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
+    gfx->set_color(COLORS[color()]);
+    gfx->draw_cube();
     gfx->set_tex(glm::vec2(0,0));
 }
 
@@ -173,7 +176,10 @@ GameObject* WeakBlock::deserialize(MapFileI& file) {
 void WeakBlock::draw(GraphicsManager* gfx) {
     Block::draw(gfx);
     gfx->set_tex(glm::vec2(1,0));
-    Block::draw(gfx);
+    Point3 p = pos_;
+    gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
+    gfx->set_color(COLORS[color()]);
+    gfx->draw_cube();
     gfx->set_tex(glm::vec2(0,0));
 }
 

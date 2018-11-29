@@ -26,7 +26,7 @@ void SwitchTab::main_loop(EditorRoom* eroom) {
         for (auto& obj : switchables_) {
             signaler->push_switchable(obj);
         }
-        eroom->room->push_signaler(std::move(signaler));
+        eroom->room->room_map()->push_signaler(std::move(signaler));
         switchables_ = {};
         switches_ = {};
     }

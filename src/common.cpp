@@ -8,6 +8,9 @@ bool operator==(const Point& a, const Point& b) {
     return a.x == b.x && a.y == b.y;
 }
 
+Point3 operator+(const Point3& p, const Point3& q) {
+    return {p.x + q.x, p.y + q.y, p.z + q.z};
+}
 
 Point3& Point3::operator+=(const Point3& p) {
     this->x += p.x;

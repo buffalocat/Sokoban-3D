@@ -6,7 +6,8 @@
 #include "switch.h"
 #include "mapfile.h"
 
-RoomMap::RoomMap(int width, int height): width_ {width}, height_ {height}, layers_ {} {}
+RoomMap::RoomMap(int width, int height):
+width_ {width}, height_ {height}, layers_ {}, signalers_ {} {}
 
 bool RoomMap::valid(Point3 pos) {
     return (0 <= pos.x) && (pos.x < width_) && (0 <= pos.y) && (pos.y < height_) && (0 <= pos.z) && (pos.z < layers_.size());
@@ -48,6 +49,10 @@ void RoomMap::serialize(MapFileO& file) const {
     for (auto& object : rel_check) {
         object->relation_serialize(file);
     }
+    // Serialize Signalers
+    for (auto& signaler : signalers_) {
+        signaler->serialize(file);
+    }
 }
 
 GameObject* RoomMap::view(Point3 pos) {
@@ -82,19 +87,36 @@ void RoomMap::draw(GraphicsManager* gfx) {
 }
 
 void RoomMap::set_initial_state(bool editor_mode) {
-    /*for (int x = 0; x != width_; ++x) {
+    // Gates don't get activated in editor mode!
+    // When we add in other things we won't do the early return though.
+    if (editor_mode) {
+        return;
+    }
+    for (int x = 0; x != width_; ++x) {
         for (int y = 0; y != height_; ++y) {
-            auto pb = dynamic_cast<PushBlock*>(view(Point{x,y}));
-            if (pb) {
-                pb->check_add_local_links(this, nullptr);
-            }
-            if (editor_mode) {
-                continue;
-            }
-            auto gate = dynamic_cast<Gate*>(view(Point{x,y}));
-            if (gate) {
-                gate->check_waiting(this, nullptr);
+            for (int z = 0; z != layers_.size(); ++z) {
+                GameObject* obj = view({x,y,z});
+                auto gate = dynamic_cast<Gate*>(obj);
+                if (gate) {
+                    gate->check_waiting(this, nullptr);
+                    continue;
+                }
+                auto sw = dynamic_cast<Switch*>(obj);
+                if (sw) {
+                    sw->check_send_signal(this, nullptr);
+                }
             }
         }
-    }*/
+    }
+    check_signalers(nullptr);
+}
+
+void RoomMap::push_signaler(std::unique_ptr<Signaler> signaler) {
+    signalers_.push_back(std::move(signaler));
+}
+
+void RoomMap::check_signalers(DeltaFrame* delta_frame) {
+    for (auto& signaler : signalers_) {
+        signaler->check_send_signal(this, delta_frame);
+    }
 }

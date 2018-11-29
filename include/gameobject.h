@@ -42,7 +42,7 @@ protected:
 class Wall: public GameObject {
 public:
     Wall(Point3);
-    ~Wall();
+    virtual ~Wall();
     ObjCode obj_code();
     static GameObject* deserialize(MapFileI& file);
 

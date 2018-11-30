@@ -31,7 +31,9 @@ void MoveProcessor::move_bound() {
     Block* adj = dynamic_cast<Block*>(map_->view(car->shifted_pos(dir_)));
     if (adj && car->color() == adj->color()) {
         auto player_unique = map_->take_quiet(player_);
-        delta_frame_->push(std::make_unique<MotionDelta>(std::vector<Block*> {player_}, dir_, map_));
+        if (delta_frame_) {
+            delta_frame_->push(std::make_unique<MotionDelta>(std::vector<Block*> {player_}, dir_, map_));
+        }
         player_->shift_pos(dir_);
         map_->put_quiet(std::move(player_unique));
     }
@@ -42,7 +44,7 @@ void MoveProcessor::move_general() {
     move_components();
     // Update snake links, do switch/other checks
     // Wait until the animation finishes
-    try_fall();
+    begin_fall_cycle();
 }
 
 void MoveProcessor::color_change_check() {
@@ -50,7 +52,9 @@ void MoveProcessor::color_change_check() {
     if (!(car && car->cycle_color(false))) {
         return;
     }
-    delta_frame_->push(std::make_unique<ColorChangeDelta>(car));
+    if (delta_frame_) {
+        delta_frame_->push(std::make_unique<ColorChangeDelta>(car));
+    }
     fall_check_.push_back(car);
     for (Point3 d : DIRECTIONS) {
         Block* block = dynamic_cast<Block*>(map_->view(car->shifted_pos(d)));
@@ -58,7 +62,7 @@ void MoveProcessor::color_change_check() {
             fall_check_.push_back(block);
         }
     }
-    try_fall();
+    begin_fall_cycle();
 }
 
 void MoveProcessor::init_movement_components() {
@@ -124,17 +128,16 @@ void MoveProcessor::move_components() {
     for (auto& obj : move_unique) {
         map_->put_quiet(std::move(obj));
     }
-    if (!to_move.empty()) {
+    if (!to_move.empty() && delta_frame_) {
         delta_frame_->push(std::make_unique<MotionDelta>(std::move(to_move), dir_, map_));
     }
-    //Do switch checks now! Later these will happen "at different times"
     for (auto obj : below_press) {
         obj->check_above_occupied(map_, delta_frame_);
     }
     for (auto obj : below_release) {
         obj->check_above_vacant(map_, delta_frame_);
     }
-    map_->check_signalers(delta_frame_);
+    map_->check_signalers(delta_frame_, &fall_check_);
 }
 
 bool MoveProcessor::try_move_component(StrongComponent* comp) {
@@ -181,7 +184,14 @@ bool MoveProcessor::try_push(StrongComponent* comp, Point3 pos) {
     return try_move_component(pushed_comp);
 }
 
-void MoveProcessor::try_fall() {
+void MoveProcessor::begin_fall_cycle() {
+    while (!fall_check_.empty()) {
+        fall_step();
+        map_->check_signalers(delta_frame_, &fall_check_);
+    }
+}
+
+void MoveProcessor::fall_step() {
     while (!fall_check_.empty()) {
         std::vector<Block*> next_check {};
         for (Block* block : fall_check_) {
@@ -216,8 +226,8 @@ void MoveProcessor::try_fall() {
             }
         }
     }
-    map_->check_signalers(delta_frame_);
     fall_comps_.clear();
+    fall_check_.clear();
 }
 
 void MoveProcessor::check_land_first() {

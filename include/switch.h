@@ -15,8 +15,8 @@ public:
     void set_aw(bool active, bool waiting, RoomMap*);
     bool state();
     virtual bool can_set_state(bool state, RoomMap*) = 0;
-    void receive_signal(bool signal, RoomMap*, DeltaFrame*);
-    virtual void apply_state_change(RoomMap*);
+    void receive_signal(bool signal, RoomMap*, DeltaFrame*, std::vector<Block*>*);
+    virtual void apply_state_change(RoomMap*, std::vector<Block*>*);
     void check_waiting(RoomMap*, DeltaFrame*);
 
 protected:
@@ -45,7 +45,7 @@ public:
     void serialize(MapFileO& file);
     static GameObject* deserialize(MapFileI& file);
     bool can_set_state(bool state, RoomMap*);
-    void apply_state_change(RoomMap*);
+    void apply_state_change(RoomMap*, std::vector<Block*>*);
 
     void draw(GraphicsManager*);
 
@@ -63,7 +63,7 @@ public:
     void push_switch(Switch*);
     void receive_signal(bool signal);
     void toggle();
-    void check_send_signal(RoomMap*, DeltaFrame*);
+    void check_send_signal(RoomMap*, DeltaFrame*, std::vector<Block*>*);
 
     void serialize(MapFileO& file);
 

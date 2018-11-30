@@ -37,7 +37,7 @@ public:
     void set_initial_state(bool editor_mode);
 
     void push_signaler(std::unique_ptr<Signaler>);
-    void check_signalers(DeltaFrame*);
+    void check_signalers(DeltaFrame*, std::vector<Block*>*);
 
 private:
     int width_;

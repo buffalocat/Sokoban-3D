@@ -112,15 +112,15 @@ void RoomMap::set_initial_state(bool editor_mode) {
             }
         }
     }
-    check_signalers(nullptr);
+    check_signalers(nullptr, nullptr);
 }
 
 void RoomMap::push_signaler(std::unique_ptr<Signaler> signaler) {
     signalers_.push_back(std::move(signaler));
 }
 
-void RoomMap::check_signalers(DeltaFrame* delta_frame) {
+void RoomMap::check_signalers(DeltaFrame* delta_frame, std::vector<Block*>* fall_check) {
     for (auto& signaler : signalers_) {
-        signaler->check_send_signal(this, delta_frame);
+        signaler->check_send_signal(this, delta_frame, fall_check);
     }
 }

@@ -1,4 +1,5 @@
 #include "switch.h"
+#include "block.h"
 #include "roommap.h"
 #include "delta.h"
 #include "graphicsmanager.h"
@@ -15,7 +16,7 @@ Switchable::~Switchable() {}
 void Switchable::set_aw(bool active, bool waiting, RoomMap* room_map) {
     if (active_ != active) {
         active_ = active;
-        apply_state_change(room_map);
+        apply_state_change(room_map, nullptr);
     }
     waiting_ = waiting;
 }
@@ -24,7 +25,7 @@ bool Switchable::state() {
     return default_ ^ active_;
 }
 
-void Switchable::receive_signal(bool signal, RoomMap* room_map, DeltaFrame* delta_frame) {
+void Switchable::receive_signal(bool signal, RoomMap* room_map, DeltaFrame* delta_frame, std::vector<Block*>* fall_check) {
     if (active_ ^ waiting_ == signal) {
         return;
     }
@@ -34,11 +35,11 @@ void Switchable::receive_signal(bool signal, RoomMap* room_map, DeltaFrame* delt
     waiting_ = !can_set_state(default_ ^ signal, room_map);
     if (active_ != waiting_ ^ signal) {
         active_ = !active_;
-        apply_state_change(room_map);
+        apply_state_change(room_map, fall_check);
     }
 }
 
-void Switchable::apply_state_change(RoomMap* room_map) {}
+void Switchable::apply_state_change(RoomMap* room_map, std::vector<Block*>* fall_check) {}
 
 void Switchable::check_waiting(RoomMap* room_map, DeltaFrame* delta_frame) {
     if (waiting_ && can_set_state(!(default_ ^ active_), room_map)) {
@@ -47,7 +48,7 @@ void Switchable::check_waiting(RoomMap* room_map, DeltaFrame* delta_frame) {
         }
         waiting_ = false;
         active_ = !active_;
-        apply_state_change(room_map);
+        apply_state_change(room_map, nullptr);
     }
 }
 
@@ -79,11 +80,17 @@ bool Gate::can_set_state(bool state, RoomMap* room_map) {
     return !state || (room_map->view(shifted_pos({0,0,1})) == nullptr);
 }
 
-void Gate::apply_state_change(RoomMap* room_map) {
+void Gate::apply_state_change(RoomMap* room_map, std::vector<Block*>* fall_check) {
     if (state()) {
         room_map->put_quiet(std::move(body_));
     } else {
         body_ = room_map->take_quiet(shifted_pos({0,0,1}));
+        if (fall_check) {
+            Block* above = dynamic_cast<Block*>(room_map->view(shifted_pos({0,0,2})));
+            if (above) {
+                fall_check->push_back(above);
+            }
+        }
     }
 }
 
@@ -147,14 +154,14 @@ void Signaler::toggle() {
     active_ = !active_;
 }
 
-void Signaler::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame) {
+void Signaler::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame, std::vector<Block*>* fall_check) {
     if (!(active_ && persistent_) && ((count_ >= threshold_) != active_)) {
         if (delta_frame) {
             delta_frame->push(std::make_unique<SignalerToggleDelta>(this));
         }
         active_ = !active_;
         for (Switchable* obj : switchables_) {
-            obj->receive_signal(active_, room_map, delta_frame);
+            obj->receive_signal(active_, room_map, delta_frame, fall_check);
         }
     }
 }

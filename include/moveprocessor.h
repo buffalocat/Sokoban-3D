@@ -21,7 +21,8 @@ public:
     void color_change_check();
     void init_movement_components();
     void move_components();
-    void try_fall();
+    void fall_step();
+    void begin_fall_cycle();
     void check_land_first();
     void make_fall_delta();
 

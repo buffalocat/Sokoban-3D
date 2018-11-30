@@ -240,10 +240,12 @@ void WeakComponent::handle_unique_blocks(int layers_fallen, RoomMap* room_map, D
             }
         } else {
             block->shift_pos({0,0,layers_fallen});
-            delta_frame->push(std::make_unique<DeletionDelta>(std::move(block), room_map));
+            if (delta_frame) {
+                delta_frame->push(std::make_unique<DeletionDelta>(std::move(block), room_map));
+            }
         }
     }
-    if (!live_blocks.empty()) {
+    if (!live_blocks.empty() && delta_frame) {
         delta_frame->push(std::make_unique<FallDelta>(std::move(live_blocks), layers_fallen, room_map));
     }
 }

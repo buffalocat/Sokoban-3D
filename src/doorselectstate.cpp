@@ -18,7 +18,7 @@ void DoorSelectState::main_loop() {
 
     handle_mouse_input(cam_pos_, room_);
     handle_keyboard_input(cam_pos_, room_);
-    room_->draw(gfx_, cam_pos_, true);
+    room_->draw(gfx_, cam_pos_, true, one_layer_);
 
     if (door_pos_->x == -1) {
         ImGui::Text("Destination not selected.");

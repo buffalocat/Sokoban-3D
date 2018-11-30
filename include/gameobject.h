@@ -32,6 +32,9 @@ public:
 
     virtual void draw(GraphicsManager*) = 0;
 
+    virtual void check_above_occupied(RoomMap*, DeltaFrame*);
+    virtual void check_above_vacant(RoomMap*, DeltaFrame*);
+
 protected:
     GameObject(Point3 pos);
     Point3 pos_;

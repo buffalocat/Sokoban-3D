@@ -4,7 +4,7 @@
 #include "roommap.h"
 
 EditorBaseState::EditorBaseState(): GameState(),
-ortho_cam_ {true}, keyboard_cooldown_ {0} {}
+ortho_cam_ {true}, one_layer_ {false}, keyboard_cooldown_ {0} {}
 
 EditorBaseState::~EditorBaseState() {}
 
@@ -73,6 +73,9 @@ void EditorBaseState::handle_keyboard_input(Point3& cam_pos, Room* room) {
     }
     if (glfwGetKey(window_, GLFW_KEY_C)) {
         ortho_cam_ = !ortho_cam_;
+        return;
+    } else if (glfwGetKey(window_, GLFW_KEY_F)) {
+        one_layer_ = !one_layer_;
         return;
     }
     keyboard_cooldown_ = 0;

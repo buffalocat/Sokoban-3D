@@ -49,6 +49,8 @@ public:
 
     void draw(GraphicsManager*);
 
+    void check_above_vacant(RoomMap*, DeltaFrame*);
+
 private:
     std::unique_ptr<GameObject> body_;
 };
@@ -102,6 +104,9 @@ public:
     bool should_toggle(RoomMap*);
 
     void draw(GraphicsManager*);
+
+    void check_above_occupied(RoomMap*, DeltaFrame*);
+    void check_above_vacant(RoomMap*, DeltaFrame*);
 
 private:
     unsigned char color_;

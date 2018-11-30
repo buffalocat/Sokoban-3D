@@ -86,6 +86,10 @@ void RoomMap::draw(GraphicsManager* gfx) {
     }
 }
 
+void RoomMap::draw_layer(GraphicsManager* gfx, int layer) {
+    layers_[layer]->draw(gfx);
+}
+
 void RoomMap::set_initial_state(bool editor_mode) {
     // Gates don't get activated in editor mode!
     // When we add in other things we won't do the early return though.

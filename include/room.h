@@ -22,7 +22,8 @@ public:
     void write_to_file(MapFileO& file, Point3 start_pos);
     void load_from_file(MapFileI& file, Point3* start_pos=nullptr);
 
-    void draw(GraphicsManager*, Point3 cam_pos, bool ortho);
+    void draw(GraphicsManager*, Point3 cam_pos, bool ortho, bool one_layer);
+    void update_view(GraphicsManager*, Point3 cam_pos, bool ortho);
 
 private:
     std::string name_;

@@ -97,8 +97,9 @@ void MoveProcessor::move_components() {
         comp->collect_good(to_move);
     }
     std::vector<std::unique_ptr<GameObject>> move_unique {};
-    std::vector<Switch*> switch_release {};
-    std::vector<Switch*> switch_press {};
+    std::vector<GameObject*> below_release {};
+    std::vector<GameObject*> below_press {};
+    GameObject* below;
     for (auto block : to_move) {
         move_unique.push_back(map_->take_quiet(block));
         fall_check_.push_back(block);
@@ -106,14 +107,14 @@ void MoveProcessor::move_components() {
         if (above && !above->s_comp()) {
             fall_check_.push_back(above);
         }
-        Switch* switch_below = dynamic_cast<Switch*>(map_->view(block->shifted_pos({0,0,-1})));
-        if (switch_below) {
-            switch_release.push_back(switch_below);
+        below = map_->view(block->shifted_pos({0,0,-1}));
+        if (below) {
+            below_release.push_back(below);
         }
         block->shift_pos(dir_);
-        switch_below = dynamic_cast<Switch*>(map_->view(block->shifted_pos({0,0,-1})));
-        if (switch_below) {
-            switch_press.push_back(switch_below);
+        below = map_->view(block->shifted_pos({0,0,-1}));
+        if (below) {
+            below_press.push_back(below);
         }
     }
     for (auto& comp : move_comps_) {
@@ -127,11 +128,11 @@ void MoveProcessor::move_components() {
         delta_frame_->push(std::make_unique<MotionDelta>(std::move(to_move), dir_, map_));
     }
     //Do switch checks now! Later these will happen "at different times"
-    for (auto sw : switch_press) {
-        sw->check_send_signal(map_, delta_frame_);
+    for (auto obj : below_press) {
+        obj->check_above_occupied(map_, delta_frame_);
     }
-    for (auto sw : switch_release) {
-        sw->check_send_signal(map_, delta_frame_);
+    for (auto obj : below_release) {
+        obj->check_above_vacant(map_, delta_frame_);
     }
     map_->check_signalers(delta_frame_);
 }
@@ -215,6 +216,7 @@ void MoveProcessor::try_fall() {
             }
         }
     }
+    map_->check_signalers(delta_frame_);
     fall_comps_.clear();
 }
 

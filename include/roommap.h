@@ -32,6 +32,7 @@ public:
     void serialize(MapFileO& file) const;
 
     void draw(GraphicsManager*);
+    void draw_layer(GraphicsManager*, int layer);
 
     void set_initial_state(bool editor_mode);
 

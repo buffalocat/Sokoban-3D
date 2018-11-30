@@ -94,6 +94,10 @@ void Gate::draw(GraphicsManager* gfx) {
     gfx->draw_cube();
 }
 
+void Gate::check_above_vacant(RoomMap* room_map, DeltaFrame* delta_frame) {
+    check_waiting(room_map, delta_frame);
+}
+
 GateBody::GateBody(Point3 pos): Wall(pos) {}
 
 GateBody::~GateBody() {}
@@ -242,4 +246,12 @@ void PressSwitch::draw(GraphicsManager* gfx) {
     }
     gfx->draw_cube();
     gfx->set_tex(glm::vec2(0,0));
+}
+
+void PressSwitch::check_above_occupied(RoomMap* room_map, DeltaFrame* delta_frame) {
+    check_send_signal(room_map, delta_frame);
+}
+
+void PressSwitch::check_above_vacant(RoomMap* room_map, DeltaFrame* delta_frame) {
+    check_send_signal(room_map, delta_frame);
 }

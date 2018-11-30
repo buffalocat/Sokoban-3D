@@ -45,6 +45,9 @@ void GameObject::shift_pos(Point3 d) {
     pos_ += d;
 }
 
+void GameObject::check_above_occupied(RoomMap*, DeltaFrame*) {}
+
+void GameObject::check_above_vacant(RoomMap*, DeltaFrame*) {}
 
 Wall::Wall(Point3 pos): GameObject(pos) {}
 

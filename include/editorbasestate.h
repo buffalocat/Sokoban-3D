@@ -18,6 +18,7 @@ public:
 
 protected:
     bool ortho_cam_;
+    bool one_layer_;
     int keyboard_cooldown_;
 
     bool want_capture_keyboard();

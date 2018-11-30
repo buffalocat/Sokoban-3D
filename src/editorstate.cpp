@@ -48,10 +48,15 @@ void EditorState::main_loop() {
     if (active_room_) {
         ImGui::Text(("Current Room: " + active_room_->room->name()).c_str());
         ImGui::Text("Current Height: %d", active_room_->cam_pos.z);
+        if (one_layer_) {
+            ImGui::Text("Only Showing This Layer (F to toggle)");
+        } else {
+            ImGui::Text("Showing Neighboring Layers (F to toggle)");
+        }
         active_room_->changed = true;
         handle_mouse_input(active_room_->cam_pos, active_room_->room.get());
         handle_keyboard_input(active_room_->cam_pos, active_room_->room.get());
-        active_room_->room->draw(gfx_, active_room_->cam_pos, ortho_cam_);
+        active_room_->room->draw(gfx_, active_room_->cam_pos, ortho_cam_, one_layer_);
     }
 
     // Draw the editor tabs

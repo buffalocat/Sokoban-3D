@@ -45,15 +45,24 @@ RoomMap* Room::room_map() {
     return map_.get();
 }
 
-void Room::draw(GraphicsManager* gfx, Point3 cam_pos, bool ortho) {
+void Room::draw(GraphicsManager* gfx, Point3 cam_pos, bool ortho, bool one_layer) {
+    update_view(gfx, cam_pos, ortho);
+    if (one_layer) {
+        map_->draw_layer(gfx, cam_pos.z);
+    } else {
+        map_->draw(gfx);
+    }
+}
+
+void Room::update_view(GraphicsManager* gfx, Point3 cam_pos, bool ortho) {
     glm::mat4 model, view, projection;
 
     if (ortho) {
         camera_->set_current_pos(cam_pos);
-        view = glm::lookAt(glm::vec3(cam_pos.x, cam_pos.z + 1.0f, cam_pos.y),
-                           glm::vec3(cam_pos.x, cam_pos.z, cam_pos.y),
+        view = glm::lookAt(glm::vec3(cam_pos.x, cam_pos.z, cam_pos.y),
+                           glm::vec3(cam_pos.x, cam_pos.z - 1.0f, cam_pos.y),
                            glm::vec3(0.0f, 0.0f, -1.0f));
-        projection = glm::ortho(-ORTHO_WIDTH/2.0f, ORTHO_WIDTH/2.0f, -ORTHO_HEIGHT/2.0f, ORTHO_HEIGHT/2.0f, -2.0f, 3.0f);
+        projection = glm::ortho(-ORTHO_WIDTH/2.0f, ORTHO_WIDTH/2.0f, -ORTHO_HEIGHT/2.0f, ORTHO_HEIGHT/2.0f, -2.5f, 2.5f);
     } else {
         camera_->set_target(cam_pos);
         camera_->update();
@@ -74,11 +83,8 @@ void Room::draw(GraphicsManager* gfx, Point3 cam_pos, bool ortho) {
                            glm::vec3(0.0f, 1.0f, 0.0f));
         projection = glm::perspective(glm::radians(60.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT, 0.1f, 100.0f);
     }
-    //view = glm::translate(view, glm::vec3(0.5, 0.0, 0.5));
     gfx->set_view(view);
     gfx->set_projection(projection);
-
-    map_->draw(gfx);
 }
 
 void Room::write_to_file(MapFileO& file, Point3 start_pos) {
@@ -226,7 +232,6 @@ void Room::read_door_dest(MapFileI& file) {
 }
 
 void Room::read_signaler(MapFileI& file) {
-    std::cout << "reading signaler" << std::endl;
     unsigned char b[4];
     file.read(b, 4);
     auto signaler = std::make_unique<Signaler>(b[0], b[1] & 1, b[1] & 2);

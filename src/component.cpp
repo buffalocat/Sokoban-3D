@@ -233,7 +233,11 @@ void WeakComponent::handle_unique_blocks(int layers_fallen, RoomMap* room_map, D
     for (auto& block : unique_blocks_) {
         if (block->z() >= 0) {
             live_blocks.push_back(static_cast<Block*>(block.get()));
+            auto obj = room_map->view(block->shifted_pos({0,0,-1}));
             room_map->put_quiet(std::move(block));
+            if (obj) {
+                obj->check_above_occupied(room_map, delta_frame);
+            }
         } else {
             block->shift_pos({0,0,layers_fallen});
             delta_frame->push(std::make_unique<DeletionDelta>(std::move(block), room_map));

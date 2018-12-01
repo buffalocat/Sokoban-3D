@@ -96,46 +96,60 @@ void MoveProcessor::make_root(Block* obj, std::vector<StrongComponent*>& roots) 
 }
 
 void MoveProcessor::move_components() {
-    std::vector<Block*> to_move {};
+    std::vector<Block*> block_move {};
+    std::vector<SnakeBlock*> check_snakes {};
+    SnakePuller snake_puller(pull_snakes, check_snakes);
     for (auto& comp : move_comps_) {
-        comp->collect_good(to_move);
+        comp->collect_good(block_move, snake_move);
+        auto snake_comp = dynamic_cast<SnakeComponent*>(comp);
+        if (snake_comp) {
+            check_snakes.push_back(snake_comp->block());
+            if (!snake_comp->pushed()) {
+                snake_puller.pull(snake_comp->block());
+            }
+        }
     }
-    std::vector<std::unique_ptr<GameObject>> move_unique {};
-    std::vector<GameObject*> below_release {};
-    std::vector<GameObject*> below_press {};
-    GameObject* below;
-    for (auto block : to_move) {
+    std::vector<std::unique_ptr<GameObject*>> move_unique_ {};
+    std::vector<std::pair<GameObject*, Point3>> movements {};
+    for (auto block : block_move) {
         move_unique.push_back(map_->take_quiet(block));
         fall_check_.push_back(block);
         Block* above = dynamic_cast<Block*>(map_->view(block->shifted_pos({0,0,1})));
         if (above && !above->s_comp()) {
             fall_check_.push_back(above);
         }
-        below = map_->view(block->shifted_pos({0,0,-1}));
-        if (below) {
-            below_release.push_back(below);
-        }
-        block->shift_pos(dir_);
-        below = map_->view(block->shifted_pos({0,0,-1}));
-        if (below) {
-            below_press.push_back(below);
-        }
     }
     for (auto& comp : move_comps_) {
         comp->reset_blocks_comps();
     }
     move_comps_.clear();
-    for (auto& obj : move_unique) {
+    std::vector<GameObject*> below_release {};
+    std::vector<GameObject*> below_press {};
+    GameObject* below;
+    for (auto& p : move_unique) {
+        below = map_->view(block->shifted_pos({0,0,-1}));
+        if (below) {
+            below_release.push_back(below);
+        }
+        movements.push_back(std::make_pair(block, block->pos()));
+        block->shift_pos(dir_);
+        below = map_->view(block->shifted_pos({0,0,-1}));
+        if (below) {
+            below_press.push_back(below);
+        }
         map_->put_quiet(std::move(obj));
     }
-    if (!to_move.empty() && delta_frame_) {
-        delta_frame_->push(std::make_unique<MotionDelta>(std::move(to_move), dir_, map_));
+    if (!movements.empty() && delta_frame_) {
+        delta_frame_->push(std::make_unique<MotionDelta>(std::move(movements), map_));
     }
     for (auto obj : below_press) {
         obj->check_above_occupied(map_, delta_frame_);
     }
     for (auto obj : below_release) {
         obj->check_above_vacant(map_, delta_frame_);
+    }
+    for (auto sb : check_snakes) {
+        sb->check_local_links(map_, delta_frame_);
     }
     map_->check_signalers(delta_frame_, &fall_check_);
 }
@@ -174,12 +188,17 @@ bool MoveProcessor::try_push(StrongComponent* comp, Point3 pos) {
     if (!block) {
         return false;
     }
-    if (block->s_comp()) {
-        return !block->s_comp()->bad();
+    StrongComponent* pushed_comp = block->s_comp();
+    if (pushed_comp) {
+        if (!pushed_comp->push_recheck()) {
+            return !pushed_comp->bad();
+        }
+    } else {
+        auto unique_comp = block->make_strong_component(map_);
+        StrongComponent* pushed_comp = unique_comp.get();
+        pushed_comp->set_pushed();
+        move_comps_.push_back(std::move(unique_comp));
     }
-    auto unique_comp = block->make_strong_component(map_);
-    StrongComponent* pushed_comp = unique_comp.get();
-    move_comps_.push_back(std::move(unique_comp));
     comp->add_push(pushed_comp);
     return try_move_component(pushed_comp);
 }

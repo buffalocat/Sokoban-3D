@@ -1,9 +1,12 @@
 #include "snakeblock.h"
 #include "graphicsmanager.h"
 #include "mapfile.h"
+#include "component.h"
+
+#include <algorithm>
 
 SnakeBlock::SnakeBlock(Point3 pos, ColorCycle color, bool is_car, unsigned char ends):
-Block(pos, color, is_car), ends_ {ends}, links_ {} {}
+Block(pos, color, is_car), links_ {}, ends_ {ends} {}
 
 SnakeBlock::~SnakeBlock() {}
 
@@ -63,39 +66,67 @@ void SnakeBlock::relation_serialize(MapFileO& file) {
     }
 }
 
-void SnakeBlock::add_link(SnakeBlock* sb, DeltaFrame* delta_frame) {
+std::unique_ptr<StrongComponent> SnakeBlock::make_strong_component(RoomMap* room_map) {
+    auto unique_comp = std::make_unique<SnakeComponent>(this);
+    comp_ = unique_comp.get();
+    return std::move(unique_comp);
+}
 
+std::unique_ptr<WeakComponent> SnakeBlock::make_weak_component(RoomMap* room_map) {
+    auto unique_comp = std::make_unique<WeakComponent>();
+    comp_ = unique_comp.get();
+    std::vector<Block*> to_check {this};
+    while (!to_check.empty()) {
+        Block* cur = to_check.back();
+        to_check.pop_back();
+        comp_->add_block(cur);
+        for (auto link : links_) {
+            if (!link->comp_) {
+                link->comp_ = comp_;
+                to_check.push_back(link);
+            }
+        }
+    }
+    return std::move(unique_comp);
+}
+
+void SnakeBlock::root_init() {
+    if (links_.size() == 2) {
+        Point3 p = links_[0]->pos_;
+        Point3 q = links_[1]->pos_;
+        if ((p.x + q.x == 2 * pos_.x) && (p.y + q.y == 2 * pos_.y)) {
+            comp_->set_pushed();
+        }
+    }
+}
+
+bool SnakeBlock::in_links(SnakeBlock* sb) {
+    return links_.find(links_.begin(), links_.end(), sb) != links_.end();
+}
+
+void SnakeBlock::add_link(SnakeBlock* sb, DeltaFrame* delta_frame) {
+    links_.push_back(sb);
+    sb->links_.push_back(this);
+    if (delta_frame) {
+        delta_frame->push(std::make_unique<AddLinkDelta>(this, sb));
+    }
 }
 
 void SnakeBlock::remove_link(SnakeBlock* sb, DeltaFrame* delta_frame) {
-
-}
-
-/*
-bool SnakeBlock::push_recheck(MoveProcessor* mp) {
-    bool recheck = (distance_ == 1);
-    target_ = nullptr;
-    distance_ = 0;
-    mp->insert_touched_snake(this);
-    for (auto& link : links_) {
-        auto snake = static_cast<SnakeBlock*>(link);
-        // A snake has distance 0 if and only if it has been pushed
-        // An unpushed snake next to a pushed snake will be taken over
-        if (snake->distance_) {
-            snake->target_ = nullptr;
-            snake->distance_ = 1;
-            mp->insert_touched_snake(snake);
-        }
+    links_.remove(sb);
+    sb->links_.remove(this);
+    if (delta_frame) {
+        delta_frame->push(std::make_unique<RemoveLinkDelta>(this, sb));
     }
-    return recheck;
 }
 
-void SnakeBlock::check_add_local_links(RoomMap* room_map, DeltaFrame* delta_frame) {
+void SnakeBlock::check_local_links(RoomMap* room_map, DeltaFrame* delta_frame) {
+    // Remove expired links!
     if (!available() || confused(room_map)) {
         return;
     }
-    for (auto& d : DIRECTIONS) {
-        auto snake = dynamic_cast<SnakeBlock*>(room_map->view(shifted_pos(d), Layer::Solid));
+    for (auto& d : H_DIRECTIONS) {
+        auto snake = dynamic_cast<SnakeBlock*>(room_map->view(shifted_pos(d)));
         if (snake && color_ == snake->color_ && snake->available() && !snake->confused(room_map)) {
             add_link(snake, delta_frame);
         }
@@ -108,8 +139,8 @@ bool SnakeBlock::available() {
 
 bool SnakeBlock::confused(RoomMap* room_map) {
     unsigned int available_count = 0;
-    for (auto& d : DIRECTIONS) {
-        auto snake = dynamic_cast<SnakeBlock*>(room_map->view(shifted_pos(d), Layer::Solid));
+    for (auto& d : H_DIRECTIONS) {
+        auto snake = dynamic_cast<SnakeBlock*>(room_map->view(shifted_pos(d)));
         if (snake && color_ == snake->color_ && (snake->available() || links_.count(snake))) {
             ++available_count;
         }
@@ -118,13 +149,14 @@ bool SnakeBlock::confused(RoomMap* room_map) {
 }
 
 void SnakeBlock::collect_unlinked_neighbors(RoomMap* room_map, std::unordered_set<SnakeBlock*>& check_snakes) {
-    for (auto& d : DIRECTIONS) {
-        auto snake = dynamic_cast<SnakeBlock*>(room_map->view(shifted_pos(d), Layer::Solid));
+    for (auto& d : H_DIRECTIONS) {
+        auto snake = dynamic_cast<SnakeBlock*>(room_map->view(shifted_pos(d)));
         if (snake && snake->available()) {
             check_snakes.insert(snake);
         }
     }
 }
+
 
 SnakePuller::SnakePuller(RoomMap* room_map, DeltaFrame* delta_frame, Point dir):
 room_map_ {room_map}, delta_frame_ {delta_frame}, dir_ {dir} {}

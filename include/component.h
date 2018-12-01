@@ -33,6 +33,8 @@ public:
     void set_bad();
     void add_weak(StrongComponent*);
     virtual void add_block(Block*);
+    virtual void set_pushed();
+    virtual bool push_recheck();
     virtual void add_push(StrongComponent*) = 0;
     virtual std::vector<Point3> to_push(Point3 d) = 0;
     virtual std::vector<Block*> get_weak_links(RoomMap*) = 0;
@@ -76,6 +78,20 @@ public:
 protected:
     Block* block_;
     StrongComponent* push_;
+};
+
+class SnakeComponent: public SingletonComponent {
+public:
+    SnakeComponent(Block* block);
+    ~SnakeComponent();
+    void set_pushed();
+    bool push_recheck();
+    void pull_snakes(RoomMap*, DeltaFrame*, std::vector<std::pair<SnakeBlock*, Point3>>&, std::vector<SnakeBlock*>&);
+    std::vector<Block*> get_weak_links(RoomMap*);
+    void collect_good(std::vector<Block*>&);
+
+private:
+    bool pushed_;
 };
 
 

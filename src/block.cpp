@@ -37,22 +37,22 @@ bool Block::cycle_color(bool undo) {
 
 // Most block types don't form strong components
 std::unique_ptr<StrongComponent> Block::make_strong_component(RoomMap* room_map) {
-    auto comp = std::make_unique<SingletonComponent>(this);
-    comp_ = comp.get();
-    return std::move(comp);
+    auto unique_comp = std::make_unique<SingletonComponent>(this);
+    comp_ = unique_comp.get();
+    return std::move(unique_comp);
 }
 
 // Some block types have trivial weak components, some don't
 // Using sticky(), we can avoid rewriting this method
 std::unique_ptr<WeakComponent> Block::make_weak_component(RoomMap* room_map) {
-    auto comp = std::make_unique<WeakComponent>();
-    comp_ = comp.get();
+    auto unique_comp = std::make_unique<WeakComponent>();
+    comp_ = unique_comp.get();
     if (sticky()) {
         std::vector<Block*> to_check {this};
         while (!to_check.empty()) {
             Block* cur = to_check.back();
             to_check.pop_back();
-            comp->add_block(cur);
+            comp_->add_block(cur);
             for (Point3 d : DIRECTIONS) {
                 Block* adj = dynamic_cast<Block*>(room_map->view(cur->shifted_pos(d)));
                 if (adj && !adj->comp_ && adj->sticky() && color() == adj->color()) {
@@ -62,9 +62,9 @@ std::unique_ptr<WeakComponent> Block::make_weak_component(RoomMap* room_map) {
             }
         }
     } else {
-        comp->add_block(this);
+        comp_->add_block(this);
     }
-    return std::move(comp);
+    return std::move(unique_comp);
 }
 
 StrongComponent* Block::s_comp() {
@@ -194,13 +194,13 @@ ObjCode StickyBlock::obj_code() {
 }
 
 std::unique_ptr<StrongComponent> StickyBlock::make_strong_component(RoomMap* room_map) {
-    auto comp = std::make_unique<ComplexComponent>();
-    comp_ = comp.get();
+    auto unique_comp = std::make_unique<ComplexComponent>();
+    comp_ = unique_comp.get();
     std::vector<StickyBlock*> to_check {this};
     while (!to_check.empty()) {
         StickyBlock* cur = to_check.back();
         to_check.pop_back();
-        comp->add_block(cur);
+        comp_->add_block(cur);
         for (Point3 d : DIRECTIONS) {
             StickyBlock* adj = dynamic_cast<StickyBlock*>(room_map->view(cur->shifted_pos(d)));
             if (adj && !adj->comp_ && color() == adj->color()) {
@@ -209,7 +209,7 @@ std::unique_ptr<StrongComponent> StickyBlock::make_strong_component(RoomMap* roo
             }
         }
     }
-    return std::move(comp);
+    return std::move(unique_comp);
 }
 
 void StickyBlock::get_weak_links(RoomMap* room_map, std::vector<Block*>& links) {

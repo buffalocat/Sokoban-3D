@@ -146,6 +146,20 @@ const glm::vec4 COLORS[] = {
     glm::vec4(0.1f, 0.1f, 0.1f, 1.0f),
 };
 
+const int NUM_GREYS = 8;
+
+const glm::vec4 GREYS[NUM_GREYS] = {
+    //glm::vec4(0.1f, 0.1f, 0.1f, 1.0f),
+    glm::vec4(0.2f, 0.2f, 0.2f, 1.0f),
+    glm::vec4(0.3f, 0.3f, 0.3f, 1.0f),
+    glm::vec4(0.4f, 0.4f, 0.4f, 1.0f),
+    glm::vec4(0.5f, 0.5f, 0.5f, 1.0f),
+    glm::vec4(0.6f, 0.6f, 0.6f, 1.0f),
+    glm::vec4(0.7f, 0.7f, 0.7f, 1.0f),
+    glm::vec4(0.8f, 0.8f, 0.8f, 1.0f),
+    glm::vec4(0.9f, 0.9f, 0.9f, 1.0f),
+};
+
 // NOTE: the order matters here, for serialization reasons!
 const Point3 DIRECTIONS[6] = {{-1,0,0}, {0,-1,0}, {1,0,0}, {0,1,0}, {0,0,1}, {0,0,-1}};
 const Point3 H_DIRECTIONS[6] = {{-1,0,0}, {0,-1,0}, {1,0,0}, {0,1,0}};

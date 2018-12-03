@@ -146,10 +146,10 @@ const glm::vec4 COLORS[] = {
     glm::vec4(0.1f, 0.1f, 0.1f, 1.0f),
 };
 
-const int NUM_GREYS = 8;
+const int NUM_GREYS = 9;
 
 const glm::vec4 GREYS[NUM_GREYS] = {
-    //glm::vec4(0.1f, 0.1f, 0.1f, 1.0f),
+    glm::vec4(0.1f, 0.1f, 0.1f, 1.0f),
     glm::vec4(0.2f, 0.2f, 0.2f, 1.0f),
     glm::vec4(0.3f, 0.3f, 0.3f, 1.0f),
     glm::vec4(0.4f, 0.4f, 0.4f, 1.0f),

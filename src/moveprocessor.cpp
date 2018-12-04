@@ -106,7 +106,6 @@ void MoveProcessor::move_components() {
         if (snake_comp) {
             check_snakes.push_back(snake_comp->block());
             if (!snake_comp->pushed()) {
-                //std::cout << "A Pull Snake at " << snake_comp->block()->pos() << std::endl;
                 pull_snakes.push_back(snake_comp->block());
             }
         }
@@ -129,10 +128,8 @@ void MoveProcessor::move_components() {
         if (below) {
             below_release.push_back(below);
         }
-        //std::cout << "Shifting block " << block.get() << " at " << block->pos() << std::endl;
         moved_blocks.push_back(static_cast<Block*>(block.get()));
         block->shift_pos(dir_);
-        //std::cout << "Shifted block to " << block->pos() << std::endl;
         below = map_->view(block->shifted_pos({0,0,-1}));
         if (below) {
             below_press.push_back(below);
@@ -146,14 +143,12 @@ void MoveProcessor::move_components() {
         sb->check_remove_local_links(delta_frame_);
     }
     SnakePuller snake_puller {map_, delta_frame_, dir_, check_snakes, below_release};
-    //std::cout << "made snake puller\n" << std::endl;
     for (SnakeBlock* snake : pull_snakes) {
         snake_puller.prepare_pull(snake);
     }
     for (SnakeBlock* snake : pull_snakes) {
         snake->reset_target();
     }
-    //std::cout << "finished pulling" << std::endl;
     for (auto& comp : move_comps_) {
         comp->reset_blocks_comps();
     }
@@ -214,7 +209,6 @@ bool MoveProcessor::try_push(StrongComponent* comp, Point3 pos) {
             return !pushed_comp->bad();
         }
     } else {
-        std::cout << "block at " << block->pos() << " was pushed" << std::endl;
         auto unique_comp = block->make_strong_component(map_);
         pushed_comp = unique_comp.get();
         pushed_comp->set_pushed();

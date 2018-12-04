@@ -136,14 +136,11 @@ void SingletonComponent::reset_blocks_comps() {
 }
 
 
-SnakeComponent::SnakeComponent(Block* block): SingletonComponent(block), pushed_ {false} {
-    //std::cout << "Making a snake component at " << block->pos() << std::endl;
-}
+SnakeComponent::SnakeComponent(Block* block): SingletonComponent(block), pushed_ {false} {}
 
 SnakeComponent::~SnakeComponent() {}
 
 void SnakeComponent::set_pushed() {
-    //std::cout << "setting pushed of comp at " << block_->pos() << std::endl;
     pushed_ = true;
 }
 
@@ -170,7 +167,6 @@ std::vector<Block*> SnakeComponent::get_weak_links(RoomMap* room_map) {
     if (pushed_) {
         block_->get_weak_links(room_map, links);
     }
-    //std::cout << "Getting weak links of comp at " << block_->pos() << "; result was size " << links.size() << std::endl;
     return links;
 }
 

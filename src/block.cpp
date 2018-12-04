@@ -10,7 +10,7 @@
 
 
 Block::Block(Point3 pos, ColorCycle color, bool car):
-GameObject(pos), comp_ {}, car_ {car}, color_ {color} {}
+GameObject(pos), comp_ {}, color_ {color}, car_ {car} {}
 
 Block::~Block() {}
 
@@ -52,7 +52,7 @@ std::unique_ptr<WeakComponent> Block::make_weak_component(RoomMap* room_map) {
         while (!to_check.empty()) {
             Block* cur = to_check.back();
             to_check.pop_back();
-            comp_->add_block(cur);
+            unique_comp->add_block(cur);
             for (Point3 d : DIRECTIONS) {
                 Block* adj = dynamic_cast<Block*>(room_map->view(cur->shifted_pos(d)));
                 if (adj && !adj->comp_ && adj->sticky() && color() == adj->color()) {
@@ -62,7 +62,7 @@ std::unique_ptr<WeakComponent> Block::make_weak_component(RoomMap* room_map) {
             }
         }
     } else {
-        comp_->add_block(this);
+        unique_comp->add_block(this);
     }
     return std::move(unique_comp);
 }
@@ -200,7 +200,7 @@ std::unique_ptr<StrongComponent> StickyBlock::make_strong_component(RoomMap* roo
     while (!to_check.empty()) {
         StickyBlock* cur = to_check.back();
         to_check.pop_back();
-        comp_->add_block(cur);
+        unique_comp->add_block(cur);
         for (Point3 d : DIRECTIONS) {
             StickyBlock* adj = dynamic_cast<StickyBlock*>(room_map->view(cur->shifted_pos(d)));
             if (adj && !adj->comp_ && color() == adj->color()) {

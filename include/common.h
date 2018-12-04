@@ -47,6 +47,7 @@ struct Point3 {
     int z;
     Point h() {return {x, y};}
     Point3& operator+=(const Point3&);
+    Point3& operator-=(const Point3&);
 };
 
 Point3 operator+(const Point3& p, const Point3& q);
@@ -148,7 +149,7 @@ const glm::vec4 COLORS[] = {
 
 // NOTE: the order matters here, for serialization reasons!
 const Point3 DIRECTIONS[6] = {{-1,0,0}, {0,-1,0}, {1,0,0}, {0,1,0}, {0,0,1}, {0,0,-1}};
-const Point3 H_DIRECTIONS[6] = {{-1,0,0}, {0,-1,0}, {1,0,0}, {0,1,0}};
+const Point3 H_DIRECTIONS[4] = {{-1,0,0}, {0,-1,0}, {1,0,0}, {0,1,0}};
 
 const int MAX_ROOM_DIMS = 255;
 

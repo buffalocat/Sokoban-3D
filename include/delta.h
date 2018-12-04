@@ -90,6 +90,17 @@ private:
     RoomMap* room_map_;
 };
 
+class SingleMoveDelta: public Delta {
+public:
+    SingleMoveDelta(Block* obj, Point3 p, RoomMap* room_map);
+    ~SingleMoveDelta();
+    void revert();
+
+private:
+    Block* obj_;
+    Point3 p_;
+    RoomMap* room_map_;
+};
 
 class FallDelta: public Delta {
 public:

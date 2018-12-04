@@ -3,6 +3,7 @@
 #include "gameobject.h"
 #include "delta.h"
 #include "block.h"
+#include "snakeblock.h"
 #include "switch.h"
 #include "mapfile.h"
 
@@ -63,6 +64,11 @@ void RoomMap::take(Point3 pos, DeltaFrame* delta_frame) {
     layers_[pos.z]->take(pos.h(), delta_frame);
 }
 
+void RoomMap::take(GameObject* obj, DeltaFrame* delta_frame) {
+    Point3 pos {obj->pos()};
+    layers_[pos.z]->take(pos.h(), delta_frame);
+}
+
 std::unique_ptr<GameObject> RoomMap::take_quiet(Point3 pos) {
     return layers_[pos.z]->take_quiet(pos.h());
 }
@@ -108,6 +114,10 @@ void RoomMap::set_initial_state(bool editor_mode) {
                 auto sw = dynamic_cast<Switch*>(obj);
                 if (sw) {
                     sw->check_send_signal(this, nullptr);
+                }
+                auto sb = dynamic_cast<SnakeBlock*>(obj);
+                if (sb) {
+                    sb->check_add_local_links(this, nullptr);
                 }
             }
         }

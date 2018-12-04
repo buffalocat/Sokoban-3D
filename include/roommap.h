@@ -24,6 +24,7 @@ public:
 
     GameObject* view(Point3 pos);
     void take(Point3, DeltaFrame*);
+    void take(GameObject*, DeltaFrame*);
     std::unique_ptr<GameObject> take_quiet(Point3);
     std::unique_ptr<GameObject> take_quiet(GameObject*);
     void put(std::unique_ptr<GameObject>, DeltaFrame*);

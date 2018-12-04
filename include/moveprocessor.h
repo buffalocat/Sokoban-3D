@@ -37,6 +37,7 @@ private:
     Point3 dir_;
     std::vector<std::unique_ptr<StrongComponent>> move_comps_;
     std::vector<Block*> fall_check_;
+    std::vector<SnakeBlock*> link_break_check_;
     std::vector<std::unique_ptr<WeakComponent>> fall_comps_;
 };
 

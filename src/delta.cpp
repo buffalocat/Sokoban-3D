@@ -62,12 +62,16 @@ void UndoStack::reset() {
 }
 
 
-DeletionDelta::DeletionDelta(std::unique_ptr<GameObject> object, RoomMap* room_map): object_ {std::move(object)}, room_map_ {room_map} {}
+DeletionDelta::DeletionDelta(std::unique_ptr<GameObject> object, RoomMap* room_map):
+object_ {std::move(object)}, room_map_ {room_map} {
+    object_->cleanup();
+}
 
 DeletionDelta::~DeletionDelta() {}
 
 void DeletionDelta::revert() {
     GameObject* obj = object_.get();
+    obj->reinit();
     room_map_->put_quiet(std::move(object_));
 }
 
@@ -95,6 +99,17 @@ void MotionDelta::revert() {
     for (auto& obj_unique : objs_unique) {
         room_map_->put_quiet(std::move(obj_unique));
     }
+}
+
+SingleMoveDelta::SingleMoveDelta(Block* obj, Point3 p, RoomMap* room_map):
+obj_ {obj}, p_ {p}, room_map_ {room_map} {}
+
+SingleMoveDelta::~SingleMoveDelta() {}
+
+void SingleMoveDelta::revert() {
+    auto obj_unique = room_map_->take_quiet(obj_);
+    obj_->set_pos(p_);
+    room_map_->put_quiet(std::move(obj_unique));
 }
 
 

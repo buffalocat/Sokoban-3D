@@ -1,6 +1,7 @@
 #include "component.h"
 #include "roommap.h"
 #include "block.h"
+#include "snakeblock.h"
 #include "delta.h"
 
 Component::Component() {}
@@ -135,12 +136,23 @@ void SingletonComponent::reset_blocks_comps() {
 }
 
 
-SnakeComponent::SnakeComponent(Block* block): SingletonComponent(block), pushed_ {false} {}
+SnakeComponent::SnakeComponent(Block* block): SingletonComponent(block), pushed_ {false} {
+    //std::cout << "Making a snake component at " << block->pos() << std::endl;
+}
 
 SnakeComponent::~SnakeComponent() {}
 
 void SnakeComponent::set_pushed() {
+    //std::cout << "setting pushed of comp at " << block_->pos() << std::endl;
     pushed_ = true;
+}
+
+bool SnakeComponent::pushed() {
+    return pushed_;
+}
+
+SnakeBlock* SnakeComponent::block() {
+    return static_cast<SnakeBlock*>(block_);
 }
 
 bool SnakeComponent::push_recheck() {
@@ -156,8 +168,9 @@ std::vector<Block*> SnakeComponent::get_weak_links(RoomMap* room_map) {
     std::vector<Block*> links {};
     // A snake block that wasn't pushed won't pull its links forward
     if (pushed_) {
-        return block_->get_weak_links(room_map, links);
+        block_->get_weak_links(room_map, links);
     }
+    //std::cout << "Getting weak links of comp at " << block_->pos() << "; result was size " << links.size() << std::endl;
     return links;
 }
 

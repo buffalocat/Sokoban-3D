@@ -6,6 +6,7 @@
 class Block;
 class RoomMap;
 class DeltaFrame;
+class SnakeBlock;
 
 enum class MoveComponentState {
     Contingent = 1,
@@ -85,10 +86,10 @@ public:
     SnakeComponent(Block* block);
     ~SnakeComponent();
     void set_pushed();
+    bool pushed();
+    SnakeBlock* block();
     bool push_recheck();
-    void pull_snakes(RoomMap*, DeltaFrame*, std::vector<std::pair<SnakeBlock*, Point3>>&, std::vector<SnakeBlock*>&);
     std::vector<Block*> get_weak_links(RoomMap*);
-    void collect_good(std::vector<Block*>&);
 
 private:
     bool pushed_;

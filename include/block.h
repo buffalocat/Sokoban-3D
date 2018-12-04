@@ -37,10 +37,8 @@ public:
 
 protected:
     Component* comp_;
-    bool car_;
-
-private:
     ColorCycle color_;
+    bool car_;
 };
 
 class NonStickBlock: public Block {

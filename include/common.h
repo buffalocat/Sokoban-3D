@@ -47,9 +47,8 @@ struct Point3 {
     int z;
     Point h() {return {x, y};}
     Point3& operator+=(const Point3&);
+    Point3& operator-=(const Point3&);
 };
-
-Point3 operator+(const Point3& p, const Point3& q);
 
 struct FPoint3 {
     float x;
@@ -59,9 +58,19 @@ struct FPoint3 {
     FPoint3(const Point3&);
 };
 
+Point3 operator+(const Point3& p, const Point3& q);
+
+Point3 operator-(const Point3& p, const Point3& q);
+
+FPoint3 operator+(const Point3& p, const FPoint3& q);
+
 bool operator==(const Point& a, const Point& b);
 
+bool operator==(const Point3& a, const Point3& b);
+
 Point3 operator*(const int, const Point3&);
+
+FPoint3 operator*(const float, const FPoint3&);
 
 std::ostream& operator<<(std::ostream& os, const Point& p);
 
@@ -162,7 +171,7 @@ const glm::vec4 GREYS[NUM_GREYS] = {
 
 // NOTE: the order matters here, for serialization reasons!
 const Point3 DIRECTIONS[6] = {{-1,0,0}, {0,-1,0}, {1,0,0}, {0,1,0}, {0,0,1}, {0,0,-1}};
-const Point3 H_DIRECTIONS[6] = {{-1,0,0}, {0,-1,0}, {1,0,0}, {0,1,0}};
+const Point3 H_DIRECTIONS[4] = {{-1,0,0}, {0,-1,0}, {1,0,0}, {0,1,0}};
 
 const int MAX_ROOM_DIMS = 255;
 
@@ -183,6 +192,8 @@ const int DEFAULT_BOARD_WIDTH = 17;
 const int DEFAULT_BOARD_HEIGHT = 13;
 
 const int MAX_COOLDOWN = 5;
+
+const int MOVEMENT_FRAMES = 10;
 
 const int MAX_UNDO_DEPTH = 1000;
 

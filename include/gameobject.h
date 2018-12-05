@@ -35,12 +35,15 @@ public:
     virtual void check_above_occupied(RoomMap*, DeltaFrame*);
     virtual void check_above_vacant(RoomMap*, DeltaFrame*);
 
+    virtual void cleanup();
+    virtual void reinit();
+
 protected:
     GameObject(Point3 pos);
     Point3 pos_;
 };
 
-/** An immovable, static, Solid layer obstacle
+/** An immovable, static obstacle
  */
 class Wall: public GameObject {
 public:

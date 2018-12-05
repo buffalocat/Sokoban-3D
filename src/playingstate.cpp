@@ -12,9 +12,9 @@
 #include "mapfile.h"
 
 PlayingState::PlayingState(std::string name, Point3 pos, bool testing):
-GameState(), loaded_rooms_ {}, room_ {}, player_ {},
+GameState(), loaded_rooms_ {}, move_processor_ {}, room_ {}, player_ {},
 undo_stack_ {MAX_UNDO_DEPTH},
-keyboard_cooldown_ {0}, testing_ {testing} {
+testing_ {testing} {
     activate_room(name);
     init_player(pos);
     room_->room_map()->set_initial_state(false);
@@ -40,25 +40,41 @@ void PlayingState::init_player(Point3 pos) {
 }
 
 void PlayingState::main_loop() {
-    auto delta_frame = std::make_unique<DeltaFrame>();
-    handle_input(delta_frame.get());
+    if (!move_processor_) {
+        delta_frame_ = std::make_unique<DeltaFrame>();
+    }
+    handle_input();
     room_->set_cam_target(player_->pos());
     room_->draw(gfx_, player_->pos(), false, false);
-    undo_stack_.push(std::move(delta_frame));
+    if (!move_processor_) {
+        undo_stack_.push(std::move(delta_frame_));
+    }
 }
 
-void PlayingState::handle_input(DeltaFrame* delta_frame) {
-    if (keyboard_cooldown_ > 0) {
-        --keyboard_cooldown_;
-        return;
-    }
-    keyboard_cooldown_ = MAX_COOLDOWN;
+void PlayingState::handle_input() {
     RoomMap* room_map = room_->room_map();
     if (glfwGetKey(window_, GLFW_KEY_Z) == GLFW_PRESS) {
-        if (undo_stack_.pop()) {
+        if (move_processor_) {
+            move_processor_->abort();
+            move_processor_.reset(nullptr);
+            delta_frame_->revert();
+            delta_frame_ = std::make_unique<DeltaFrame>();
             if (player_) {
                 room_->set_cam_pos(player_->pos());
             }
+        } else if (undo_stack_.non_empty()) {
+            undo_stack_.pop();
+            if (player_) {
+                room_->set_cam_pos(player_->pos());
+            }
+        }
+        return;
+    }
+    // Ignore all other input if an animation is occurring
+    if (move_processor_) {
+        if (move_processor_->update()) {
+            move_processor_.reset(nullptr);
+        } else {
             return;
         }
     }
@@ -68,23 +84,26 @@ void PlayingState::handle_input(DeltaFrame* delta_frame) {
     }
     for (auto p : MOVEMENT_KEYS) {
         if (glfwGetKey(window_, p.first) == GLFW_PRESS) {
-            MoveProcessor(player_, room_map, p.second, delta_frame).try_move();
+            move_processor_ = std::make_unique<MoveProcessor>(player_, room_map, p.second, delta_frame_.get());
+            if (!move_processor_->try_move()) {
+                move_processor_.reset(nullptr);
+                return;
+            }
             Door* door = dynamic_cast<Door*>(room_map->view(player_->shifted_pos({0,0,-1})));
             // When doors are switchable, check for state too!
             if (door && door->dest() && door->state()) {
-                use_door(door->dest(), delta_frame);
+                use_door(door->dest());
             }
             return;
         }
     }
     if (glfwGetKey(window_, GLFW_KEY_X) == GLFW_PRESS) {
-        player_->toggle_riding(room_map, delta_frame);
+        player_->toggle_riding(room_map, delta_frame_.get());
         return;
     } else if (glfwGetKey(window_, GLFW_KEY_C) == GLFW_PRESS) {
-        MoveProcessor(player_, room_map, {0,0,0}, delta_frame).color_change_check();
+        MoveProcessor(player_, room_map, {0,0,0}, delta_frame_.get()).color_change_check();
         return;
     }
-    keyboard_cooldown_ = 0;
 }
 
 bool PlayingState::activate_room(std::string name) {
@@ -115,7 +134,7 @@ bool PlayingState::load_room(std::string name) {
     return true;
 }
 
-void PlayingState::use_door(MapLocation* dest, DeltaFrame* delta_frame) {
+void PlayingState::use_door(MapLocation* dest) {
     if (!loaded_rooms_.count(dest->name)) {
         load_room(dest->name);
     }
@@ -131,7 +150,7 @@ void PlayingState::use_door(MapLocation* dest, DeltaFrame* delta_frame) {
             return;
         }
     }
-    delta_frame->push(std::make_unique<DoorMoveDelta>(this, room_, player_->pos()));
+    delta_frame_->push(std::make_unique<DoorMoveDelta>(this, room_, player_->pos()));
     room_ = dest_room;
     auto player_unique = cur_map->take_quiet(player_);
     if (car) {

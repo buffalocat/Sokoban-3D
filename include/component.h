@@ -6,6 +6,7 @@
 class Block;
 class RoomMap;
 class DeltaFrame;
+class SnakeBlock;
 
 enum class MoveComponentState {
     Contingent = 1,
@@ -33,11 +34,13 @@ public:
     void set_bad();
     void add_weak(StrongComponent*);
     virtual void add_block(Block*);
+    virtual void set_pushed();
+    virtual bool push_recheck();
     virtual void add_push(StrongComponent*) = 0;
     virtual std::vector<Point3> to_push(Point3 d) = 0;
     virtual std::vector<Block*> get_weak_links(RoomMap*) = 0;
     virtual void resolve_contingent() = 0;
-    virtual void collect_good(std::vector<Block*>&) = 0;
+    virtual void collect_blocks(std::vector<Block*>&, Point3) = 0;
     const std::vector<Block*>& blocks();
 
 protected:
@@ -54,7 +57,7 @@ public:
     std::vector<Point3> to_push(Point3 d);
     std::vector<Block*> get_weak_links(RoomMap*);
     void resolve_contingent();
-    void collect_good(std::vector<Block*>&);
+    void collect_blocks(std::vector<Block*>&, Point3);
     void reset_blocks_comps();
 
 private:
@@ -70,12 +73,26 @@ public:
     std::vector<Point3> to_push(Point3 d);
     std::vector<Block*> get_weak_links(RoomMap*);
     void resolve_contingent();
-    void collect_good(std::vector<Block*>&);
+    void collect_blocks(std::vector<Block*>&, Point3);
     void reset_blocks_comps();
 
 protected:
     Block* block_;
     StrongComponent* push_;
+};
+
+class SnakeComponent: public SingletonComponent {
+public:
+    SnakeComponent(Block* block);
+    ~SnakeComponent();
+    void set_pushed();
+    bool pushed();
+    SnakeBlock* block();
+    bool push_recheck();
+    std::vector<Block*> get_weak_links(RoomMap*);
+
+private:
+    bool pushed_;
 };
 
 

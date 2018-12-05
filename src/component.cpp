@@ -1,6 +1,7 @@
 #include "component.h"
 #include "roommap.h"
 #include "block.h"
+#include "snakeblock.h"
 #include "delta.h"
 
 Component::Component() {}
@@ -31,6 +32,13 @@ void StrongComponent::set_bad() {
 
 void StrongComponent::add_block(Block*) {}
 
+void StrongComponent::set_pushed() {}
+
+bool StrongComponent::push_recheck() {
+    return false;
+}
+
+
 ComplexComponent::ComplexComponent(): StrongComponent(), blocks_ {}, push_ {} {}
 
 ComplexComponent::~ComplexComponent() {}
@@ -47,10 +55,11 @@ void ComplexComponent::resolve_contingent() {
     }
 }
 
-void ComplexComponent::collect_good(std::vector<Block*>& to_move) {
+void ComplexComponent::collect_blocks(std::vector<Block*>& moving, Point3 d) {
     if (state_ == MoveComponentState::Good) {
         for (Block* block : blocks_) {
-            to_move.push_back(block);
+            moving.push_back(block);
+            block->set_linear_animation(d);
         }
     }
 }
@@ -117,14 +126,50 @@ void SingletonComponent::resolve_contingent() {
     }
 }
 
-void SingletonComponent::collect_good(std::vector<Block*>& to_move) {
+void SingletonComponent::collect_blocks(std::vector<Block*>& moving, Point3 d) {
     if (state_ == MoveComponentState::Good) {
-        to_move.push_back(block_);
+        moving.push_back(block_);
+        block_->set_linear_animation(d);
     }
 }
 
 void SingletonComponent::reset_blocks_comps() {
     block_->reset_comp();
+}
+
+
+SnakeComponent::SnakeComponent(Block* block): SingletonComponent(block), pushed_ {false} {}
+
+SnakeComponent::~SnakeComponent() {}
+
+void SnakeComponent::set_pushed() {
+    pushed_ = true;
+}
+
+bool SnakeComponent::pushed() {
+    return pushed_;
+}
+
+SnakeBlock* SnakeComponent::block() {
+    return static_cast<SnakeBlock*>(block_);
+}
+
+bool SnakeComponent::push_recheck() {
+    if (pushed_) {
+        return false;
+    } else {
+        pushed_ = true;
+        return true;
+    }
+}
+
+std::vector<Block*> SnakeComponent::get_weak_links(RoomMap* room_map) {
+    std::vector<Block*> links {};
+    // A snake block that wasn't pushed won't pull its links forward
+    if (pushed_) {
+        block_->get_weak_links(room_map, links);
+    }
+    return links;
 }
 
 

@@ -8,7 +8,19 @@ bool operator==(const Point& a, const Point& b) {
     return a.x == b.x && a.y == b.y;
 }
 
+bool operator==(const Point3& a, const Point3& b) {
+    return a.x == b.x && a.y == b.y && a.z == b.z;
+}
+
 Point3 operator+(const Point3& p, const Point3& q) {
+    return {p.x + q.x, p.y + q.y, p.z + q.z};
+}
+
+Point3 operator-(const Point3& p, const Point3& q) {
+    return {p.x - q.x, p.y - q.y, p.z - q.z};
+}
+
+FPoint3 operator+(const Point3& p, const FPoint3& q) {
     return {p.x + q.x, p.y + q.y, p.z + q.z};
 }
 
@@ -19,9 +31,22 @@ Point3& Point3::operator+=(const Point3& p) {
     return *this;
 }
 
-Point3 operator*(const int a, const Point3& p) {
-    return Point3 {a*p.x, a*p.y, a*p.z};
+Point3& Point3::operator-=(const Point3& p) {
+    this->x -= p.x;
+    this->y -= p.y;
+    this->z -= p.z;
+    return *this;
 }
+
+Point3 operator*(const int a, const Point3& p) {
+    return {a*p.x, a*p.y, a*p.z};
+}
+
+FPoint3 operator*(const float a, const FPoint3& p) {
+    return {a*p.x, a*p.y, a*p.z};
+}
+
+
 
 std::ostream& operator<<(std::ostream& os, const Point& p) {
     os << "(" <<  p.x << "," << p.y << ")";

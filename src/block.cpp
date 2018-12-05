@@ -5,12 +5,13 @@
 #include "moveprocessor.h"
 #include "component.h"
 #include "mapfile.h"
+#include "animation.h"
 
 #include "graphicsmanager.h"
 
 
 Block::Block(Point3 pos, ColorCycle color, bool car):
-GameObject(pos), comp_ {}, car_ {car}, color_ {color} {}
+GameObject(pos), animation_ {}, comp_ {}, color_ {color}, car_ {car} {}
 
 Block::~Block() {}
 
@@ -37,22 +38,22 @@ bool Block::cycle_color(bool undo) {
 
 // Most block types don't form strong components
 std::unique_ptr<StrongComponent> Block::make_strong_component(RoomMap* room_map) {
-    auto comp = std::make_unique<SingletonComponent>(this);
-    comp_ = comp.get();
-    return std::move(comp);
+    auto unique_comp = std::make_unique<SingletonComponent>(this);
+    comp_ = unique_comp.get();
+    return std::move(unique_comp);
 }
 
 // Some block types have trivial weak components, some don't
 // Using sticky(), we can avoid rewriting this method
 std::unique_ptr<WeakComponent> Block::make_weak_component(RoomMap* room_map) {
-    auto comp = std::make_unique<WeakComponent>();
-    comp_ = comp.get();
+    auto unique_comp = std::make_unique<WeakComponent>();
+    comp_ = unique_comp.get();
     if (sticky()) {
         std::vector<Block*> to_check {this};
         while (!to_check.empty()) {
             Block* cur = to_check.back();
             to_check.pop_back();
-            comp->add_block(cur);
+            unique_comp->add_block(cur);
             for (Point3 d : DIRECTIONS) {
                 Block* adj = dynamic_cast<Block*>(room_map->view(cur->shifted_pos(d)));
                 if (adj && !adj->comp_ && adj->sticky() && color() == adj->color()) {
@@ -62,9 +63,9 @@ std::unique_ptr<WeakComponent> Block::make_weak_component(RoomMap* room_map) {
             }
         }
     } else {
-        comp->add_block(this);
+        unique_comp->add_block(this);
     }
-    return std::move(comp);
+    return std::move(unique_comp);
 }
 
 StrongComponent* Block::s_comp() {
@@ -106,9 +107,36 @@ bool Block::has_weak_neighbor(RoomMap* room_map) {
     return false;
 }
 
+void Block::reset_animation() {
+    animation_.reset(nullptr);
+}
+
+
+void Block::set_linear_animation(Point3 d) {
+    animation_ = std::make_unique<LinearAnimation>(d);
+}
+
+void Block::update_animation() {
+    if (animation_ && animation_->update()) {
+        animation_.reset(nullptr);
+    }
+}
+
+void Block::shift_pos_from_animation() {
+    pos_ = animation_->shift_pos(pos_);
+}
+
+FPoint3 Block::real_pos() {
+    if (animation_) {
+        return pos_ + animation_->dpos();
+    } else {
+        return pos_;
+    }
+}
+
 void Block::draw(GraphicsManager* gfx) {
     if (car_) {
-        Point3 p {pos_};
+        FPoint3 p {real_pos()};
         glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z + 0.5, p.y));
         model = glm::scale(model, glm::vec3(0.7f, 0.1f, 0.7f));
         gfx->set_model(model);
@@ -136,7 +164,7 @@ GameObject* NonStickBlock::deserialize(MapFileI& file) {
 void NonStickBlock::draw(GraphicsManager* gfx) {
     Block::draw(gfx);
     gfx->set_tex(glm::vec2(2,0));
-    Point3 p = pos_;
+    FPoint3 p {real_pos()};
     gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
     gfx->set_color(COLORS[color()]);
     gfx->draw_cube();
@@ -176,7 +204,7 @@ GameObject* WeakBlock::deserialize(MapFileI& file) {
 void WeakBlock::draw(GraphicsManager* gfx) {
     Block::draw(gfx);
     gfx->set_tex(glm::vec2(1,0));
-    Point3 p = pos_;
+    FPoint3 p {real_pos()};
     gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
     gfx->set_color(COLORS[color()]);
     gfx->draw_cube();
@@ -194,13 +222,13 @@ ObjCode StickyBlock::obj_code() {
 }
 
 std::unique_ptr<StrongComponent> StickyBlock::make_strong_component(RoomMap* room_map) {
-    auto comp = std::make_unique<ComplexComponent>();
-    comp_ = comp.get();
+    auto unique_comp = std::make_unique<ComplexComponent>();
+    comp_ = unique_comp.get();
     std::vector<StickyBlock*> to_check {this};
     while (!to_check.empty()) {
         StickyBlock* cur = to_check.back();
         to_check.pop_back();
-        comp->add_block(cur);
+        unique_comp->add_block(cur);
         for (Point3 d : DIRECTIONS) {
             StickyBlock* adj = dynamic_cast<StickyBlock*>(room_map->view(cur->shifted_pos(d)));
             if (adj && !adj->comp_ && color() == adj->color()) {
@@ -209,7 +237,7 @@ std::unique_ptr<StrongComponent> StickyBlock::make_strong_component(RoomMap* roo
             }
         }
     }
-    return std::move(comp);
+    return std::move(unique_comp);
 }
 
 void StickyBlock::get_weak_links(RoomMap* room_map, std::vector<Block*>& links) {
@@ -236,7 +264,7 @@ GameObject* StickyBlock::deserialize(MapFileI& file) {
 
 void StickyBlock::draw(GraphicsManager* gfx) {
     Block::draw(gfx);
-    Point3 p = pos_;
+    FPoint3 p {real_pos()};
     gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
     gfx->set_color(COLORS[color()]);
     gfx->draw_cube();

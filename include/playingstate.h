@@ -8,6 +8,7 @@
 class GraphicsManager;
 class Room;
 class Player;
+class MoveProcessor;
 
 struct MapLocation;
 
@@ -17,17 +18,19 @@ public:
     virtual ~PlayingState();
     void init_player(Point3);
     void main_loop();
-    void handle_input(DeltaFrame*);
+    void handle_input();
     bool activate_room(std::string);
     bool load_room(std::string);
-    void use_door(MapLocation* dest, DeltaFrame*);
+    void use_door(MapLocation* dest);
 
 private:
     std::map<std::string, std::unique_ptr<Room>> loaded_rooms_;
+    std::unique_ptr<MoveProcessor> move_processor_;
+    std::unique_ptr<DeltaFrame> delta_frame_;
     Room* room_;
     Player* player_;
     UndoStack undo_stack_;
-    int keyboard_cooldown_;
+
     bool testing_;
 
     friend DoorMoveDelta;

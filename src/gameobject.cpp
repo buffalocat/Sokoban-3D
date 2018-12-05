@@ -49,6 +49,10 @@ void GameObject::check_above_occupied(RoomMap*, DeltaFrame*) {}
 
 void GameObject::check_above_vacant(RoomMap*, DeltaFrame*) {}
 
+void GameObject::cleanup() {}
+
+void GameObject::reinit() {}
+
 Wall::Wall(Point3 pos): GameObject(pos) {}
 
 Wall::~Wall() {}

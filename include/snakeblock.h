@@ -21,7 +21,7 @@ public:
 
     std::unique_ptr<StrongComponent> make_strong_component(RoomMap*);
     std::unique_ptr<WeakComponent> make_weak_component(RoomMap*);
-    void root_init();
+    void root_init(Point3);
     void get_weak_links(RoomMap*, std::vector<Block*>&);
 
     bool in_links(SnakeBlock* sb);

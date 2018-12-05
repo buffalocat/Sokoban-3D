@@ -62,6 +62,8 @@ struct FPoint3 {
 
 bool operator==(const Point& a, const Point& b);
 
+bool operator==(const Point3& a, const Point3& b);
+
 Point3 operator*(const int, const Point3&);
 
 std::ostream& operator<<(std::ostream& os, const Point& p);

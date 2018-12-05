@@ -93,6 +93,10 @@ void MoveProcessor::init_movement_components() {
 void MoveProcessor::make_root(Block* obj, std::vector<StrongComponent*>& roots) {
     auto component = obj->make_strong_component(map_);
     roots.push_back(component.get());
+    auto snake_comp = dynamic_cast<SnakeComponent*>(component.get());
+    if (snake_comp) {
+        snake_comp->block()->root_init(dir_);
+    }
     move_comps_.push_back(std::move(component));
 }
 
@@ -101,12 +105,14 @@ void MoveProcessor::move_components() {
     std::vector<SnakeBlock*> pull_snakes {};
     std::vector<SnakeBlock*> check_snakes {};
     for (auto& comp : move_comps_) {
-        comp->collect_good(block_move);
-        auto snake_comp = dynamic_cast<SnakeComponent*>(comp.get());
-        if (snake_comp) {
-            check_snakes.push_back(snake_comp->block());
-            if (!snake_comp->pushed()) {
-                pull_snakes.push_back(snake_comp->block());
+        if (comp->good()) {
+            comp->collect_blocks(block_move);
+            auto snake_comp = dynamic_cast<SnakeComponent*>(comp.get());
+            if (snake_comp) {
+                check_snakes.push_back(snake_comp->block());
+                if (!snake_comp->pushed()) {
+                    pull_snakes.push_back(snake_comp->block());
+                }
             }
         }
     }

@@ -55,7 +55,7 @@ void ComplexComponent::resolve_contingent() {
     }
 }
 
-void ComplexComponent::collect_good(std::vector<Block*>& to_move) {
+void ComplexComponent::collect_blocks(std::vector<Block*>& to_move) {
     if (state_ == MoveComponentState::Good) {
         for (Block* block : blocks_) {
             to_move.push_back(block);
@@ -125,7 +125,7 @@ void SingletonComponent::resolve_contingent() {
     }
 }
 
-void SingletonComponent::collect_good(std::vector<Block*>& to_move) {
+void SingletonComponent::collect_blocks(std::vector<Block*>& to_move) {
     if (state_ == MoveComponentState::Good) {
         to_move.push_back(block_);
     }

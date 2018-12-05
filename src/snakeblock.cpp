@@ -102,11 +102,17 @@ std::unique_ptr<WeakComponent> SnakeBlock::make_weak_component(RoomMap* room_map
     return std::move(unique_comp);
 }
 
-void SnakeBlock::root_init() {
+
+void SnakeBlock::root_init(Point3 dir) {
     if (links_.size() == 2) {
-        Point3 p = links_[0]->pos_;
-        Point3 q = links_[1]->pos_;
-        if ((p.x + q.x == 2 * pos_.x) && (p.y + q.y == 2 * pos_.y)) {
+        bool in_front = false;
+        Point3 front_pos = pos_ + dir;
+        for (auto link : links_) {
+            if (link->pos_ == front_pos) {
+                in_front = true;
+            }
+        }
+        if (!in_front) {
             static_cast<SnakeComponent*>(comp_)->set_pushed();
         }
     }
@@ -187,6 +193,7 @@ void SnakeBlock::collect_unlinked_neighbors(RoomMap* room_map, std::unordered_se
 */
 
 void SnakeBlock::reset_target() {
+    std::cout << "RESETTING distance for " << this << std::endl;
     target_ = nullptr;
     distance_ = 0;
 }
@@ -213,9 +220,10 @@ room_map_ {room_map}, delta_frame_ {delta_frame}, check_snakes_ {check_snakes}, 
 SnakePuller::~SnakePuller() {}
 
 void SnakePuller::prepare_pull(SnakeBlock* cur) {
-    SnakeBlock* prev;
-    // The previous snake block is the adjacent one which was pushed.
-    // There is at least one such block, and maybe two (but that's fine).
+    if (cur->links_.size() == 0) {
+        return;
+    }
+    SnakeBlock* prev {};
     for (SnakeBlock* link : cur->links_) {
         auto comp = static_cast<SnakeComponent*>(link->s_comp());
         if (comp && comp->pushed()) {
@@ -224,6 +232,15 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
         }
     }
     unsigned int d = 1;
+    // If no pushed snakeblock is adjacent to cur, then cur was driven
+    // and only has one link; we need to preempt the first check of the loop
+    if (!prev) {
+        std::cout << "Setting distance for " << cur << std::endl;
+        cur->distance_ = d++;
+        prev = cur;
+        cur = cur->links_[0];
+        cur->target_ = prev;
+    }
     while (true) {
         // If we reach the end of the snake, we can pull it
         if (cur->links_.size() == 1) {
@@ -238,6 +255,7 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
         // Progress down the snake
         for (SnakeBlock* link : cur->links_) {
             if (link != prev) {
+                std::cout << "Setting distance for " << cur << std::endl;
                 cur->distance_ = d++;
                 prev = cur;
                 cur = link;
@@ -304,11 +322,13 @@ void SnakePuller::pull(SnakeBlock* cur) {
         // we're aiming for has already moved!  In this case, be sure to aim at
         // its previous position instead.
         if (cur->distance_ <= 2) {
+            std::cout << "Checking d <= 2!!" << std::endl;
             cur_pos = cur->pos();
             if (abs(next_pos.x - cur_pos.x) + abs(next_pos.y - cur_pos.y) != 1) {
                 next_pos -= dir_;
             }
         }
+        std::cout << cur->pos() << " aiming for " << next_pos << std::endl;
         to_move.push_back(std::make_pair(cur, next_pos));
         cur->reset_target();
         cur = next;

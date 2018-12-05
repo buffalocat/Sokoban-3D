@@ -40,7 +40,7 @@ public:
     virtual std::vector<Point3> to_push(Point3 d) = 0;
     virtual std::vector<Block*> get_weak_links(RoomMap*) = 0;
     virtual void resolve_contingent() = 0;
-    virtual void collect_good(std::vector<Block*>&) = 0;
+    virtual void collect_blocks(std::vector<Block*>&) = 0;
     const std::vector<Block*>& blocks();
 
 protected:
@@ -57,7 +57,7 @@ public:
     std::vector<Point3> to_push(Point3 d);
     std::vector<Block*> get_weak_links(RoomMap*);
     void resolve_contingent();
-    void collect_good(std::vector<Block*>&);
+    void collect_blocks(std::vector<Block*>&);
     void reset_blocks_comps();
 
 private:
@@ -73,7 +73,7 @@ public:
     std::vector<Point3> to_push(Point3 d);
     std::vector<Block*> get_weak_links(RoomMap*);
     void resolve_contingent();
-    void collect_good(std::vector<Block*>&);
+    void collect_blocks(std::vector<Block*>&);
     void reset_blocks_comps();
 
 protected:

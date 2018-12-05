@@ -33,10 +33,6 @@ void Room::set_cam_pos(Point3 pos) {
     camera_->set_current_pos(pos);
 }
 
-void Room::set_cam_target(Point3 pos) {
-    camera_->set_target(pos);
-}
-
 bool Room::valid(Point3 pos) {
     return (map_ && map_->valid(pos));
 }
@@ -46,7 +42,7 @@ RoomMap* Room::room_map() {
 }
 
 void Room::draw(GraphicsManager* gfx, Point3 cam_pos, bool ortho, bool one_layer) {
-    update_view(gfx, cam_pos, ortho);
+    update_view(gfx, cam_pos, cam_pos, ortho);
     if (one_layer) {
         map_->draw_layer(gfx, cam_pos.z);
     } else {
@@ -54,17 +50,25 @@ void Room::draw(GraphicsManager* gfx, Point3 cam_pos, bool ortho, bool one_layer
     }
 }
 
-void Room::update_view(GraphicsManager* gfx, Point3 cam_pos, bool ortho) {
-    glm::mat4 model, view, projection;
+void Room::draw(GraphicsManager* gfx, Block* target, bool ortho, bool one_layer) {
+    update_view(gfx, target->pos(), target->real_pos(), ortho);
+    if (one_layer) {
+        map_->draw_layer(gfx, target->z());
+    } else {
+        map_->draw(gfx);
+    }
+}
 
+void Room::update_view(GraphicsManager* gfx, Point3 vpos, FPoint3 rpos, bool ortho) {
+    glm::mat4 model, view, projection;
     if (ortho) {
-        camera_->set_current_pos(cam_pos);
-        view = glm::lookAt(glm::vec3(cam_pos.x, cam_pos.z, cam_pos.y),
-                           glm::vec3(cam_pos.x, cam_pos.z - 1.0f, cam_pos.y),
+        camera_->set_current_pos(rpos);
+        view = glm::lookAt(glm::vec3(rpos.x, rpos.z, rpos.y),
+                           glm::vec3(rpos.x, rpos.z - 1.0f, rpos.y),
                            glm::vec3(0.0f, 0.0f, -1.0f));
         projection = glm::ortho(-ORTHO_WIDTH/2.0f, ORTHO_WIDTH/2.0f, -ORTHO_HEIGHT/2.0f, ORTHO_HEIGHT/2.0f, -2.5f, 2.5f);
     } else {
-        camera_->set_target(cam_pos);
+        camera_->set_target(vpos, rpos);
         camera_->update();
 
         float cam_radius = camera_->get_radius();

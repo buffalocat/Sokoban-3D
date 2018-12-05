@@ -260,7 +260,8 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
             }
         }
         // If we reach another block with a component initialized, nothing gets pulled (yet)
-        if (cur->comp_) {
+        auto comp = dynamic_cast<SnakeComponent*>(cur->comp_);
+        if (comp && comp->good()) {
             return;
         }
         // If we reach a block with an initialized but shorter distance, we're done

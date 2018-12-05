@@ -193,7 +193,7 @@ const int DEFAULT_BOARD_HEIGHT = 13;
 
 const int MAX_COOLDOWN = 5;
 
-const int MOVEMENT_FRAMES = 10;
+const int MOVEMENT_FRAMES = 8;
 
 const int MAX_UNDO_DEPTH = 1000;
 

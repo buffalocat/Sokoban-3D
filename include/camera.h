@@ -12,10 +12,10 @@ public:
     CameraContext(int x, int y, int w, int h, int priority);
     virtual ~CameraContext() = 0;
     virtual bool is_null();
-    virtual FPoint3 center(Point3);
-    virtual float radius(Point3);
-    virtual float tilt(Point3);
-    virtual float rotation(Point3);
+    virtual FPoint3 center(FPoint3);
+    virtual float radius(FPoint3);
+    virtual float tilt(FPoint3);
+    virtual float rotation(FPoint3);
     virtual void serialize(MapFileO& file);
 
 protected:
@@ -32,10 +32,10 @@ class FreeCameraContext: public CameraContext {
 public:
     FreeCameraContext(int x, int y, int w, int h, int priority, float radius, float tilt, float rotation);
     ~FreeCameraContext();
-    FPoint3 center(Point3);
-    float radius(Point3);
-    float tilt(Point3);
-    float rotation(Point3);
+    FPoint3 center(FPoint3);
+    float radius(FPoint3);
+    float tilt(FPoint3);
+    float rotation(FPoint3);
     void serialize(MapFileO& file);
     static CameraContext* deserialize(MapFileI& file);
 
@@ -49,10 +49,10 @@ class FixedCameraContext: public CameraContext {
 public:
     FixedCameraContext(int x, int y, int w, int h, int priority, float radius, float tilt, float rotation, FPoint3 center);
     ~FixedCameraContext();
-    FPoint3 center(Point3);
-    float radius(Point3);
-    float tilt(Point3);
-    float rotation(Point3);
+    FPoint3 center(FPoint3);
+    float radius(FPoint3);
+    float tilt(FPoint3);
+    float rotation(FPoint3);
     void serialize(MapFileO& file);
     static CameraContext* deserialize(MapFileI& file);
 
@@ -68,9 +68,9 @@ class ClampedCameraContext: public CameraContext {
 public:
     ClampedCameraContext(int x, int y, int w, int h, int priority, float radius, float tilt, int xpad, int ypad);
     ~ClampedCameraContext();
-    FPoint3 center(Point3);
-    float radius(Point3);
-    float tilt(Point3);
+    FPoint3 center(FPoint3);
+    float radius(FPoint3);
+    float tilt(FPoint3);
     void serialize(MapFileO& file);
     static CameraContext* deserialize(MapFileI& file);
 
@@ -95,8 +95,8 @@ public:
     Camera(int w, int h);
     void serialize(MapFileO& file);
     void update();
-    void set_target(Point3);
-    void set_current_pos(Point3);
+    void set_target(Point3, FPoint3);
+    void set_current_pos(FPoint3);
     float get_radius();
     FPoint3 get_pos();
     void push_context(std::unique_ptr<CameraContext>);

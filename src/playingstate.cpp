@@ -44,8 +44,7 @@ void PlayingState::main_loop() {
         delta_frame_ = std::make_unique<DeltaFrame>();
     }
     handle_input();
-    room_->set_cam_target(player_->pos());
-    room_->draw(gfx_, player_->pos(), false, false);
+    room_->draw(gfx_, player_, false, false);
     if (!move_processor_) {
         undo_stack_.push(std::move(delta_frame_));
     }

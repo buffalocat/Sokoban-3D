@@ -1,6 +1,7 @@
 #include "camera.h"
 #include "roommap.h"
 #include "mapfile.h"
+#include "block.h"
 
 
 CameraContext::CameraContext(int x, int y, int w, int h, int priority): x_ {x}, y_ {y}, w_ {w}, h_ {h}, priority_ {priority} {}
@@ -11,19 +12,19 @@ bool CameraContext::is_null() {
     return false;
 }
 
-FPoint3 CameraContext::center(Point3 pos) {
+FPoint3 CameraContext::center(FPoint3 pos) {
     return pos;
 }
 
-float CameraContext::radius(Point3 pos) {
+float CameraContext::radius(FPoint3 pos) {
     return DEFAULT_CAM_RADIUS;
 }
 
-float CameraContext::tilt(Point3 pos) {
+float CameraContext::tilt(FPoint3 pos) {
     return DEFAULT_CAM_TILT;
 }
 
-float CameraContext::rotation(Point3 pos) {
+float CameraContext::rotation(FPoint3 pos) {
     return DEFAULT_CAM_ROTATION;
 }
 
@@ -40,19 +41,19 @@ CameraContext(x, y, w, h, priority), radius_ {radius}, tilt_ {tilt}, rotation_ {
 
 FreeCameraContext::~FreeCameraContext() {}
 
-FPoint3 FreeCameraContext::center(Point3 pos) {
+FPoint3 FreeCameraContext::center(FPoint3 pos) {
     return pos;
 }
 
-float FreeCameraContext::radius(Point3 pos) {
+float FreeCameraContext::radius(FPoint3 pos) {
     return radius_;
 }
 
-float FreeCameraContext::tilt(Point3 pos) {
+float FreeCameraContext::tilt(FPoint3 pos) {
     return tilt_;
 }
 
-float FreeCameraContext::rotation(Point3 pos) {
+float FreeCameraContext::rotation(FPoint3 pos) {
     return rotation_;
 }
 
@@ -77,19 +78,19 @@ CameraContext(x, y, w, h, priority), radius_ {radius}, tilt_ {tilt}, rotation_ {
 
 FixedCameraContext::~FixedCameraContext() {}
 
-FPoint3 FixedCameraContext::center(Point3 pos) {
+FPoint3 FixedCameraContext::center(FPoint3 pos) {
     return center_;
 }
 
-float FixedCameraContext::radius(Point3 pos) {
+float FixedCameraContext::radius(FPoint3 pos) {
     return radius_;
 }
 
-float FixedCameraContext::tilt(Point3 pos) {
+float FixedCameraContext::tilt(FPoint3 pos) {
     return tilt_;
 }
 
-float FixedCameraContext::rotation(Point3 pos) {
+float FixedCameraContext::rotation(FPoint3 pos) {
     return rotation_;
 }
 
@@ -115,19 +116,19 @@ CameraContext(x, y, w, h, priority), radius_ {radius}, xpad_ {xpad}, ypad_ {ypad
 
 ClampedCameraContext::~ClampedCameraContext() {}
 
-FPoint3 ClampedCameraContext::center(Point3 pos) {
-    return Point3{
-        std::min(std::max(pos.x, x_ + xpad_), x_ + w_ - xpad_),
-        std::min(std::max(pos.y, y_ + ypad_), y_ + h_ - ypad_),
+FPoint3 ClampedCameraContext::center(FPoint3 pos) {
+    return {
+        std::min(std::max(pos.x, (float)x_ + xpad_), (float)x_ + w_ - xpad_),
+        std::min(std::max(pos.y, (float)y_ + ypad_), (float)y_ + h_ - ypad_),
         pos.z
     };
 }
 
-float ClampedCameraContext::radius(Point3 pos) {
+float ClampedCameraContext::radius(FPoint3 pos) {
     return radius_;
 }
 
-float ClampedCameraContext::tilt(Point3 pos) {
+float ClampedCameraContext::tilt(FPoint3 pos) {
     return tilt_;
 }
 
@@ -214,16 +215,16 @@ FPoint3 Camera::get_pos() {
     return cur_pos_;
 }
 
-void Camera::set_target(Point3 pos) {
-    CameraContext* new_context = context_map_[pos.x][pos.y];
+void Camera::set_target(Point3 vpos, FPoint3 rpos) {
+    CameraContext* new_context = context_map_[vpos.x][vpos.y];
     if (!new_context->is_null()) {
         context_ = new_context;
     }
-    target_pos_ = context_->center(pos);
-    target_rad_ = context_->radius(pos);
+    target_pos_ = context_->center(rpos);
+    target_rad_ = context_->radius(rpos);
 }
 
-void Camera::set_current_pos(Point3 pos) {
+void Camera::set_current_pos(FPoint3 pos) {
     target_pos_ = pos;
     cur_pos_ = pos;
 }

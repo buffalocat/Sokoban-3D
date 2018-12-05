@@ -55,10 +55,11 @@ void ComplexComponent::resolve_contingent() {
     }
 }
 
-void ComplexComponent::collect_blocks(std::vector<Block*>& to_move) {
+void ComplexComponent::collect_blocks(std::vector<Block*>& moving, Point3 d) {
     if (state_ == MoveComponentState::Good) {
         for (Block* block : blocks_) {
-            to_move.push_back(block);
+            moving.push_back(block);
+            block->set_linear_animation(d);
         }
     }
 }
@@ -125,9 +126,10 @@ void SingletonComponent::resolve_contingent() {
     }
 }
 
-void SingletonComponent::collect_blocks(std::vector<Block*>& to_move) {
+void SingletonComponent::collect_blocks(std::vector<Block*>& moving, Point3 d) {
     if (state_ == MoveComponentState::Good) {
-        to_move.push_back(block_);
+        moving.push_back(block_);
+        block_->set_linear_animation(d);
     }
 }
 

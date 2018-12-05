@@ -8,6 +8,7 @@
 class Component;
 class StrongComponent;
 class WeakComponent;
+class Animation;
 
 class Block: public GameObject {
 public:
@@ -33,9 +34,15 @@ public:
 
     bool car();
 
+    void reset_animation();
+    void set_linear_animation(Point3);
+    void update_animation();
+    void shift_pos_from_animation();
+    FPoint3 real_pos();
     virtual void draw(GraphicsManager*);
 
 protected:
+    std::unique_ptr<Animation> animation_;
     Component* comp_;
     ColorCycle color_;
     bool car_;

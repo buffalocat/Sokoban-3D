@@ -67,6 +67,7 @@
 		<Unit filename="glad.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="include/animation.h" />
 		<Unit filename="include/block.h" />
 		<Unit filename="include/camera.h" />
 		<Unit filename="include/colorcycle.h" />
@@ -106,6 +107,7 @@
 		<Unit filename="main.cpp" />
 		<Unit filename="shaders/shader.fs" />
 		<Unit filename="shaders/shader.vs" />
+		<Unit filename="src/animation.cpp" />
 		<Unit filename="src/block.cpp">
 			<Option virtualFolder="GameObjects/" />
 		</Unit>

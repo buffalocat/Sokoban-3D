@@ -17,7 +17,7 @@ ObjCode SnakeBlock::obj_code() {
 }
 
 void SnakeBlock::draw(GraphicsManager* gfx) {
-    Point3 p = pos();
+    FPoint3 p {real_pos()};
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y));
     model = glm::scale(model, glm::vec3(0.7071f, 1, 0.7071f));
     model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0, 1, 0));
@@ -31,8 +31,8 @@ void SnakeBlock::draw(GraphicsManager* gfx) {
         gfx->draw_cube();
     }
     for (auto link : links_) {
-        Point3 q = link->pos_;
-        Point d {q.x - p.x, q.y - p.y};
+        FPoint3 q = link->real_pos();
+        FPoint3 d {q.x - p.x, q.y - p.y, 0};
         gfx->set_color(COLORS[BLACK]);
         model = glm::translate(glm::mat4(), glm::vec3(0.2f*d.x, 0.5f, 0.2f*d.y));
         model = glm::translate(model, glm::vec3(p.x, p.z, p.y));
@@ -159,8 +159,8 @@ void SnakeBlock::check_add_local_links(RoomMap* room_map, DeltaFrame* delta_fram
 void SnakeBlock::check_remove_local_links(DeltaFrame* delta_frame) {
     auto links_copy = links_;
     for (auto link : links_copy) {
-        Point3 q = link->pos_;
-        if (abs(pos_.x - q.x) + abs(pos_.y - q.y) != 1) {
+        auto comp = dynamic_cast<SnakeComponent*>(link->comp_);
+        if (comp && comp->good()) {
             remove_link(link, delta_frame);
         }
     }
@@ -193,7 +193,6 @@ void SnakeBlock::collect_unlinked_neighbors(RoomMap* room_map, std::unordered_se
 */
 
 void SnakeBlock::reset_target() {
-    std::cout << "RESETTING distance for " << this << std::endl;
     target_ = nullptr;
     distance_ = 0;
 }
@@ -212,10 +211,11 @@ void SnakeBlock::reinit() {
 }
 
 
-SnakePuller::SnakePuller(RoomMap* room_map, DeltaFrame* delta_frame, Point3 dir,
-                         std::vector<SnakeBlock*>& check_snakes,
-                         std::vector<GameObject*>& below_release):
-room_map_ {room_map}, delta_frame_ {delta_frame}, check_snakes_ {check_snakes}, below_release_ {below_release}, dir_ {dir} {}
+SnakePuller::SnakePuller(RoomMap* room_map, DeltaFrame* delta_frame,
+                         std::vector<SnakeBlock*>& add_link_check,
+                         std::vector<std::pair<std::unique_ptr<SnakeBlock>, SnakeBlock*>>& split_snakes,
+                         std::vector<Block*>& moving_blocks):
+room_map_ {room_map}, delta_frame_ {delta_frame}, add_link_check_ {add_link_check}, split_snakes_ {split_snakes}, moving_blocks_ {moving_blocks} {}
 
 SnakePuller::~SnakePuller() {}
 
@@ -235,8 +235,7 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
     // If no pushed snakeblock is adjacent to cur, then cur was driven
     // and only has one link; we need to preempt the first check of the loop
     if (!prev) {
-        std::cout << "Setting distance for " << cur << std::endl;
-        cur->distance_ = d++;
+        ++d;
         prev = cur;
         cur = cur->links_[0];
         cur->target_ = prev;
@@ -244,19 +243,17 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
     while (true) {
         // If we reach the end of the snake, we can pull it
         if (cur->links_.size() == 1) {
-            check_snakes_.push_back(cur);
-            GameObject* below = room_map_->view(cur->shifted_pos({0,0,-1}));
-            if (below) {
-                below_release_.push_back(below);
-            }
+            add_link_check_.push_back(cur);
             pull(cur);
             break;
         }
         // Progress down the snake
         for (SnakeBlock* link : cur->links_) {
             if (link != prev) {
-                std::cout << "Setting distance for " << cur << std::endl;
-                cur->distance_ = d++;
+                if (d > 1) {
+                    cur->distance_ = d;
+                }
+                ++d;
                 prev = cur;
                 cur = link;
                 break;
@@ -271,24 +268,17 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
             // The chain was odd length; split the middle block!
             if (d == cur->distance_) {
                 std::vector<SnakeBlock*> links = cur->links_;
-                GameObject* below = room_map_->view(cur->shifted_pos({0,0,-1}));
-                if (below) {
-                    below_release_.push_back(below);
-                }
                 room_map_->take(cur, delta_frame_);
                 for (SnakeBlock* link : links) {
-                    Point3 new_pos {link->pos_};
-                    if (d == 2) {
-                        new_pos -= dir_;
-                    }
-                    auto split = std::make_unique<SnakeBlock>(new_pos, cur->color_, cur->car_, 1);
-                    split->add_link(link, delta_frame_);
+                    auto split = std::make_unique<SnakeBlock>(link->pos_, cur->color_, cur->car_, 1);
+                    split->set_linear_animation(link->pos_ - cur->pos_);
                     pull(link);
-                    room_map_->put(std::move(split), delta_frame_);
+                    split_snakes_.push_back(std::make_pair(std::move(split), link));
                 }
             }
             // The chain was even length; cut!
             else {
+                /*
                 GameObject* below = room_map_->view(cur->shifted_pos({0,0,-1}));
                 if (below) {
                     below_release_.push_back(below);
@@ -297,8 +287,9 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
                 if (below) {
                     below_release_.push_back(below);
                 }
-                check_snakes_.push_back(cur);
-                check_snakes_.push_back(prev);
+                */
+                add_link_check_.push_back(cur);
+                add_link_check_.push_back(prev);
                 cur->remove_link(prev, delta_frame_);
                 pull(cur);
                 pull(prev);
@@ -310,36 +301,16 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
 }
 
 void SnakePuller::pull(SnakeBlock* cur) {
+    /*
     if (cur->ends_ == 2) {
-        //cur->collect_unlinked_neighbors(room_map_, check_);
+        cur->collect_unlinked_neighbors(room_map_, check_);
     }
-    SnakeBlock* next = cur->target_;
-    Point3 cur_pos, next_pos;
-    std::vector<std::pair<SnakeBlock*, Point3>> to_move {};
-    while (next) {
-        next_pos = next->pos();
-        // When we are sufficiently close to a push, it's possible that the thing
-        // we're aiming for has already moved!  In this case, be sure to aim at
-        // its previous position instead.
-        if (cur->distance_ <= 2) {
-            std::cout << "Checking d <= 2!!" << std::endl;
-            cur_pos = cur->pos();
-            if (abs(next_pos.x - cur_pos.x) + abs(next_pos.y - cur_pos.y) != 1) {
-                next_pos -= dir_;
-            }
-        }
-        std::cout << cur->pos() << " aiming for " << next_pos << std::endl;
-        to_move.push_back(std::make_pair(cur, next_pos));
+    */
+    while (SnakeBlock* next = cur->target_) {
         cur->reset_target();
+        moving_blocks_.push_back(cur);
+        cur->set_linear_animation(next->pos_ - cur->pos_);
         cur = next;
-        next = cur->target_;
     }
     cur->reset_target();
-    for (auto it = to_move.rbegin(); it != to_move.rend(); ++it) {
-        std::tie(cur, next_pos) = *it;
-        auto cur_unique = room_map_->take_quiet(cur);
-        delta_frame_->push(std::make_unique<SingleMoveDelta>(cur, cur->pos_, room_map_));
-        cur->set_pos(next_pos);
-        room_map_->put_quiet(std::move(cur_unique));
-    }
 }

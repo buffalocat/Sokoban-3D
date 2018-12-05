@@ -50,8 +50,6 @@ struct Point3 {
     Point3& operator-=(const Point3&);
 };
 
-Point3 operator+(const Point3& p, const Point3& q);
-
 struct FPoint3 {
     float x;
     float y;
@@ -60,11 +58,19 @@ struct FPoint3 {
     FPoint3(const Point3&);
 };
 
+Point3 operator+(const Point3& p, const Point3& q);
+
+Point3 operator-(const Point3& p, const Point3& q);
+
+FPoint3 operator+(const Point3& p, const FPoint3& q);
+
 bool operator==(const Point& a, const Point& b);
 
 bool operator==(const Point3& a, const Point3& b);
 
 Point3 operator*(const int, const Point3&);
+
+FPoint3 operator*(const float, const FPoint3&);
 
 std::ostream& operator<<(std::ostream& os, const Point& p);
 
@@ -172,6 +178,8 @@ const int DEFAULT_BOARD_WIDTH = 17;
 const int DEFAULT_BOARD_HEIGHT = 13;
 
 const int MAX_COOLDOWN = 5;
+
+const int MOVEMENT_FRAMES = 10;
 
 const int MAX_UNDO_DEPTH = 1000;
 

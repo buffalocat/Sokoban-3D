@@ -52,9 +52,10 @@ private:
 
 class SnakePuller {
 public:
-    SnakePuller(RoomMap*, DeltaFrame*, Point3,
-                std::vector<SnakeBlock*>& check_snakes,
-                std::vector<GameObject*>& below_release);
+    SnakePuller(RoomMap*, DeltaFrame*,
+                std::vector<SnakeBlock*>& add_link_check,
+                std::vector<std::pair<std::unique_ptr<SnakeBlock>, SnakeBlock*>>& split_snakes,
+                std::vector<Block*>& moving_blocks);
     ~SnakePuller();
     void prepare_pull(SnakeBlock*);
     void pull(SnakeBlock*);
@@ -62,8 +63,9 @@ public:
 private:
     RoomMap* room_map_;
     DeltaFrame* delta_frame_;
-    std::vector<SnakeBlock*>& check_snakes_;
-    std::vector<GameObject*>& below_release_;
+    std::vector<SnakeBlock*>& add_link_check_;
+    std::vector<std::pair<std::unique_ptr<SnakeBlock>, SnakeBlock*>>& split_snakes_;
+    std::vector<Block*>& moving_blocks_;
     Point3 dir_;
 };
 

@@ -88,7 +88,7 @@ int main(void) {
         glfwMakeContextCurrent(window);
         glfwSwapBuffers(window);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
     }
 
     glfwTerminate();

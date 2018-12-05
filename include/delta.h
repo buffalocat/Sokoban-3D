@@ -44,13 +44,14 @@ public:
     UndoStack(unsigned int max_depth);
     virtual ~UndoStack();
     void push(std::unique_ptr<DeltaFrame>);
-    bool pop();
+    bool non_empty();
+    void pop();
     void reset();
 
 private:
+    std::deque<std::unique_ptr<DeltaFrame>> frames_;
     unsigned int max_depth_;
     unsigned int size_;
-    std::deque<std::unique_ptr<DeltaFrame>> frames_;
 };
 
 
@@ -80,16 +81,16 @@ private:
 
 class MotionDelta: public Delta {
 public:
-    MotionDelta(std::vector<Block*> objs, Point3 d, RoomMap* room_map);
+    MotionDelta(std::vector<std::pair<GameObject*, Point3>> pairs, RoomMap* room_map);
     ~MotionDelta();
     void revert();
 
 private:
-    std::vector<Block*> objs_;
-    Point3 d_;
+    std::vector<std::pair<GameObject*, Point3>> pairs_;
     RoomMap* room_map_;
 };
 
+/*
 class SingleMoveDelta: public Delta {
 public:
     SingleMoveDelta(Block* obj, Point3 p, RoomMap* room_map);
@@ -101,6 +102,7 @@ private:
     Point3 p_;
     RoomMap* room_map_;
 };
+*/
 
 class FallDelta: public Delta {
 public:

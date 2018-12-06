@@ -206,7 +206,6 @@ void Camera::push_context(std::unique_ptr<CameraContext> context) {
     loaded_contexts_.push_back(std::move(context));
 }
 
-
 float Camera::get_radius() {
     return cur_rad_;
 }

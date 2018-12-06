@@ -191,9 +191,8 @@ constexpr float ORTHO_HEIGHT = (float)SCREEN_HEIGHT/(float)MESH_SIZE;
 const int DEFAULT_BOARD_WIDTH = 17;
 const int DEFAULT_BOARD_HEIGHT = 13;
 
-const int MAX_COOLDOWN = 5;
-
 const int MOVEMENT_FRAMES = 8;
+const int MAX_COOLDOWN = 6;
 
 const int MAX_UNDO_DEPTH = 1000;
 

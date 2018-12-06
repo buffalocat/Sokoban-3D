@@ -39,10 +39,12 @@ void MoveProcessor::move_bound() {
     Block* adj = dynamic_cast<Block*>(map_->view(car->shifted_pos(dir_)));
     if (adj && car->color() == adj->color()) {
         auto player_unique = map_->take_quiet(player_);
+        player_->set_linear_animation(dir_);
         if (delta_frame_) {
             delta_frame_->push(std::make_unique<MotionDelta>(std::vector<std::pair<GameObject*, Point3>> {std::make_pair(player_, player_->pos())}, map_));
         }
-        player_->shift_pos(dir_);
+        moving_blocks_.push_back(player_);
+        player_->shift_pos_from_animation();
         map_->put_quiet(std::move(player_unique));
     }
 }

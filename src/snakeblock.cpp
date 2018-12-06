@@ -166,6 +166,16 @@ void SnakeBlock::check_remove_local_links(DeltaFrame* delta_frame) {
     }
 }
 
+void SnakeBlock::update_links_color(RoomMap* room_map, DeltaFrame* delta_frame) {
+    auto links_copy = links_;
+    for (auto link : links_copy) {
+        if (color() != link->color()) {
+            remove_link(link, delta_frame);
+        }
+    }
+    check_add_local_links(room_map, delta_frame);
+}
+
 bool SnakeBlock::available() {
     return links_.size() < ends_;
 }

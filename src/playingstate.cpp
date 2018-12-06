@@ -51,32 +51,50 @@ void PlayingState::main_loop() {
 }
 
 void PlayingState::handle_input() {
-    RoomMap* room_map = room_->room_map();
+    static int input_cooldown = 0;
+    static bool holding_z = false;
     if (glfwGetKey(window_, GLFW_KEY_Z) == GLFW_PRESS) {
-        if (move_processor_) {
-            move_processor_->abort();
-            move_processor_.reset(nullptr);
-            delta_frame_->revert();
-            delta_frame_ = std::make_unique<DeltaFrame>();
-            if (player_) {
-                room_->set_cam_pos(player_->pos());
+        if (input_cooldown == 0 || !holding_z) {
+            holding_z = true;
+            input_cooldown = MAX_COOLDOWN;
+            if (move_processor_) {
+                move_processor_->abort();
+                move_processor_.reset(nullptr);
+                delta_frame_->revert();
+                delta_frame_ = std::make_unique<DeltaFrame>();
+                if (player_) {
+                    room_->set_cam_pos(player_->pos());
+                }
+            } else if (undo_stack_.non_empty()) {
+                undo_stack_.pop();
+                if (player_) {
+                    room_->set_cam_pos(player_->pos());
+                }
             }
-        } else if (undo_stack_.non_empty()) {
-            undo_stack_.pop();
-            if (player_) {
-                room_->set_cam_pos(player_->pos());
-            }
+            return;
         }
-        return;
+    } else {
+        holding_z = false;
+    }
+    bool ignore_input = false;
+    if (input_cooldown > 0) {
+        --input_cooldown;
+        ignore_input = true;
     }
     // Ignore all other input if an animation is occurring
     if (move_processor_) {
         if (move_processor_->update()) {
             move_processor_.reset(nullptr);
+            undo_stack_.push(std::move(delta_frame_));
+            delta_frame_ = std::make_unique<DeltaFrame>();
         } else {
             return;
         }
     }
+    if (ignore_input) {
+        return;
+    }
+    RoomMap* room_map = room_->room_map();
     // Don't allow other input if player is "dead"
     if (!dynamic_cast<Player*>(room_map->view(player_->pos()))) {
         return;
@@ -88,6 +106,7 @@ void PlayingState::handle_input() {
                 move_processor_.reset(nullptr);
                 return;
             }
+            input_cooldown = MAX_COOLDOWN;
             Door* door = dynamic_cast<Door*>(room_map->view(player_->shifted_pos({0,0,-1})));
             // When doors are switchable, check for state too!
             if (door && door->dest() && door->state()) {
@@ -98,9 +117,11 @@ void PlayingState::handle_input() {
     }
     if (glfwGetKey(window_, GLFW_KEY_X) == GLFW_PRESS) {
         player_->toggle_riding(room_map, delta_frame_.get());
+        input_cooldown = MAX_COOLDOWN;
         return;
     } else if (glfwGetKey(window_, GLFW_KEY_C) == GLFW_PRESS) {
         MoveProcessor(player_, room_map, {0,0,0}, delta_frame_.get()).color_change_check();
+        input_cooldown = MAX_COOLDOWN;
         return;
     }
 }

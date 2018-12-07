@@ -27,6 +27,7 @@ public:
     void init_movement_components();
     void move_components();
     void fall_step();
+    void perform_switch_checks();
     void begin_fall_cycle();
     void check_land_first();
     void make_fall_delta();
@@ -48,6 +49,7 @@ private:
     std::vector<GameObject*> below_press_;
     std::vector<Block*> moving_blocks_;
     std::vector<Block*> fall_check_;
+    std::vector<SnakeBlock*> link_add_check_;
     std::vector<SnakeBlock*> link_break_check_;
     std::vector<std::unique_ptr<WeakComponent>> fall_comps_;
 

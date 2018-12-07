@@ -99,6 +99,8 @@ public:
     void set_current_pos(FPoint3);
     float get_radius();
     FPoint3 get_pos();
+    float get_tilt();
+    float get_rotation();
     void push_context(std::unique_ptr<CameraContext>);
 
 private:

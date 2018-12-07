@@ -8,7 +8,8 @@
 #include "mapfile.h"
 
 RoomMap::RoomMap(int width, int height):
-width_ {width}, height_ {height}, layers_ {}, signalers_ {} {}
+width_ {width}, height_ {height}, layers_ {}, signalers_ {},
+effects_ {std::make_unique<Effects>()} {}
 
 bool RoomMap::valid(Point3 pos) {
     return (0 <= pos.x) && (pos.x < width_) && (0 <= pos.y) && (pos.y < height_) && (0 <= pos.z) && (pos.z < layers_.size());
@@ -86,10 +87,12 @@ void RoomMap::put_quiet(std::unique_ptr<GameObject> obj) {
     layers_[obj->z()]->put_quiet(std::move(obj));
 }
 
-void RoomMap::draw(GraphicsManager* gfx) {
+void RoomMap::draw(GraphicsManager* gfx, float angle) {
     for (auto& layer : layers_) {
         layer->draw(gfx);
     }
+    effects_->sort_by_distance(angle);
+    effects_->draw(gfx);
 }
 
 void RoomMap::draw_layer(GraphicsManager* gfx, int layer) {
@@ -133,4 +136,8 @@ void RoomMap::check_signalers(DeltaFrame* delta_frame, std::vector<Block*>* fall
     for (auto& signaler : signalers_) {
         signaler->check_send_signal(this, delta_frame, fall_check);
     }
+}
+
+void RoomMap::make_fall_trail(Block* block, int height, int drop) {
+    effects_->push_trail(block, height, drop);
 }

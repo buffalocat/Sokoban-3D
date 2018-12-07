@@ -46,7 +46,7 @@ void Room::draw(GraphicsManager* gfx, Point3 cam_pos, bool ortho, bool one_layer
     if (one_layer) {
         map_->draw_layer(gfx, cam_pos.z);
     } else {
-        map_->draw(gfx);
+        map_->draw(gfx, camera_->get_rotation());
     }
 }
 
@@ -55,7 +55,7 @@ void Room::draw(GraphicsManager* gfx, Block* target, bool ortho, bool one_layer)
     if (one_layer) {
         map_->draw_layer(gfx, target->z());
     } else {
-        map_->draw(gfx);
+        map_->draw(gfx, camera_->get_rotation());
     }
 }
 
@@ -74,13 +74,11 @@ void Room::update_view(GraphicsManager* gfx, Point3 vpos, FPoint3 rpos, bool ort
         float cam_radius = camera_->get_radius();
         FPoint3 target_pos = camera_->get_pos();
 
-        // NOTE: These belong in the camera class later
-        float cam_incline = 0.4;
-        float cam_rotation = 0.0;
-
-        float cam_x = sin(cam_incline) * sin(cam_rotation) * cam_radius;
-        float cam_y = cos(cam_incline) * cam_radius;
-        float cam_z = sin(cam_incline) * cos(cam_rotation) * cam_radius;
+        float cam_tilt = camera_->get_tilt();
+        float cam_rotation = camera_->get_rotation();
+        float cam_x = sin(cam_tilt) * sin(cam_rotation) * cam_radius;
+        float cam_y = cos(cam_tilt) * cam_radius;
+        float cam_z = sin(cam_tilt) * cos(cam_rotation) * cam_radius;
 
         view = glm::lookAt(glm::vec3(cam_x + target_pos.x, cam_y, cam_z + target_pos.y),
                            glm::vec3(target_pos.x, 0.0f, target_pos.y),

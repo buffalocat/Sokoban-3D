@@ -32,6 +32,7 @@ public:
 
     bool available();
     bool confused(RoomMap*);
+    void update_links_color(RoomMap*, DeltaFrame*);
     void check_add_local_links(RoomMap*, DeltaFrame*);
     void check_remove_local_links(DeltaFrame*);
     //void collect_unlinked_neighbors(RoomMap*, std::)

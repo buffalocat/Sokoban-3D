@@ -15,6 +15,8 @@ shader_ {Shader("shaders\\shader.vs", "shaders\\shader.fs")} {
     load_texture_atlas();
     shader_.use();
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 GLFWwindow* GraphicsManager::window() {
@@ -132,3 +134,9 @@ void GraphicsManager::set_tex(glm::vec2 tex) {
 void GraphicsManager::draw_cube() {
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 }
+
+/*
+void GraphicsManager::draw_trail() {
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+}
+*/

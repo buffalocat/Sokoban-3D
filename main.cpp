@@ -58,6 +58,8 @@ int main(void) {
     glfwSwapInterval(0);
 
     while(!glfwWindowShouldClose(window)) {
+        auto time_0 = std::chrono::high_resolution_clock::now();
+
         glfwPollEvents();
 
         int display_w, display_h;
@@ -88,7 +90,8 @@ int main(void) {
         glfwMakeContextCurrent(window);
         glfwSwapBuffers(window);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        auto time_1 = std::chrono::high_resolution_clock::now();
+        std::this_thread::sleep_for(std::chrono::milliseconds(20) - (time_1 - time_0));
     }
 
     glfwTerminate();

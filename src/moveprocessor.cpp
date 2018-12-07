@@ -10,7 +10,7 @@
 MoveProcessor::MoveProcessor(Player* player, RoomMap* room_map, Point3 dir, DeltaFrame* delta_frame):
 player_ {player}, map_ {room_map}, delta_frame_ {delta_frame}, dir_ {dir},
 move_comps_ {}, below_release_ {}, below_press_ {},
-moving_blocks_ {}, fall_check_ {}, link_break_check_ {}, fall_comps_ {},
+moving_blocks_ {}, fall_check_ {}, link_add_check_ {}, link_break_check_ {}, fall_comps_ {},
 frames_ {0}, state_ {MoveState::Horizontal} {}
 
 MoveProcessor::~MoveProcessor() {}
@@ -56,6 +56,7 @@ void MoveProcessor::move_general() {
 
 bool MoveProcessor::update() {
     if (--frames_ == 0) {
+        perform_switch_checks();
         begin_fall_cycle();
         return true;
     } else {
@@ -125,9 +126,8 @@ void MoveProcessor::make_root(Block* obj, std::vector<StrongComponent*>& roots) 
 }
 
 void MoveProcessor::move_components() {
-    std::vector<SnakeBlock*> link_add_check {};
     std::vector<std::pair<std::unique_ptr<SnakeBlock>, SnakeBlock*>> split_snakes {};
-    SnakePuller snake_puller {map_, delta_frame_, link_add_check, split_snakes, moving_blocks_};
+    SnakePuller snake_puller {map_, delta_frame_, link_add_check_, split_snakes, moving_blocks_};
     for (auto sb : link_break_check_) {
         sb->check_remove_local_links(delta_frame_);
     }
@@ -136,7 +136,7 @@ void MoveProcessor::move_components() {
             comp->collect_blocks(moving_blocks_, dir_);
             auto snake_comp = dynamic_cast<SnakeComponent*>(comp.get());
             if (snake_comp) {
-                link_add_check.push_back(snake_comp->block());
+                link_add_check_.push_back(snake_comp->block());
                 if (!snake_comp->pushed()) {
                     snake_puller.prepare_pull(snake_comp->block());
                 }
@@ -148,9 +148,6 @@ void MoveProcessor::move_components() {
         move_unique.push_back(map_->take_quiet(block));
         fall_check_.push_back(block);
         Block* above = dynamic_cast<Block*>(map_->view(block->shifted_pos({0,0,1})));
-        if (above && !above->s_comp()) {
-            fall_check_.push_back(above);
-        }
     }
     std::vector<std::pair<GameObject*, Point3>> moved_blocks {};
     GameObject* below;
@@ -181,13 +178,16 @@ void MoveProcessor::move_components() {
         comp->reset_blocks_comps();
     }
     move_comps_.clear();
+}
+
+void MoveProcessor::perform_switch_checks() {
     for (auto obj : below_press_) {
         obj->check_above_occupied(map_, delta_frame_);
     }
     for (auto obj : below_release_) {
         obj->check_above_vacant(map_, delta_frame_);
     }
-    for (auto sb : link_add_check) {
+    for (auto sb : link_add_check_) {
         sb->check_add_local_links(map_, delta_frame_);
     }
     map_->check_signalers(delta_frame_, &fall_check_);

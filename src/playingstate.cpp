@@ -52,11 +52,17 @@ void PlayingState::main_loop() {
 
 void PlayingState::handle_input() {
     static int input_cooldown = 0;
-    static bool holding_z = false;
+    static int undo_combo = 0;
     if (glfwGetKey(window_, GLFW_KEY_Z) == GLFW_PRESS) {
-        if (input_cooldown == 0 || !holding_z) {
-            holding_z = true;
-            input_cooldown = MAX_COOLDOWN;
+        if (input_cooldown == 0) {
+            ++undo_combo;
+            if (undo_combo < UNDO_COMBO_FIRST) {
+                input_cooldown = UNDO_COOLDOWN_FIRST;
+            } else if (undo_combo < UNDO_COMBO_SECOND) {
+                input_cooldown = UNDO_COOLDOWN_SECOND;
+            } else {
+                input_cooldown = UNDO_COOLDOWN_FINAL;
+            }
             if (move_processor_) {
                 move_processor_->abort();
                 move_processor_.reset(nullptr);
@@ -74,7 +80,7 @@ void PlayingState::handle_input() {
             return;
         }
     } else {
-        holding_z = false;
+        undo_combo = 0;
     }
     bool ignore_input = false;
     if (input_cooldown > 0) {

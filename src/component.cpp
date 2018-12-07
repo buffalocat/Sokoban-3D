@@ -212,8 +212,10 @@ void WeakComponent::check_land_first(RoomMap* room_map) {
             Block* block_below = dynamic_cast<Block*>(obj);
             if (block_below) {
                 WeakComponent* comp_below = block_below->w_comp();
-                if (comp_below && comp_below->falling_ && comp_below != this) {
-                    comps_below.push_back(comp_below);
+                if (comp_below && comp_below->falling_) {
+                    if (comp_below != this) {
+                        comps_below.push_back(comp_below);
+                    }
                     continue;
                 }
             }
@@ -275,18 +277,21 @@ void WeakComponent::check_land_sticky(int layers_fallen, RoomMap* room_map, Delt
 void WeakComponent::handle_unique_blocks(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame) {
     falling_ = false;
     std::vector<Block*> live_blocks {};
-    for (auto& block : unique_blocks_) {
+    for (auto& obj : unique_blocks_) {
+        Block* block = static_cast<Block*>(obj.get());
         if (block->z() >= 0) {
-            live_blocks.push_back(static_cast<Block*>(block.get()));
-            auto obj = room_map->view(block->shifted_pos({0,0,-1}));
-            room_map->put_quiet(std::move(block));
-            if (obj) {
-                obj->check_above_occupied(room_map, delta_frame);
+            room_map->make_fall_trail(block, layers_fallen, 0);
+            live_blocks.push_back(block);
+            auto obj_below = room_map->view(block->shifted_pos({0,0,-1}));
+            room_map->put_quiet(std::move(obj));
+            if (obj_below) {
+                obj_below->check_above_occupied(room_map, delta_frame);
             }
         } else {
+            room_map->make_fall_trail(block, layers_fallen, 10);
             block->shift_pos({0,0,layers_fallen});
             if (delta_frame) {
-                delta_frame->push(std::make_unique<DeletionDelta>(std::move(block), room_map));
+                delta_frame->push(std::make_unique<DeletionDelta>(std::move(obj), room_map));
             }
         }
     }

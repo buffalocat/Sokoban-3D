@@ -4,6 +4,7 @@
 #include "common.h"
 #include "maplayer.h"
 #include "switch.h"
+#include "effects.h"
 
 class GraphicsManager;
 class DeltaFrame;
@@ -32,7 +33,7 @@ public:
 
     void serialize(MapFileO& file) const;
 
-    void draw(GraphicsManager*);
+    void draw(GraphicsManager*, float angle);
     void draw_layer(GraphicsManager*, int layer);
 
     void set_initial_state(bool editor_mode);
@@ -40,12 +41,15 @@ public:
     void push_signaler(std::unique_ptr<Signaler>);
     void check_signalers(DeltaFrame*, std::vector<Block*>*);
 
+    void make_fall_trail(Block*, int height, int drop);
+
 private:
     int width_;
     int height_;
     std::vector<std::unique_ptr<MapLayer>> layers_;
 
     std::vector<std::unique_ptr<Signaler>> signalers_;
+    std::unique_ptr<Effects> effects_;
 };
 
 #endif // ROOMMAP_H

@@ -179,7 +179,8 @@ Camera::Camera(int w, int h): width_ {w}, height_ {h},
     target_tilt_ {DEFAULT_CAM_TILT}, cur_tilt_ {DEFAULT_CAM_TILT},
     target_rotation_ {DEFAULT_CAM_ROTATION}, cur_rotation_ {DEFAULT_CAM_ROTATION}
 {
-    context_map_ = std::vector<std::vector<CameraContext*>>(w, std::vector<CameraContext*>(h, &default_context_));
+    context_ = &default_context_;
+    context_map_ = std::vector<std::vector<CameraContext*>>(w, std::vector<CameraContext*>(h, context_));
 }
 
 void Camera::serialize(MapFileO& file) {
@@ -214,6 +215,14 @@ FPoint3 Camera::get_pos() {
     return cur_pos_;
 }
 
+float Camera::get_tilt() {
+    return cur_tilt_;
+}
+
+float Camera::get_rotation() {
+    return cur_rotation_;
+}
+
 void Camera::set_target(Point3 vpos, FPoint3 rpos) {
     CameraContext* new_context = context_map_[vpos.x][vpos.y];
     if (!new_context->is_null()) {
@@ -221,11 +230,19 @@ void Camera::set_target(Point3 vpos, FPoint3 rpos) {
     }
     target_pos_ = context_->center(rpos);
     target_rad_ = context_->radius(rpos);
+    target_tilt_ = context_->tilt(rpos);
+    target_rotation_ = context_->rotation(rpos);
 }
 
 void Camera::set_current_pos(FPoint3 pos) {
     target_pos_ = pos;
     cur_pos_ = pos;
+    target_rad_ = context_->radius(pos);
+    cur_rad_ = target_rad_;
+    target_tilt_ = context_->tilt(pos);
+    cur_tilt_ = target_tilt_;
+    target_rotation_ = context_->rotation(pos);
+    cur_rotation_ = target_rotation_;
 }
 
 void Camera::update() {

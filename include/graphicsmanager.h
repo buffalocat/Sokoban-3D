@@ -29,6 +29,7 @@ public:
     void set_tex(glm::vec2);
 
     void draw_cube();
+    //void draw_trail();
 
 private:
     GLFWwindow* window_;

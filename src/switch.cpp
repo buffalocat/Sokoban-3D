@@ -97,7 +97,7 @@ void Gate::apply_state_change(RoomMap* room_map, std::vector<Block*>* fall_check
 void Gate::draw(GraphicsManager* gfx) {
     Point3 p = pos();
     gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
-    gfx->set_color(COLORS[DARK_GREY]);
+    gfx->set_color(COLORS[LIGHT_GREY]);
     gfx->draw_cube();
 }
 
@@ -122,7 +122,7 @@ void GateBody::draw(GraphicsManager* gfx) {
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y));
     model = glm::scale(model, glm::vec3(0.7f, 1.0f, 0.7f));
     gfx->set_model(model);
-    gfx->set_color(COLORS[DARK_GREY]);
+    gfx->set_color(COLORS[LIGHT_GREY]);
     gfx->draw_cube();
 }
 

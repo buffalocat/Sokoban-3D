@@ -10,6 +10,7 @@ Effects::~Effects() {}
 
 const unsigned int FALL_TRAIL_OPACITY = 8;
 const float MAX_OPACITY = 10.0;
+const float MAX_WIDTH = 16.0;
 
 bool is_zero_opacity(FallTrail trail) {
     return trail.opacity == 0;
@@ -25,7 +26,7 @@ void Effects::draw(GraphicsManager* gfx) {
         gfx->set_color(color);
         Point3 base = trail.base;
         glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(base.x, base.z, base.y));
-        model = glm::scale(model, glm::vec3(0.3,trail.height,0.3));
+        model = glm::scale(model, glm::vec3(trail.opacity/MAX_WIDTH, trail.height, trail.opacity/MAX_WIDTH));
         model = glm::translate(model, glm::vec3(0,0.5,0));
         gfx->set_model(model);
         gfx->draw_cube();

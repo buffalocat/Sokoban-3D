@@ -64,6 +64,7 @@ public:
     void receive_signal(bool signal);
     void toggle();
     void check_send_signal(RoomMap*, DeltaFrame*, std::vector<Block*>*);
+    bool remove_object(GameObject*);
 
     void serialize(MapFileO& file);
 

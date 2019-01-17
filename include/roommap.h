@@ -40,6 +40,7 @@ public:
 
     void push_signaler(std::unique_ptr<Signaler>);
     void check_signalers(DeltaFrame*, std::vector<Block*>*);
+    void remove_from_signalers(GameObject*);
 
     void make_fall_trail(Block*, int height, int drop);
 

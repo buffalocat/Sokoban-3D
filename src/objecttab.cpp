@@ -135,12 +135,7 @@ void ObjectTab::handle_right_click(EditorRoom* eroom, Point3 pos) {
         if (obj->obj_code() == ObjCode::Player) {
             return;
         }
+        room_map->remove_from_signalers(obj);
         room_map->take_quiet(obj);
-            /*for (auto& d : DIRECTIONS) {
-                auto snake = dynamic_cast<SnakeBlock*>(room_map->view(Point{pos.x + d.x, pos.y + d.y}, Layer::Solid));
-                if (snake) {
-                    snake->check_add_local_links(room_map, nullptr);
-                }
-            }*/
     }
 }

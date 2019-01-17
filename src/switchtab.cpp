@@ -3,8 +3,9 @@
 #include "editorstate.h"
 #include "room.h"
 #include "roommap.h"
-
 #include "switch.h"
+
+#include <algorithm>
 
 SwitchTab::SwitchTab(EditorState* editor, GraphicsManager* gfx): EditorTab(editor, gfx),
 switchables_ {}, switches_ {} {}
@@ -35,18 +36,19 @@ void SwitchTab::main_loop(EditorRoom* eroom) {
 void SwitchTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
     RoomMap* room_map = eroom->room->room_map();
     auto swble = dynamic_cast<Switchable*>(room_map->view(pos));
-    if (swble) {
-        switchables_.insert(swble);
+    if (swble && std::find(switchables_.begin(), switchables_.end(), swble) == switchables_.end()) {
+        switchables_.push_back(swble);
         return;
     }
     auto sw = dynamic_cast<Switch*>(room_map->view(pos));
-    if (sw) {
-        switches_.insert(sw);
+    if (sw && std::find(switches_.begin(), switches_.end(), sw) == switches_.end())  {
+        switches_.push_back(sw);
         return;
     }
 }
 
 void SwitchTab::handle_right_click(EditorRoom* eroom, Point3 pos) {
-    switchables_ = {};
-    switches_ = {};
+    GameObject* obj = eroom->room->room_map()->view(pos);
+    switchables_.erase(std::remove(switchables_.begin(), switchables_.end(), obj), switchables_.end());
+    switches_.erase(std::remove(switches_.begin(), switches_.end(), obj), switches_.end());
 }

@@ -16,8 +16,8 @@ public:
     void handle_right_click(EditorRoom*, Point3);
 
 private:
-    std::unordered_set<Switchable*> switchables_;
-    std::unordered_set<Switch*> switches_;
+    std::vector<Switchable*> switchables_;
+    std::vector<Switch*> switches_;
 };
 
 #endif // SWITCHTAB_H

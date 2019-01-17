@@ -28,7 +28,7 @@
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-g" />
+					<Add option="-O3" />
 					<Add option="-isystem" />
 					<Add directory="include" />
 				</Compiler>
@@ -86,6 +86,7 @@
 		<Unit filename="include/editorbasestate.h" />
 		<Unit filename="include/editorstate.h" />
 		<Unit filename="include/editortab.h" />
+		<Unit filename="include/effects.h" />
 		<Unit filename="include/gameobject.h" />
 		<Unit filename="include/gamestate.h" />
 		<Unit filename="include/graphicsmanager.h" />
@@ -134,6 +135,7 @@
 		<Unit filename="src/editortab.cpp">
 			<Option virtualFolder="GameStates/EditorTabs/" />
 		</Unit>
+		<Unit filename="src/effects.cpp" />
 		<Unit filename="src/gameobject.cpp">
 			<Option virtualFolder="GameObjects/" />
 		</Unit>

@@ -7,6 +7,8 @@
 #include "switch.h"
 #include "mapfile.h"
 
+#include <algorithm>
+
 RoomMap::RoomMap(int width, int height):
 width_ {width}, height_ {height}, layers_ {}, signalers_ {},
 effects_ {std::make_unique<Effects>()} {}
@@ -136,6 +138,11 @@ void RoomMap::check_signalers(DeltaFrame* delta_frame, std::vector<Block*>* fall
     for (auto& signaler : signalers_) {
         signaler->check_send_signal(this, delta_frame, fall_check);
     }
+}
+
+void RoomMap::remove_from_signalers(GameObject* obj) {
+    signalers_.erase(std::remove_if(signalers_.begin(), signalers_.end(),
+                                    [obj](std::unique_ptr<Signaler>& sig) {return sig->remove_object(obj);}), signalers_.end());
 }
 
 void RoomMap::make_fall_trail(Block* block, int height, int drop) {

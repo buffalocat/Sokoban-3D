@@ -12,10 +12,6 @@ const unsigned int FALL_TRAIL_OPACITY = 8;
 const float MAX_OPACITY = 10.0;
 const float MAX_WIDTH = 16.0;
 
-bool is_zero_opacity(FallTrail trail) {
-    return trail.opacity == 0;
-}
-
 void Effects::sort_by_distance(float angle) {}
 
 void Effects::draw(GraphicsManager* gfx) {
@@ -31,7 +27,7 @@ void Effects::draw(GraphicsManager* gfx) {
         gfx->set_model(model);
         gfx->draw_cube();
     }
-    trails_.erase(std::remove_if(trails_.begin(), trails_.end(), &is_zero_opacity), trails_.end());
+    trails_.erase(std::remove_if(trails_.begin(), trails_.end(), [](FallTrail t) {return t.opacity == 0;}), trails_.end());
 }
 
 void Effects::push_trail(Block* block, int height, int drop) {

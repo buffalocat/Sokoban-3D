@@ -5,6 +5,8 @@
 #include "graphicsmanager.h"
 #include "mapfile.h"
 
+#include <algorithm>
+
 Switchable::Switchable(Point3 pos, bool default_state, bool initial_state):
 GameObject(pos),
 default_ {default_state},
@@ -178,6 +180,12 @@ void Signaler::serialize(MapFileO& file) {
     for (auto& obj : switchables_) {
         file << obj->pos();
     }
+}
+
+bool Signaler::remove_object(GameObject* obj) {
+    switchables_.erase(std::remove(switchables_.begin(), switchables_.end(), obj), switchables_.end());
+    switches_.erase(std::remove(switches_.begin(), switches_.end(), obj), switches_.end());
+    return switchables_.empty() || switches_.empty();
 }
 
 Switch::Switch(Point3 pos, bool persistent, bool active): GameObject(pos),

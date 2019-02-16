@@ -145,6 +145,14 @@ void Block::draw(GraphicsManager* gfx) {
     }
 }
 
+void Block::pushable() {
+    return true;
+}
+
+void Block::gravitable() {
+    return true;
+}
+
 NonStickBlock::NonStickBlock(Point3 pos, ColorCycle color, bool car): Block(pos, color, car) {}
 
 NonStickBlock::~NonStickBlock() {}

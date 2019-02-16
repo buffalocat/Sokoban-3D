@@ -88,6 +88,7 @@
 		<Unit filename="include/editortab.h" />
 		<Unit filename="include/effects.h" />
 		<Unit filename="include/gameobject.h" />
+		<Unit filename="include/gameobjectarray.h" />
 		<Unit filename="include/gamestate.h" />
 		<Unit filename="include/graphicsmanager.h" />
 		<Unit filename="include/mainmenustate.h" />
@@ -139,6 +140,7 @@
 		<Unit filename="src/gameobject.cpp">
 			<Option virtualFolder="GameObjects/" />
 		</Unit>
+		<Unit filename="src/gameobjectarray.cpp" />
 		<Unit filename="src/gamestate.cpp">
 			<Option virtualFolder="GameStates/" />
 		</Unit>

@@ -1,5 +1,7 @@
 #include "common.h"
 
+#include <limits>
+
 #include "gameobject.h"
 #include "block.h"
 #include "roommap.h"
@@ -7,8 +9,8 @@
 #include "delta.h"
 #include "mapfile.h"
 
-
-GameObject::GameObject(Point3 pos): pos_ {pos} {}
+// id_ begins in an "inconsistent" state - it *must* be set by the GameObjectArray
+GameObject::GameObject(Point3 pos): pos_ {pos}, id_ {-1} {}
 
 GameObject::~GameObject() {}
 
@@ -45,15 +47,25 @@ void GameObject::shift_pos(Point3 d) {
     pos_ += d;
 }
 
-void GameObject::check_above_occupied(RoomMap*, DeltaFrame*) {}
+void GameObject::setup_on_put(RoomMap*) {}
 
-void GameObject::check_above_vacant(RoomMap*, DeltaFrame*) {}
+void GameObject::cleanup_on_take(RoomMap*) {}
 
-void GameObject::cleanup() {}
+void GameObject::cleanup_on_destruction() {}
 
-void GameObject::reinit() {}
+void GameObject::setup_on_undestruction() {}
 
-Wall::Wall(Point3 pos): GameObject(pos) {}
+void GameObject::pushable() {
+    return false;
+}
+
+void GameObject::gravitable() {
+    return false;
+}
+
+// Wall is a special GameObject, only instantiated once
+// As it is completely static, and has no "identity", its pos is fake
+Wall::Wall(): GameObject({INT_MAX, INT_MAX, INT_MAX}) {}
 
 Wall::~Wall() {}
 
@@ -61,13 +73,12 @@ ObjCode Wall::obj_code() {
     return ObjCode::Wall;
 }
 
-void Wall::draw(GraphicsManager* gfx) {
-    Point3 p = pos();
+void Wall::draw(GraphicsManager* gfx, Point3 p) {
     gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
     gfx->set_color(GREYS[p.z % NUM_GREYS]);
     gfx->draw_cube();
 }
 
 GameObject* Wall::deserialize(MapFileI& file) {
-    return new Wall(file.read_point3());
+    return new Wall();
 }

@@ -99,7 +99,7 @@ void ObjectTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
     }
     switch (obj_code) {
     case (int)ObjCode::Wall :
-        obj = std::make_unique<Wall>(pos);
+        obj = std::make_unique<Wall>();
         break;
     case (int)ObjCode::NonStickBlock :
         obj = std::make_unique<NonStickBlock>(pos, color_cycle, is_car);

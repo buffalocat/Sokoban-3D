@@ -30,29 +30,34 @@ public:
     void set_pos(Point3 p);
     void shift_pos(Point3 d);
 
-    virtual void draw(GraphicsManager*) = 0;
+    virtual void draw(GraphicsManager*, Point3 p);
 
-    virtual void check_above_occupied(RoomMap*, DeltaFrame*);
-    virtual void check_above_vacant(RoomMap*, DeltaFrame*);
+    virtual void setup_on_put(RoomMap*);
+    virtual void cleanup_on_take(RoomMap*);
 
-    virtual void cleanup();
-    virtual void reinit();
+    virtual void setup_on_undestruction(RoomMap*);
+    virtual void cleanup_on_destruction(RoomMap*);
+
+    virtual bool pushable();
+    virtual bool gravitable();
+
+    Point3 pos_;
+    int id_;
 
 protected:
     GameObject(Point3 pos);
-    Point3 pos_;
 };
 
 /** An immovable, static obstacle
  */
 class Wall: public GameObject {
 public:
-    Wall(Point3);
-    virtual ~Wall();
+    Wall();
+    ~Wall();
     ObjCode obj_code();
     static GameObject* deserialize(MapFileI& file);
 
-    void draw(GraphicsManager*);
+    void draw(GraphicsManager*, Point3 p={0,0,0});
 };
 
 #endif // GAMEOBJECT_H

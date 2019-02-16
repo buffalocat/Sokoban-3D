@@ -6,9 +6,23 @@
 #include "colorcycle.h"
 
 class Component;
-class StrongComponent;
-class WeakComponent;
 class Animation;
+
+enum class Sticky : uint8_t {
+    // Stickiness levels of particular objects
+    NonStickBlock = 0,
+    WeakBlock = 1,
+    StrongBlock = 3,
+    SnakeBlock = 4,
+    // Conditions for sticking
+    WEAKSTICK = 1,
+    STRONGSTICK = 2,
+};
+
+Sticky operator &(Sticky a, Sticky b) {
+    return static_cast<Sticky>(static_cast<uint8_t>(a) &
+                               static_cast<uint8_t>(b));
+}
 
 class Block: public GameObject {
 public:
@@ -19,12 +33,6 @@ public:
     unsigned char color();
     void insert_color(unsigned char color);
     bool cycle_color(bool undo);
-
-    virtual std::unique_ptr<StrongComponent> make_strong_component(RoomMap*);
-    virtual std::unique_ptr<WeakComponent> make_weak_component(RoomMap*);
-    StrongComponent* s_comp();
-    WeakComponent* w_comp();
-    void reset_comp();
 
     void set_z(int z);
 
@@ -41,9 +49,14 @@ public:
     FPoint3 real_pos();
     virtual void draw(GraphicsManager*);
 
+    //NOTE: should these be virtual in Block? maybe!
+    bool pushable();
+    bool gravitable();
+
+    Sticky sticky_;
+
 protected:
     std::unique_ptr<Animation> animation_;
-    Component* comp_;
     ColorCycle color_;
     bool car_;
 };
@@ -66,7 +79,6 @@ public:
     static GameObject* deserialize(MapFileI& file);
 
     bool sticky();
-    void get_weak_links(RoomMap*, std::vector<Block*>& links);
 
     void draw(GraphicsManager*);
 };
@@ -79,9 +91,6 @@ public:
     static GameObject* deserialize(MapFileI& file);
 
     bool sticky();
-    void get_weak_links(RoomMap*, std::vector<Block*>& links);
-
-    std::unique_ptr<StrongComponent> make_strong_component(RoomMap*);
 
     void draw(GraphicsManager*);
 };

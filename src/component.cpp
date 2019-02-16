@@ -1,3 +1,4 @@
+/*
 #include "component.h"
 #include "roommap.h"
 #include "block.h"
@@ -174,7 +175,7 @@ std::vector<Block*> SnakeComponent::get_weak_links(RoomMap* room_map) {
 
 
 WeakComponent::WeakComponent(): Component(),
-blocks_ {}, unique_blocks_ {}, above_ {}, falling_ {true} {}
+blocks_ {}, above_ {}, falling_ {true} {}
 
 WeakComponent::~WeakComponent() {}
 
@@ -284,9 +285,6 @@ void WeakComponent::handle_unique_blocks(int layers_fallen, RoomMap* room_map, D
             live_blocks.push_back(block);
             auto obj_below = room_map->view(block->shifted_pos({0,0,-1}));
             room_map->put_quiet(std::move(obj));
-            if (obj_below) {
-                obj_below->check_above_occupied(room_map, delta_frame);
-            }
         } else {
             room_map->make_fall_trail(block, layers_fallen, 10);
             block->shift_pos({0,0,layers_fallen});
@@ -308,3 +306,4 @@ void WeakComponent::settle(int layers_fallen, RoomMap* room_map, DeltaFrame* del
         }
     }
 }
+*/

@@ -96,15 +96,20 @@ void Gate::apply_state_change(RoomMap* room_map, std::vector<Block*>* fall_check
     }
 }
 
+void Gate::setup_on_put(RoomMap* room_map) {
+    room_map->add_listener(this, &Gate::check_waiting, pos_ + {0,0,1});
+    room_map->activate_listener(this);
+}
+
+void Gate::cleanup_on_take(RoomMap* room_map) {
+    room_map->remove_listener(this, pos_ + {0,0,1});
+}
+
 void Gate::draw(GraphicsManager* gfx) {
     Point3 p = pos();
     gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
     gfx->set_color(COLORS[LIGHT_GREY]);
     gfx->draw_cube();
-}
-
-void Gate::check_above_vacant(RoomMap* room_map, DeltaFrame* delta_frame) {
-    check_waiting(room_map, delta_frame);
 }
 
 GateBody::GateBody(Point3 pos): Wall(pos) {}
@@ -241,6 +246,15 @@ bool PressSwitch::should_toggle(RoomMap* room_map) {
     return active_ ^ (room_map->view(shifted_pos({0,0,1})) != nullptr);
 }
 
+void PressSwitch::setup_on_put(RoomMap* room_map) {
+    room_map->add_listener(this, &PressSwitch::check_send_signal, pos_ + {0,0,1});
+    room_map->activate_listener(this);
+}
+
+void PressSwitch::cleanup_on_take(RoomMap* room_map) {
+    room_map->remove_listener(this, pos_ + {0,0,1});
+}
+
 void PressSwitch::draw(GraphicsManager* gfx) {
     Point3 p = pos_;
     gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
@@ -261,12 +275,4 @@ void PressSwitch::draw(GraphicsManager* gfx) {
     }
     gfx->draw_cube();
     gfx->set_tex(glm::vec2(0,0));
-}
-
-void PressSwitch::check_above_occupied(RoomMap* room_map, DeltaFrame* delta_frame) {
-    check_send_signal(room_map, delta_frame);
-}
-
-void PressSwitch::check_above_vacant(RoomMap* room_map, DeltaFrame* delta_frame) {
-    check_send_signal(room_map, delta_frame);
 }

@@ -80,6 +80,10 @@ struct PointHash {
     std::size_t operator()(const Point& p) const;
 };
 
+struct Point3Hash {
+    std::size_t operator()(const Point3& p) const;
+};
+
 void clamp(int* n, int a, int b);
 
 //NOTE: all enums here should be explicitly numbered, because they are largely
@@ -92,6 +96,8 @@ enum class RidingState {
     Bound = 2,
     Riding = 3,
 };
+
+const int GLOBAL_WALL_ID = 1;
 
 enum class ObjCode {
     NONE = 0,
@@ -222,6 +228,7 @@ enum class MapCode {
     Signaler = 7, // List of Switches and Switchables linked to a Signaler
     FullLayer = 8, // Create a new full layer
     SparseLayer = 9, // Create a new sparse layer
+    Walls = 10,
     End = 255,
 };
 

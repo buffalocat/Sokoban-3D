@@ -47,6 +47,9 @@ public:
     bool can_set_state(bool state, RoomMap*);
     void apply_state_change(RoomMap*, std::vector<Block*>*);
 
+    void setup_on_put(RoomMap*);
+    void cleanup_on_take(RoomMap*);
+
     void draw(GraphicsManager*);
 
     void check_above_vacant(RoomMap*, DeltaFrame*);
@@ -103,6 +106,9 @@ public:
 
     void check_send_signal(RoomMap*, DeltaFrame*);
     bool should_toggle(RoomMap*);
+
+    void setup_on_put(RoomMap*);
+    void cleanup_on_take(RoomMap*);
 
     void draw(GraphicsManager*);
 

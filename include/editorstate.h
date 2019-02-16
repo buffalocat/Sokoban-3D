@@ -5,6 +5,7 @@
 #include "editorbasestate.h"
 #include "editortab.h"
 #include "room.h"
+#include "gameobjectarray.h"
 
 struct EditorRoom {
     std::unique_ptr<Room> room;
@@ -60,6 +61,8 @@ private:
 
     std::map<std::string, std::unique_ptr<EditorTab>> tabs_;
     EditorTab* active_tab_;
+
+    std::unique_ptr<GameObjectArray> objs_;
 
     void handle_left_click(Point3);
     void handle_right_click(Point3);

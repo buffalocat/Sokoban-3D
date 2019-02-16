@@ -14,18 +14,14 @@
 Room::Room(std::string name): name_ {name},
 map_ {}, camera_ {} {}
 
-Room::Room(std::string name, int w, int h): name_ {name},
-map_ {std::make_unique<RoomMap>(w, h)},
-camera_ {std::make_unique<Camera>(w, h)} {}
-
 Room::~Room() = default;
 
 std::string const Room::name() {
     return name_;
 }
 
-void Room::initialize(int w, int h) {
-    map_ = std::make_unique<RoomMap>(w, h);
+void Room::initialize(GameObjectArray& objs, int w, int h, int d) {
+    map_ = std::make_unique<RoomMap>(objs, w, h, d);
     camera_ = std::make_unique<Camera>(w, h);
 }
 
@@ -91,8 +87,8 @@ void Room::update_view(GraphicsManager* gfx, Point3 vpos, FPoint3 rpos, bool ort
 
 void Room::write_to_file(MapFileO& file, Point3 start_pos) {
     file << MapCode::Dimensions;
-    file << map_->width();
-    file << map_->height();
+    file << map_->width_;
+    file << map_->height_;
 
     file << MapCode::DefaultPos;
     file << start_pos;
@@ -104,7 +100,7 @@ void Room::write_to_file(MapFileO& file, Point3 start_pos) {
     file << MapCode::End;
 }
 
-void Room::load_from_file(MapFileI& file, Point3* start_pos) {
+void Room::load_from_file(GameObjectArray& objs, MapFileI& file, Point3* start_pos) {
     unsigned char b[8];
     bool reading_file = true;
     while (reading_file) {
@@ -112,7 +108,7 @@ void Room::load_from_file(MapFileI& file, Point3* start_pos) {
         switch (static_cast<MapCode>(b[0])) {
         case MapCode::Dimensions:
             file.read(b, 2);
-            initialize(b[0], b[1]);
+            initialize(objs, b[0], b[1], 16);
             break;
         case MapCode::DefaultPos:
             file.read(b, 3);

@@ -8,12 +8,18 @@ class Block;
 class RoomMap;
 class DeltaFrame;
 class SnakeBlock;
-class StrongComponent;
-class WeakComponent;
 
-enum class MoveState {
+enum class MoveStepType {
     Horizontal = 1,
     Fall = 2,
+};
+
+struct PushComponent {
+    std::vector<Block*> blocks_;
+    std::unordered_set<PushComponent*> pushing_;
+    bool blocked_;
+    bool pushed_;
+    PushComponent(bool pushed): blocks_ {}, pushing_ {}, blocked_ {false}, pushed_ {pushed} {}
 };
 
 class MoveProcessor {
@@ -35,7 +41,6 @@ public:
     bool update();
     void abort();
 
-    void make_root(Block* obj, std::vector<StrongComponent*>& roots);
     bool try_move_component(StrongComponent*);
     bool try_push(StrongComponent*, Point3);
 
@@ -44,9 +49,11 @@ private:
     RoomMap* map_;
     DeltaFrame* delta_frame_;
     Point3 dir_;
+    std::vector<std::unique_ptr<PushComponent>> push_comps_unique_;
+    std::unordered_map<Block*, PushComponent*> push_comps_;
+    std::vector<PushComponent*> moving_comps_;
+
     std::vector<std::unique_ptr<StrongComponent>> move_comps_;
-    std::vector<GameObject*> below_release_;
-    std::vector<GameObject*> below_press_;
     std::vector<Block*> moving_blocks_;
     std::vector<Block*> fall_check_;
     std::vector<SnakeBlock*> link_add_check_;
@@ -54,7 +61,7 @@ private:
     std::vector<std::unique_ptr<WeakComponent>> fall_comps_;
 
     unsigned int frames_;
-    MoveState state_;
+    MoveStepType state_;
 };
 
 #endif // MOVEPROCESSOR_H

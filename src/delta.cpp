@@ -61,18 +61,17 @@ void UndoStack::reset() {
     size_ = 0;
 }
 
-
-DeletionDelta::DeletionDelta(std::unique_ptr<GameObject> object, RoomMap* room_map):
-object_ {std::move(object)}, room_map_ {room_map} {
-    object_->cleanup();
+//TODO: make sure DeletionDelta is right
+DeletionDelta::DeletionDelta(GameObject* obj, RoomMap* room_map):
+obj_ {obj}, room_map_ {room_map} {
+    obj_->cleanup_on_destruction();
 }
 
 DeletionDelta::~DeletionDelta() {}
 
 void DeletionDelta::revert() {
-    GameObject* obj = object_.get();
-    obj->reinit();
-    room_map_->put_quiet(std::move(object_));
+    obj->setup_on_undestruction();
+    room_map_->put(obj_, nullptr);
 }
 
 
@@ -81,38 +80,29 @@ CreationDelta::CreationDelta(Point3 pos, RoomMap* room_map): pos_ {pos}, room_ma
 CreationDelta::~CreationDelta() {}
 
 void CreationDelta::revert() {
-    room_map_->take_quiet(pos_);
+    room_map_->take(pos_);
 }
 
 
-MotionDelta::MotionDelta(std::vector<std::pair<GameObject*, Point3>> pairs, RoomMap* room_map):
-pairs_ {pairs}, room_map_ {room_map} {}
+MotionDelta::MotionDelta(GameObject* obj, Point3 dpos RoomMap* room_map):
+obj_ {obj}, dpos_ {dpos} room_map_ {room_map} {}
 
 MotionDelta::~MotionDelta() {}
 
 void MotionDelta::revert() {
-    std::vector<std::unique_ptr<GameObject>> objs_unique {};
-    for (auto p : pairs_) {
-        objs_unique.push_back(room_map_->take_quiet(p.first));
-        p.first->set_pos(p.second);
-    }
-    for (auto& obj_unique : objs_unique) {
-        room_map_->put_quiet(std::move(obj_unique));
-    }
+    room_map_->shift(obj_, -dpos_, nullptr);
 }
 
-/*
-SingleMoveDelta::SingleMoveDelta(Block* obj, Point3 p, RoomMap* room_map):
-obj_ {obj}, p_ {p}, room_map_ {room_map} {}
 
-SingleMoveDelta::~SingleMoveDelta() {}
+BatchMotionDelta::BatchMotionDelta(std::vector<GameObject*> objs, Point3 dpos, RoomMap* room_map):
+objs_ {objs}, dpos_ {dpos}, room_map_ {room_map} {}
 
-void SingleMoveDelta::revert() {
-    auto obj_unique = room_map_->take_quiet(obj_);
-    obj_->set_pos(p_);
-    room_map_->put_quiet(std::move(obj_unique));
+BatchMotionDelta::~BatchMotionDelta() {}
+
+void BatchMotionDelta::revert() {
+    room_map_->batch_shift(objs_, -dpos_, nullptr);
 }
-*/
+
 
 FallDelta::FallDelta(std::vector<Block*> blocks, int distance, RoomMap* room_map):
 blocks_ {blocks}, room_map_ {room_map}, distance_ {distance} {}

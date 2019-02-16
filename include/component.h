@@ -1,3 +1,4 @@
+/*
 #ifndef COMPONENT_H
 #define COMPONENT_H
 
@@ -117,9 +118,9 @@ public:
 
 private:
     std::vector<Block*> blocks_;
-    std::vector<std::unique_ptr<GameObject>> unique_blocks_;
     std::vector<WeakComponent*> above_;
     bool falling_;
 };
 
 #endif // COMPONENT_H
+*/

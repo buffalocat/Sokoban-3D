@@ -30,9 +30,9 @@ Point3 EditorBaseState::get_pos_from_mouse(Point3 cam_pos) {
 void EditorBaseState::clamp_to_room(Point3& pos, Room* room) {
     RoomMap* cur_map = room->room_map();
     pos = {
-        std::max(0, std::min(cur_map->width() - 1, pos.x)),
-        std::max(0, std::min(cur_map->height() - 1, pos.y)),
-        std::max(0, std::min(cur_map->depth() - 1, pos.z))
+        std::max(0, std::min(cur_map->width_ - 1, pos.x)),
+        std::max(0, std::min(cur_map->height_ - 1, pos.y)),
+        std::max(0, std::min(cur_map->depth_ - 1, pos.z))
     };
 }
 

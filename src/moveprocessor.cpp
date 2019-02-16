@@ -11,7 +11,7 @@ MoveProcessor::MoveProcessor(Player* player, RoomMap* room_map, Point3 dir, Delt
 player_ {player}, map_ {room_map}, delta_frame_ {delta_frame}, dir_ {dir},
 move_comps_ {}, below_release_ {}, below_press_ {},
 moving_blocks_ {}, fall_check_ {}, link_add_check_ {}, link_break_check_ {}, fall_comps_ {},
-frames_ {0}, state_ {MoveState::Horizontal} {}
+frames_ {0}, state_ {MoveStepType::Horizontal} {}
 
 MoveProcessor::~MoveProcessor() {}
 
@@ -91,7 +91,100 @@ void MoveProcessor::color_change_check() {
     begin_fall_cycle();
 }
 
+// Return whether all blocks in the group can move
+bool MoveProcessor::find_push_component_tree(std::vector<Block*> block_group) {
+    std::unordered_set<Block*> weak_links {};
+    // TODO : change false to an appropriate conditional
+    // because a snakeblock "pretends" to be pushed in certain situations
+    for (Block* block : block_group) {
+        if (!push_component_tree_helper(block, weak_links, false)) {
+            return false;
+        }
+    }
+    moving_comps_.push_back(push_comps_[block]);
+    for (Block* link : weak_links) {
+        // TODO : use result of this to determine broken snake links
+        find_push_component_tree(link);
+    }
+    return true;
+}
+
+// Return whether the block can move
+bool MoveProcessor::push_component_tree_helper(Block* block, std::unordered_set<Block*>& weak_links, bool pushed) {
+    if (PushComponent* comp = push_comps_[block]) {
+        if (pushed && !comp->pushed_) {
+            comp->pushed_ = true;
+            // If this is a snake being pushed for the first time, check links!
+            if (SnakeBlock* sb = dynamic_cast<SnakeBlock*>(block)) {
+                for (SnakeBlock* link : sb->links_) {
+                    weak_links.insert(link);
+                }
+            }
+        }
+        return !comp->blocked_;
+    }
+    auto comp_unique = std::make_unique<PushComponent>(pushed));
+    PushComponent* comp = comp_unique.get();
+    push_comps_unique_.push_back(std::move(comp_unique));
+    if (block->sticky_) {
+        // Form the strong component, collecting weak links
+        Sticky strong_sticky_condition = block->sticky_ & Sticky::STRONGSTICK;
+        Sticky weak_sticky_condition = block->sticky_ & Sticky::WEAKSTICK;
+        std::vector<Block*> to_check {block};
+        unsigned char color = block->color();
+        while (!to_check.empty()) {
+            Block* cur = to_check.back();
+            to_check.pop_back();
+            push_comps_[cur] = comp;
+            comp->blocks_.push_back(cur);
+            for (Point3 d : DIRECTIONS) {
+                Block* adj = dynamic_cast<Block*>(room_map->view(cur->pos_ + d));
+                if (adj && push_comps_.count(adj) == 0 && adj->color() == color) {
+                    if (adj->sticky_ & strong_sticky_condition) {
+                        to_check.push_back(adj);
+                    // Blocks in front don't become weak links
+                    } else if (adj->sticky_ & weak_sticky_condition && d != dir_) {
+                        weak_links.insert(adj);
+                    }
+                }
+            }
+        }
+    } else {
+        push_comps_[cur] = comp;
+        comp->blocks_.push_back(block);
+        if (pushed && SnakeBlock* sb = dynamic_cast<SnakeBlock*>(block)) {
+            for (SnakeBlock* link : sb->links_) {
+                weak_links.insert(link);
+            }
+        }
+    }
+    for (Block* block : comp->blocks_) {
+        if (!block->pushable()) {
+            comp->blocked_ = true;
+            break;
+        }
+        if (GameObject* in_front = room_map->view(cur->pos_ + dir_)) {
+            if (Block* block_in_front = dynamic_cast<Block*>(in_front)) {
+                if (push_component_tree_helper(block_in_front, weak_links, true)) {
+                    comp->pushing_.insert(push_comps_[block_in_front]);
+                } else {
+                    // The Block we tried to push couldn't move
+                    comp->blocked_ = true;
+                    break;
+                }
+            } else {
+                // The thing we tried to push wasn't a Block
+                comp->blocked_ = true;
+                break;
+            }
+        }
+    }
+    return !comp->blocked_;
+}
+
+
 void MoveProcessor::init_movement_components() {
+    /*
     std::vector<StrongComponent*> roots {};
     std::vector<std::pair<StrongComponent*, StrongComponent*>> dependent_pairs {};
     make_root(player_, roots);
@@ -113,16 +206,7 @@ void MoveProcessor::init_movement_components() {
     for (StrongComponent* comp : roots) {
         comp->resolve_contingent();
     }
-}
-
-void MoveProcessor::make_root(Block* obj, std::vector<StrongComponent*>& roots) {
-    auto component = obj->make_strong_component(map_);
-    roots.push_back(component.get());
-    auto snake_comp = dynamic_cast<SnakeComponent*>(component.get());
-    if (snake_comp) {
-        snake_comp->block()->root_init(dir_);
-    }
-    move_comps_.push_back(std::move(component));
+    */
 }
 
 void MoveProcessor::move_components() {
@@ -150,19 +234,10 @@ void MoveProcessor::move_components() {
         Block* above = dynamic_cast<Block*>(map_->view(block->shifted_pos({0,0,1})));
     }
     std::vector<std::pair<GameObject*, Point3>> moved_blocks {};
-    GameObject* below;
     for (auto& obj : move_unique) {
-        below = map_->view(obj->shifted_pos({0,0,-1}));
-        if (below) {
-            below_release_.push_back(below);
-        }
         Block* block = static_cast<Block*>(obj.get());
         moved_blocks.push_back(std::make_pair(block, block->pos()));
         block->shift_pos_from_animation();
-        below = map_->view(block->shifted_pos({0,0,-1}));
-        if (below) {
-            below_press_.push_back(below);
-        }
         map_->put_quiet(std::move(obj));
     }
     if (!moved_blocks.empty() && delta_frame_) {
@@ -181,15 +256,7 @@ void MoveProcessor::move_components() {
 }
 
 void MoveProcessor::perform_switch_checks() {
-    for (auto obj : below_press_) {
-        obj->check_above_occupied(map_, delta_frame_);
-    }
-    for (auto obj : below_release_) {
-        obj->check_above_vacant(map_, delta_frame_);
-    }
-    for (auto sb : link_add_check_) {
-        sb->check_add_local_links(map_, delta_frame_);
-    }
+    map_->alert_activated_listeners();
     map_->check_signalers(delta_frame_, &fall_check_);
 }
 

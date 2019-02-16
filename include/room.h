@@ -10,16 +10,15 @@ class GraphicsManager;
 class Room {
 public:
     Room(std::string name);
-    Room(std::string name, int w, int h);
     ~Room();
     std::string const name();
-    void initialize(int w, int h);
+    void initialize(GameObjectArray& objs, int w, int h, int d);
     void set_cam_pos(Point3);
     bool valid(Point3);
     RoomMap* room_map();
 
     void write_to_file(MapFileO& file, Point3 start_pos);
-    void load_from_file(MapFileI& file, Point3* start_pos=nullptr);
+    void load_from_file(GameObjectArray& objs, MapFileI& file, Point3* start_pos=nullptr);
 
     void draw(GraphicsManager*, Point3 cam_pos, bool ortho, bool one_layer);
     void draw(GraphicsManager*, Block* target, bool ortho, bool one_layer);

@@ -12,7 +12,8 @@
 #include "mapfile.h"
 
 PlayingState::PlayingState(std::string name, Point3 pos, bool testing):
-GameState(), loaded_rooms_ {}, move_processor_ {}, room_ {}, player_ {},
+GameState(), loaded_rooms_ {}, objs_ {std::make_unique<GameObjectArray>()},
+move_processor_ {}, room_ {}, player_ {},
 undo_stack_ {MAX_UNDO_DEPTH},
 testing_ {testing} {
     activate_room(name);
@@ -66,6 +67,7 @@ void PlayingState::handle_input() {
             if (move_processor_) {
                 move_processor_->abort();
                 move_processor_.reset(nullptr);
+                room_->map_->reset_local_sate();
                 delta_frame_->revert();
                 delta_frame_ = std::make_unique<DeltaFrame>();
                 if (player_) {
@@ -101,6 +103,7 @@ void PlayingState::handle_input() {
         return;
     }
     RoomMap* room_map = room_->room_map();
+    // TODO: Make a real "death" flag/state
     // Don't allow other input if player is "dead"
     if (!dynamic_cast<Player*>(room_map->view(player_->pos()))) {
         return;
@@ -153,7 +156,7 @@ bool PlayingState::load_room(std::string name) {
     }
     MapFileI file {path};
     auto room = std::make_unique<Room>(name);
-    room->load_from_file(file);
+    room->load_from_file(*objs_, file);
     // Load dynamic component!
     //room->room_map()->set_initial_state(false);
     loaded_rooms_[name] = std::move(room);

@@ -9,61 +9,104 @@ class RoomMap;
 class MapFileO;
 class GraphicsManager;
 
-class MapLayer {
-public:
-    MapLayer(RoomMap*);
-    virtual ~MapLayer();
 
-    virtual GameObject* view(Point) = 0;
-    virtual void take(Point, DeltaFrame*) = 0;
-    virtual std::unique_ptr<GameObject> take_quiet(Point) = 0;
-    virtual void put(std::unique_ptr<GameObject>, DeltaFrame*) = 0;
-    virtual void put_quiet(std::unique_ptr<GameObject>) = 0;
-    virtual MapCode type() = 0;
-    virtual void serialize(MapFileO&, std::vector<GameObject*>&) = 0;
-    virtual void draw(GraphicsManager*) = 0;
+class MapLayerIterator {
+public:
+    virtual ~MapLayerIterator() = 0;
+
+    virtual void advance() = 0;
+    virtual bool done() = 0;
+
+    virtual Point3 pos() = 0;
+    virtual int id() = 0;
 
 protected:
-    RoomMap* parent_map_;
+    MapLayerIterator() = default;
+};
+
+class FullMapLayerIterator: public MapLayerIterator {
+public:
+    FullMapLayerIterator(std::vector<std::vector<int>>& map, int z, int width, int height);
+    ~FullMapLayerIterator();
+
+    void advance();
+    bool done();
+
+    Point3 pos();
+    int id();
+
+private:
+    std::vector<std::vector<int>>& map_;
+    Point3 pos_;
+    int width_;
+    int height_;
+};
+
+class SparseMapLayerIterator: public MapLayerIterator {
+public:
+    SparseMapLayerIterator(std::unordered_map<Point, int, PointHash>& map, int z);
+    ~SparseMapLayerIterator();
+
+    void advance();
+    bool done();
+
+    Point3 pos();
+    int id();
+
+private:
+    std::unordered_map<Point, int, PointHash>::iterator iter_;
+    std::unordered_map<Point, int, PointHash>::iterator end_;
+    Point3 pos_;
+    int id_;
+
+    void update_values();
 };
 
 
+class MapLayer {
+public:
+    MapLayer(RoomMap*, int z);
+    virtual ~MapLayer() = 0;
+
+    virtual int& at(Point pos) = 0;
+
+    virtual MapCode type() = 0;
+    virtual std::unique_ptr<MapLayerIterator> begin_iter() = 0;
+
+protected:
+    RoomMap* parent_map_;
+    int z_;
+};
+
 class FullMapLayer: public MapLayer {
 public:
-    FullMapLayer(RoomMap*, int width, int height);
+    FullMapLayer(RoomMap*, int width, int height, int z);
     ~FullMapLayer();
 
-    GameObject* view(Point);
-    void take(Point, DeltaFrame*);
-    std::unique_ptr<GameObject> take_quiet(Point);
-    void put(std::unique_ptr<GameObject>, DeltaFrame*);
-    void put_quiet(std::unique_ptr<GameObject>);
+    int& at(Point pos);
+
     MapCode type();
-    void serialize(MapFileO&, std::vector<GameObject*>&);
-    void draw(GraphicsManager*);
+    std::unique_ptr<MapLayerIterator> begin_iter();
 
 private:
-    std::vector<std::vector<std::unique_ptr<GameObject>>> map_;
+    std::vector<std::vector<int>> map_;
+    int width_;
+    int height_;
 };
 
 
 class SparseMapLayer: public MapLayer {
 public:
-    SparseMapLayer(RoomMap*);
+    SparseMapLayer(RoomMap*, int z);
     ~SparseMapLayer();
 
-    GameObject* view(Point);
-    void take(Point, DeltaFrame*);
-    std::unique_ptr<GameObject> take_quiet(Point);
-    void put(std::unique_ptr<GameObject>, DeltaFrame*);
-    void put_quiet(std::unique_ptr<GameObject>);
+    int& at(Point pos);
+
     MapCode type();
-    void serialize(MapFileO&, std::vector<GameObject*>&);
-    void draw(GraphicsManager*);
+    std::unique_ptr<MapLayerIterator> begin_iter();
 
 private:
-    std::unordered_map<Point, std::unique_ptr<GameObject>, PointHash> map_;
+    std::unordered_map<Point, int, PointHash> map_;
 };
-
 
 #endif // MAPLAYER_H

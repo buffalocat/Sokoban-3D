@@ -27,7 +27,8 @@ changed {true} {}
 
 EditorState::EditorState(GraphicsManager* gfx): EditorBaseState(),
 rooms_ {}, active_room_ {},
-tabs_ {}, active_tab_ {} {
+tabs_ {}, active_tab_ {},
+objs_ {std::make_unique<GameObjectArray>()} {
     INIT_TAB(SaveLoad);
     INIT_TAB(Object);
     INIT_TAB(Door);
@@ -104,7 +105,8 @@ void EditorState::new_room(std::string name, int w, int h) {
         std::cout << "A room with that name is already loaded!" << std::endl;
         return;
     }
-    auto room = std::make_unique<Room>(name, w, h);
+    auto room = std::make_unique<Room>(name);
+    room->initialize(*objs_, w, h, 0);
     for (int i = 0; i < 16; ++i) {
         room->room_map()->push_full();
     }
@@ -122,9 +124,9 @@ bool EditorState::load_room(std::string name) {
     MapFileI file {path};
     Point3 start_pos {0,0,2};
     std::unique_ptr<Room> room = std::make_unique<Room>(name);
-    room->load_from_file(file, &start_pos);
+    room->load_from_file(*objs_, file, &start_pos);
 
-    //NOTE: Later, load .mapd file here!!
+    //TODO: (consider?) load .mapd file here!!
 
     room->room_map()->put_quiet(std::make_unique<Player>(start_pos, RidingState::Free));
     room->set_cam_pos(start_pos);

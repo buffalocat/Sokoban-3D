@@ -4,6 +4,7 @@
 #include "common.h"
 #include "delta.h"
 #include "gamestate.h"
+#include "gameobjectarray.h"
 
 class GraphicsManager;
 class Room;
@@ -25,6 +26,7 @@ public:
 
 private:
     std::map<std::string, std::unique_ptr<Room>> loaded_rooms_;
+    std::unique_ptr<GameObjectArray> objs_;
     std::unique_ptr<MoveProcessor> move_processor_;
     std::unique_ptr<DeltaFrame> delta_frame_;
     Room* room_;

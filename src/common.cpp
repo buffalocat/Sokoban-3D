@@ -58,8 +58,14 @@ std::ostream& operator<<(std::ostream& os, const Point3& p) {
     return os;
 }
 
+
+// There isn't a strict limit on Point components lying in [0,255], but it's fine
 std::size_t PointHash::operator()(const Point& p) const {
     return (p.x << 8) + p.y;
+}
+
+std::size_t Point3Hash::operator()(const Point3& p) const {
+    return (p.x << 16) + (p.y << 8) + p.z;
 }
 
 FPoint3::FPoint3(float ax, float ay, float az): x {ax}, y {ay}, z {az} {}

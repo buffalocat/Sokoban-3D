@@ -69,41 +69,42 @@ private:
 
 class DeletionDelta: public Delta {
 public:
-    DeletionDelta(std::unique_ptr<GameObject> object, RoomMap* room_map);
+    DeletionDelta(GameObject* obj, RoomMap* room_map);
     ~DeletionDelta();
     void revert();
 
 private:
-    std::unique_ptr<GameObject> object_;
+    GameObject* obj_;
     RoomMap* room_map_;
 };
 
 
 class MotionDelta: public Delta {
 public:
-    MotionDelta(std::vector<std::pair<GameObject*, Point3>> pairs, RoomMap* room_map);
+    MotionDelta(GameObject* obj, Point3 dpos, RoomMap* room_map);
     ~MotionDelta();
     void revert();
 
 private:
-    std::vector<std::pair<GameObject*, Point3>> pairs_;
+    GameObject* obj_;
+    Point3 dpos_;
     RoomMap* room_map_;
 };
 
-/*
-class SingleMoveDelta: public Delta {
+
+class BatchMotionDelta: public Delta {
 public:
-    SingleMoveDelta(Block* obj, Point3 p, RoomMap* room_map);
-    ~SingleMoveDelta();
+    BatchMotionDelta(std::vector<GameObject*> objs, Point3 dpos, RoomMap* room_map);
+    ~BatchMotionDelta();
     void revert();
 
 private:
-    Block* obj_;
-    Point3 p_;
+    std::vector<GameObject*> objs_;
+    Point3 dpos_;
     RoomMap* room_map_;
 };
-*/
 
+//TODO: remove, replace with a BatchMotionDelta
 class FallDelta: public Delta {
 public:
     FallDelta(std::vector<Block*> blocks, int distance, RoomMap* room_map);

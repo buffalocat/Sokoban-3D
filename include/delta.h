@@ -1,12 +1,13 @@
 #ifndef DELTA_H
 #define DELTA_H
 
+#include <deque>
+
 #include "common.h"
 
 class Room;
 class RoomMap;
 class GameObject;
-class Block;
 class PushBlock;
 class SnakeBlock;
 class Switchable;
@@ -57,12 +58,12 @@ private:
 
 class CreationDelta: public Delta {
 public:
-    CreationDelta(Point3 pos, RoomMap* room_map);
+    CreationDelta(GameObject* obj, RoomMap* room_map);
     ~CreationDelta();
     void revert();
 
 private:
-    Point3 pos_;
+    GameObject* obj_;
     RoomMap* room_map_;
 };
 
@@ -102,19 +103,6 @@ private:
     std::vector<GameObject*> objs_;
     Point3 dpos_;
     RoomMap* room_map_;
-};
-
-//TODO: remove, replace with a BatchMotionDelta
-class FallDelta: public Delta {
-public:
-    FallDelta(std::vector<Block*> blocks, int distance, RoomMap* room_map);
-    ~FallDelta();
-    void revert();
-
-private:
-    std::vector<Block*> blocks_;
-    RoomMap* room_map_;
-    int distance_;
 };
 
 
@@ -204,12 +192,12 @@ private:
 
 class ColorChangeDelta: public Delta {
 public:
-    ColorChangeDelta(Block* obj);
+    ColorChangeDelta(GameObject* obj);
     ~ColorChangeDelta();
     void revert();
 
 private:
-    Block* obj_;
+    GameObject* obj_;
 };
 
 #endif // DELTA_H

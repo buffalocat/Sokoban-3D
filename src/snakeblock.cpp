@@ -16,6 +16,36 @@ ObjCode SnakeBlock::obj_code() {
     return ObjCode::SnakeBlock;
 }
 
+void SnakeBlock::collect_sticky_links(RoomMap* room_map, Sticky sticky_level, std::vector<GameObject*>& links) {
+    if (!(Sticky::Snake & sticky_level)) {
+        return;
+    }
+    // Insert this Snake's links into the collection of links
+    std::insert(links.end(), links_.begin(), links_.end());
+}
+
+void SnakeBlock::toggle_push() {
+    distance_ ^= 3;
+}
+
+void SnakeBlock::record_move() {
+    distance_ ^= 2;
+    // If it has two opposite links, it gets "pushed" for free!
+    if ((links_.size() == 2) && ((pos_ - links_[0]->pos_) == (links_[1]->pos_ - pos_))) {
+        distance_ = 1;
+    }
+}
+
+void SnakeBlock::reset_distance_and_target() {
+    distance_ = 0;
+    target_ = nullptr;
+}
+
+bool SnakeBlock::pushed_and_moving() {
+    return distance_ == 1;
+}
+
+
 void SnakeBlock::draw(GraphicsManager* gfx) {
     FPoint3 p {real_pos()};
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y));
@@ -78,30 +108,6 @@ void SnakeBlock::relation_serialize(MapFileO& file) {
     }
 }
 
-std::unique_ptr<StrongComponent> SnakeBlock::make_strong_component(RoomMap* room_map) {
-    auto unique_comp = std::make_unique<SnakeComponent>(this);
-    comp_ = unique_comp.get();
-    return std::move(unique_comp);
-}
-
-std::unique_ptr<WeakComponent> SnakeBlock::make_weak_component(RoomMap* room_map) {
-    auto unique_comp = std::make_unique<WeakComponent>();
-    comp_ = unique_comp.get();
-    std::vector<SnakeBlock*> to_check {this};
-    while (!to_check.empty()) {
-        SnakeBlock* cur = to_check.back();
-        to_check.pop_back();
-        unique_comp->add_block(cur);
-        for (auto link : cur->links_) {
-            if (!link->comp_) {
-                link->comp_ = comp_;
-                to_check.push_back(link);
-            }
-        }
-    }
-    return std::move(unique_comp);
-}
-
 
 void SnakeBlock::root_init(Point3 dir) {
     if (links_.size() == 2) {
@@ -156,11 +162,22 @@ void SnakeBlock::check_add_local_links(RoomMap* room_map, DeltaFrame* delta_fram
     }
 }
 
-void SnakeBlock::check_remove_local_links(DeltaFrame* delta_frame) {
+void SnakeBlock::collect_maybe_confused_links(RoomMap* room_map, std::unordered_set<SnakeBlock*>& check) {
+    if (available()) {
+        for (Point3 d : H_DIRECTIONS) {
+            auto snake = dynamic_cast<SnakeBlock*>(room_map->view(shifted_pos(d)));
+            // TODO: Make sure these conditions are reasonable
+            if (snake && (snake->distance_ == 0) && (color_ == snake->color_) && snake->available()) {
+                check.insert(snake);
+            }
+        }
+    }
+}
+
+void SnakeBlock::remove_moving_links(DeltaFrame* delta_frame) {
     auto links_copy = links_;
-    for (auto link : links_copy) {
-        auto comp = dynamic_cast<SnakeComponent*>(link->comp_);
-        if (comp && comp->good()) {
+    for (SnakeBlock* link : links_copy) {
+        if (link->distance_) {
             remove_link(link, delta_frame);
         }
     }
@@ -191,17 +208,6 @@ bool SnakeBlock::confused(RoomMap* room_map) {
     return available_count > ends_;
 }
 
-/*
-void SnakeBlock::collect_unlinked_neighbors(RoomMap* room_map, std::unordered_set<SnakeBlock*>& check_snakes) {
-    for (auto& d : H_DIRECTIONS) {
-        auto snake = dynamic_cast<SnakeBlock*>(room_map->view(shifted_pos(d)));
-        if (snake && snake->available()) {
-            check_snakes.insert(snake);
-        }
-    }
-}
-*/
-
 void SnakeBlock::reset_target() {
     target_ = nullptr;
     distance_ = 0;
@@ -223,9 +229,8 @@ void SnakeBlock::reinit() {
 
 SnakePuller::SnakePuller(RoomMap* room_map, DeltaFrame* delta_frame,
                          std::vector<SnakeBlock*>& add_link_check,
-                         std::vector<std::pair<std::unique_ptr<SnakeBlock>, SnakeBlock*>>& split_snakes,
                          std::vector<Block*>& moving_blocks):
-room_map_ {room_map}, delta_frame_ {delta_frame}, add_link_check_ {add_link_check}, split_snakes_ {split_snakes}, moving_blocks_ {moving_blocks} {}
+room_map_ {room_map}, delta_frame_ {delta_frame}, add_link_check_ {add_link_check}, moving_blocks_ {moving_blocks} {}
 
 SnakePuller::~SnakePuller() {}
 
@@ -284,7 +289,7 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
                     auto split = std::make_unique<SnakeBlock>(link->pos_, cur->color_, cur->car_, 1);
                     split->set_linear_animation(link->pos_ - cur->pos_);
                     pull(link);
-                    split_snakes_.push_back(std::make_pair(std::move(split), link));
+                    //TODO: FIX!!!
                 }
             }
             // The chain was even length; cut!
@@ -312,11 +317,6 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
 }
 
 void SnakePuller::pull(SnakeBlock* cur) {
-    /*
-    if (cur->ends_ == 2) {
-        cur->collect_unlinked_neighbors(room_map_, check_);
-    }
-    */
     while (SnakeBlock* next = cur->target_) {
         cur->reset_target();
         moving_blocks_.push_back(cur);

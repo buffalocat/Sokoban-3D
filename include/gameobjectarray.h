@@ -1,7 +1,10 @@
 #ifndef GAMEOBJECTARRAY_H
 #define GAMEOBJECTARRAY_H
 
-#include "gameobject.h"
+#include <memory>
+#include <vector>
+
+class GameObject;
 
 class GameObjectArray
 {

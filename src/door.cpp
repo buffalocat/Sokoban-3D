@@ -1,11 +1,12 @@
 #include "door.h"
 
 #include "mapfile.h"
+#include "gameobject.h"
 #include "graphicsmanager.h"
 
 MapLocation::MapLocation(Point3 p, std::string room_name): pos {p}, name {room_name} {}
 
-Door::Door(Point3 pos, bool def): Switchable(pos, def, def), dest_ {} {}
+Door::Door(GameObject* parent, bool def): ObjectModifier(parent), Switchable(def, def), dest_ {} {}
 
 Door::~Door() {}
 
@@ -25,12 +26,14 @@ void Door::serialize(MapFileO& file) {
     file << default_;
 }
 
+/*
 GameObject* Door::deserialize(MapFileI& file) {
     Point3 pos {file.read_point3()};
     unsigned char b[1];
     file.read(b,1);
     return new Door(pos, b[0]);
 }
+*/
 
 bool Door::relation_check() {
     return dest_ != nullptr;
@@ -38,7 +41,7 @@ bool Door::relation_check() {
 
 void Door::relation_serialize(MapFileO& file) {
     file << MapCode::DoorDest;
-    file << pos_;
+    file << parent_->pos_;
     file << dest_->pos;
     file << dest_->name;
 }

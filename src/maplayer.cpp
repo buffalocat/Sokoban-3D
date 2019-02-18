@@ -34,7 +34,7 @@ int FullMapLayerIterator::id() {
 }
 
 
-SparseMapLayerIterator::SparseMapLayerIterator(std::unordered_map<Point, int, PointHash>& map, int z):
+SparseMapLayerIterator::SparseMapLayerIterator(std::unordered_map<Point2, int, Point2Hash>& map, int z):
 MapLayerIterator(),
 iter_ {map.begin()}, end_ {map.end()}, pos_ {0, 0, z}, id_ {-1} {
     update_values();
@@ -84,7 +84,7 @@ FullMapLayer::FullMapLayer(RoomMap* room_map, int width, int height, int z): Map
 
 FullMapLayer::~FullMapLayer() {}
 
-int& FullMapLayer::at(Point pos) {
+int& FullMapLayer::at(Point2 pos) {
     return map_[pos.x][pos.y];
 }
 
@@ -101,7 +101,7 @@ SparseMapLayer::SparseMapLayer(RoomMap* room_map, int z): MapLayer(room_map, z),
 
 SparseMapLayer::~SparseMapLayer() {}
 
-int& SparseMapLayer::at(Point pos) {
+int& SparseMapLayer::at(Point2 pos) {
     return map_.at(pos);
 }
 

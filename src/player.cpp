@@ -1,15 +1,16 @@
 #include "player.h"
+#include "pushblock.h"
 
 #include "delta.h"
 #include "roommap.h"
 #include "graphicsmanager.h"
 #include "mapfile.h"
 
-Player::Player(Point3 pos, RidingState state): Block(pos, ColorCycle(PINK), false), state_ {state} {}
+Player::Player(Point3 pos, RidingState state): PushBlock(pos, PINK, true, true, Sticky::None), state_ {state} {}
 
 Player::~Player() {}
 
-ObjCode Player::obj_code() {
+ObjCode Player::obj_code() const {
     return ObjCode::Player;
 }
 
@@ -26,20 +27,19 @@ void Player::toggle_riding(RoomMap* room_map, DeltaFrame* delta_frame) {
         delta_frame->push(std::make_unique<RidingStateDelta>(this, state_));
         state_ = RidingState::Bound;
     } else if (state_ == RidingState::Bound) {
-        Block* block = dynamic_cast<Block*>(room_map->view(shifted_pos({0,0,-1})));
-        if (block && block->car()) {
+        if (dynamic_cast<Car*>(room_map->view(shifted_pos({0,0,-1}))->modifier())) {
             delta_frame->push(std::make_unique<RidingStateDelta>(this, state_));
             state_ = RidingState::Riding;
         }
     }
 }
 
-Block* Player::get_car(RoomMap* room_map, bool strict) {
+Car* Player::get_car(RoomMap* room_map, bool strict) {
     if (state_ == RidingState::Free || (strict && state_ == RidingState::Bound)) {
         return nullptr;
     } else {
-        GameObject* car = room_map->view(shifted_pos({0,0,-1}));
-        return dynamic_cast<Block*>(car);
+        //NOTE: if there are no bugs elsewhere, this could be a static cast
+        return dynamic_cast<Car*>(room_map->view(shifted_pos({0,0,-1}))->modifier());
     }
 }
 
@@ -70,4 +70,11 @@ GameObject* Player::deserialize(MapFileI& file) {
     unsigned char b[4];
     file.read(b, 4);
     return new Player(Deser::p3(b), static_cast<RidingState>(b[3]));
+}
+
+// NOTE: if the Player becomes a subclass of a more general "Passenger" type, move this up to that class.
+void Player::collect_special_links(RoomMap* room_map, Sticky sticky_level, std::vector<GameObject*>& links) const {
+    if (state_ == RidingState::Riding) {
+        links.push_back(room_map->view(shifted_pos({0,0,-1})));
+    }
 }

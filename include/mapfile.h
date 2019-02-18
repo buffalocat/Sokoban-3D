@@ -1,6 +1,8 @@
 #ifndef MAPFILE_H
 #define MAPFILE_H
 
+#include <fstream>
+
 #include "common.h"
 #include "colorcycle.h"
 

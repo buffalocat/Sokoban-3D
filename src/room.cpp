@@ -5,7 +5,7 @@
 
 #include "graphicsmanager.h"
 #include "gameobject.h"
-#include "block.h"
+
 #include "snakeblock.h"
 #include "door.h"
 #include "switch.h"
@@ -14,7 +14,7 @@
 Room::Room(std::string name): name_ {name},
 map_ {}, camera_ {} {}
 
-Room::~Room() = default;
+Room::~Room() {}
 
 std::string const Room::name() {
     return name_;

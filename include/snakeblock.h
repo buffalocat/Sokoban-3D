@@ -1,30 +1,26 @@
 #ifndef SNAKEBLOCK_H
 #define SNAKEBLOCK_H
 
+#include <unordered_set>
+
 #include "common.h"
-#include "block.h"
+#include "gameobject.h"
 
-class StrongComponent;
-class WeakComponent;
-
-/** A different type of block which forms "chains", represented by a diamond
- */
-class SnakeBlock: public Block {
+class SnakeBlock: public GameObject {
 public:
-    SnakeBlock(Point3 pos, ColorCycle color, bool is_car, unsigned char ends);
+    SnakeBlock(Point3 pos, bool is_car, unsigned char ends);
     virtual ~SnakeBlock();
-    virtual ObjCode obj_code();
-    void serialize(MapFileO& file);
+    virtual ObjCode obj_code() const;
+    void serialize(MapFileO& file) const;
     static GameObject* deserialize(MapFileI& file);
-    bool relation_check();
-    void relation_serialize(MapFileO& file);
+    bool relation_check() const;
+    void relation_serialize(MapFileO& file) const;
 
-    std::unique_ptr<StrongComponent> make_strong_component(RoomMap*);
-    std::unique_ptr<WeakComponent> make_weak_component(RoomMap*);
-    void root_init(Point3);
-    void get_weak_links(RoomMap*, std::vector<Block*>&);
+    //void root_init(Point3);
 
-    bool in_links(SnakeBlock* sb);
+    void collect_sticky_links(RoomMap*, Sticky sticky_level, std::vector<GameObject*>& links) const;
+
+    bool in_links(SnakeBlock* sb) const;
     void add_link(SnakeBlock*, DeltaFrame*);
     void remove_link(SnakeBlock*, DeltaFrame*);
 
@@ -32,41 +28,48 @@ public:
 
     bool available();
     bool confused(RoomMap*);
+    void collect_maybe_confused_links(RoomMap*, std::unordered_set<SnakeBlock*>& check);
     void update_links_color(RoomMap*, DeltaFrame*);
     void check_add_local_links(RoomMap*, DeltaFrame*);
-    void check_remove_local_links(DeltaFrame*);
-    //void collect_unlinked_neighbors(RoomMap*, std::)
-    void reset_target();
+    void remove_moving_links(DeltaFrame*);
+
+    // distance_ encodes information about the state of the block during move processing
+    // A snake which is moving has positive distance_
+    // A snake which was not pushed has disitance_ at least 2
+    // target_ is only changed during snake pulling, and is reset afterwards
+    void toggle_push();
+    void record_move();
+    void reset_distance_and_target();
+    bool pushed_and_moving();
 
     void cleanup();
     void reinit();
 
 private:
     std::vector<SnakeBlock*> links_;
+    // Temporary data members, which should only be nontrivial during move computations
     SnakeBlock* target_;
     unsigned int distance_;
+
     unsigned char ends_;
 
-    friend class SnakeComponent;
     friend class SnakePuller;
 };
 
 class SnakePuller {
 public:
     SnakePuller(RoomMap*, DeltaFrame*,
-                std::vector<SnakeBlock*>& add_link_check,
-                std::vector<std::pair<std::unique_ptr<SnakeBlock>, SnakeBlock*>>& split_snakes,
-                std::vector<Block*>& moving_blocks);
+                std::vector<SnakeBlock*>& moving_snakes,
+                std::unordered_set<SnakeBlock*>& link_add_check,
+                std::vector<GameObject*>& fall_check);
     ~SnakePuller();
     void prepare_pull(SnakeBlock*);
-    void pull(SnakeBlock*);
+    void perform_pulls();
 
 private:
     RoomMap* room_map_;
     DeltaFrame* delta_frame_;
-    std::vector<SnakeBlock*>& add_link_check_;
-    std::vector<std::pair<std::unique_ptr<SnakeBlock>, SnakeBlock*>>& split_snakes_;
-    std::vector<Block*>& moving_blocks_;
+    std::vector<GameObject*>& add_link_check_;
     Point3 dir_;
 };
 

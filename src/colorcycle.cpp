@@ -20,7 +20,10 @@ void ColorCycle::insert_color(unsigned char color) {
     ++size_;
 }
 
-void ColorCycle::cycle(bool undo) {
+bool ColorCycle::cycle(bool undo) {
+    if (size_ == 1) {
+        return false;
+    }
     if (!undo) {
         ++index_;
         if (index_ == size_) {
@@ -33,4 +36,5 @@ void ColorCycle::cycle(bool undo) {
             --index_;
         }
     }
+    return true;
 }

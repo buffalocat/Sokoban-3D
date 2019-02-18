@@ -3,10 +3,11 @@
 #include "gameobject.h"
 #include "room.h"
 #include "roommap.h"
-#include "block.h"
 #include "snakeblock.h"
 #include "player.h"
 #include "switch.h"
+#include "switchable.h"
+#include "signaler.h"
 #include "playingstate.h"
 
 Delta::~Delta() {}
@@ -64,28 +65,28 @@ void UndoStack::reset() {
 //TODO: make sure DeletionDelta is right
 DeletionDelta::DeletionDelta(GameObject* obj, RoomMap* room_map):
 obj_ {obj}, room_map_ {room_map} {
-    obj_->cleanup_on_destruction();
+    obj_->cleanup_on_destruction(room_map);
 }
 
 DeletionDelta::~DeletionDelta() {}
 
 void DeletionDelta::revert() {
-    obj->setup_on_undestruction();
-    room_map_->put(obj_, nullptr);
+    obj_->setup_on_undestruction(room_map_);
+    room_map_->put(obj_);
 }
 
 
-CreationDelta::CreationDelta(Point3 pos, RoomMap* room_map): pos_ {pos}, room_map_ {room_map} {}
+CreationDelta::CreationDelta(GameObject* obj, RoomMap* room_map): obj_ {obj}, room_map_ {room_map} {}
 
 CreationDelta::~CreationDelta() {}
 
 void CreationDelta::revert() {
-    room_map_->take(pos_);
+    room_map_->take(obj_);
 }
 
 
-MotionDelta::MotionDelta(GameObject* obj, Point3 dpos RoomMap* room_map):
-obj_ {obj}, dpos_ {dpos} room_map_ {room_map} {}
+MotionDelta::MotionDelta(GameObject* obj, Point3 dpos, RoomMap* room_map):
+obj_ {obj}, dpos_ {dpos}, room_map_ {room_map} {}
 
 MotionDelta::~MotionDelta() {}
 
@@ -102,24 +103,6 @@ BatchMotionDelta::~BatchMotionDelta() {}
 void BatchMotionDelta::revert() {
     room_map_->batch_shift(objs_, -dpos_, nullptr);
 }
-
-
-FallDelta::FallDelta(std::vector<Block*> blocks, int distance, RoomMap* room_map):
-blocks_ {blocks}, room_map_ {room_map}, distance_ {distance} {}
-
-FallDelta::~FallDelta() {}
-
-void FallDelta::revert() {
-    std::vector<std::unique_ptr<GameObject>> objs_unique {};
-    for (Block* block : blocks_) {
-        objs_unique.push_back(room_map_->take_quiet(block));
-        block->shift_pos({0,0,distance_});
-    }
-    for (auto& obj_unique : objs_unique) {
-        room_map_->put_quiet(std::move(obj_unique));
-    }
-}
-
 
 AddLinkDelta::AddLinkDelta(SnakeBlock* a, SnakeBlock* b): a_ {a}, b_ {b} {}
 
@@ -147,16 +130,16 @@ void DoorMoveDelta::revert() {
     RoomMap* cur_map = state_->room_->room_map();
     RoomMap* dest_map = room_->room_map();
     Player* player = state_->player_;
-    Block* car = player->get_car(cur_map, true);
     state_->room_ = room_;
-    auto player_unique = cur_map->take_quiet(player);
-    if (car) {
-        auto car_unique = cur_map->take_quiet(car);
-        car->set_pos(pos_);
-        dest_map->put_quiet(std::move(car_unique));
+    cur_map->take(player);
+    if (Car* car = player->get_car(cur_map, true)) {
+        GameObject* car_concrete = car->parent_;
+        cur_map->take(car_concrete);
+        car_concrete->pos_ = pos_ + Point3{0,0,-1};
+        dest_map->put(car_concrete);
     }
-    player->set_pos(pos_);
-    dest_map->put_quiet(std::move(player_unique));
+    player->pos_ = pos_;
+    dest_map->put(player);
 }
 
 
@@ -197,10 +180,13 @@ void RidingStateDelta::revert() {
     player_->set_riding(state_);
 }
 
-ColorChangeDelta::ColorChangeDelta(Block* obj): obj_ {obj} {}
+// TODO: Fix when Car is a ObjectModifier
+/*
+ColorChangeDelta::ColorChangeDelta(GameObject* obj): obj_ {obj} {}
 
 ColorChangeDelta::~ColorChangeDelta() {}
 
 void ColorChangeDelta::revert() {
     obj_->cycle_color(true);
 }
+*/

@@ -5,24 +5,7 @@
 #include "gameobject.h"
 #include "colorcycle.h"
 
-class Component;
-class Animation;
-
-enum class Sticky : uint8_t {
-    // Stickiness levels of particular objects
-    NonStickBlock = 0,
-    WeakBlock = 1,
-    StrongBlock = 3,
-    SnakeBlock = 4,
-    // Conditions for sticking
-    WEAKSTICK = 1,
-    STRONGSTICK = 2,
-};
-
-Sticky operator &(Sticky a, Sticky b) {
-    return static_cast<Sticky>(static_cast<uint8_t>(a) &
-                               static_cast<uint8_t>(b));
-}
+/*
 
 class Block: public GameObject {
 public:
@@ -94,5 +77,7 @@ public:
 
     void draw(GraphicsManager*);
 };
+
+*/
 
 #endif // BLOCK_H

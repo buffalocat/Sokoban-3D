@@ -25,6 +25,9 @@
 *.depend
 *.layout
 
+# Backups
+*.save-failed
+
 # Private Maps
 *_.map
 

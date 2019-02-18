@@ -1,7 +1,9 @@
+#include <cmath>
+
 #include "camera.h"
 #include "roommap.h"
 #include "mapfile.h"
-#include "block.h"
+
 
 
 CameraContext::CameraContext(int x, int y, int w, int h, int priority): x_ {x}, y_ {y}, w_ {w}, h_ {h}, priority_ {priority} {}

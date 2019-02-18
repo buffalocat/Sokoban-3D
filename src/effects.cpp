@@ -1,8 +1,10 @@
 #include "effects.h"
-#include "graphicsmanager.h"
-#include "block.h"
 
 #include <algorithm>
+
+#include "graphicsmanager.h"
+#include "gameobject.h"
+
 
 Effects::Effects(): trails_ {} {}
 
@@ -30,6 +32,6 @@ void Effects::draw(GraphicsManager* gfx) {
     trails_.erase(std::remove_if(trails_.begin(), trails_.end(), [](FallTrail t) {return t.opacity == 0;}), trails_.end());
 }
 
-void Effects::push_trail(Block* block, int height, int drop) {
-    trails_.push_back({block->pos() - Point3{0,0,drop}, height+drop, FALL_TRAIL_OPACITY, block->color()});
+void Effects::push_trail(GameObject* block, int height, int drop) {
+    trails_.push_back({block->pos_ - Point3{0,0,drop}, height+drop, FALL_TRAIL_OPACITY, block->color_});
 }

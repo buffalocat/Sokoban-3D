@@ -1,11 +1,18 @@
 #ifndef ROOM_H
 #define ROOM_H
 
-#include "common.h"
-#include "roommap.h"
-#include "camera.h"
+#include <string>
+#include <memory>
 
+#include "common.h"
+
+class GameObjectArray;
 class GraphicsManager;
+class RoomMap;
+class Camera;
+class MapFileI;
+class MapFileO;
+class GameObject;
 
 class Room {
 public:
@@ -21,7 +28,7 @@ public:
     void load_from_file(GameObjectArray& objs, MapFileI& file, Point3* start_pos=nullptr);
 
     void draw(GraphicsManager*, Point3 cam_pos, bool ortho, bool one_layer);
-    void draw(GraphicsManager*, Block* target, bool ortho, bool one_layer);
+    void draw(GraphicsManager*, GameObject* target, bool ortho, bool one_layer);
     void update_view(GraphicsManager*, Point3 vpos, FPoint3 rpos, bool ortho);
 
 private:

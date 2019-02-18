@@ -5,7 +5,7 @@
 		<Option title="Sokoban-3D" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="GameObjects\;GameStates\;GameStates\EditorTabs\;" />
+		<Option virtualFolders="ObjectModifiers\;GameObjects\;GameStates\;GameStates\EditorTabs\;ObjectModifiers\Properties\;" />
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/Debug/Sokoban-3D" prefix_auto="1" extension_auto="1" />
@@ -70,6 +70,8 @@
 		<Unit filename="include/animation.h" />
 		<Unit filename="include/block.h" />
 		<Unit filename="include/camera.h" />
+		<Unit filename="include/car.h" />
+		<Unit filename="include/color_constants.h" />
 		<Unit filename="include/colorcycle.h" />
 		<Unit filename="include/common.h" />
 		<Unit filename="include/component.h" />
@@ -90,22 +92,31 @@
 		<Unit filename="include/gameobject.h" />
 		<Unit filename="include/gameobjectarray.h" />
 		<Unit filename="include/gamestate.h" />
+		<Unit filename="include/gate.h" />
+		<Unit filename="include/gatebody.h" />
 		<Unit filename="include/graphicsmanager.h" />
 		<Unit filename="include/mainmenustate.h" />
 		<Unit filename="include/mapfile.h" />
 		<Unit filename="include/maplayer.h" />
 		<Unit filename="include/moveprocessor.h" />
+		<Unit filename="include/objectmodifier.h" />
 		<Unit filename="include/objecttab.h" />
 		<Unit filename="include/player.h" />
 		<Unit filename="include/playingstate.h" />
+		<Unit filename="include/point.h" />
+		<Unit filename="include/pressswitch.h" />
+		<Unit filename="include/pushblock.h" />
 		<Unit filename="include/room.h" />
 		<Unit filename="include/roommap.h" />
 		<Unit filename="include/saveloadtab.h" />
 		<Unit filename="include/shader.h" />
+		<Unit filename="include/signaler.h" />
 		<Unit filename="include/snakeblock.h" />
 		<Unit filename="include/stb_image.h" />
 		<Unit filename="include/switch.h" />
+		<Unit filename="include/switchable.h" />
 		<Unit filename="include/switchtab.h" />
+		<Unit filename="include/wall.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="shaders/shader.fs" />
 		<Unit filename="shaders/shader.vs" />
@@ -114,12 +125,15 @@
 			<Option virtualFolder="GameObjects/" />
 		</Unit>
 		<Unit filename="src/camera.cpp" />
+		<Unit filename="src/car.cpp">
+			<Option virtualFolder="ObjectModifiers/" />
+		</Unit>
 		<Unit filename="src/colorcycle.cpp" />
 		<Unit filename="src/common.cpp" />
 		<Unit filename="src/component.cpp" />
 		<Unit filename="src/delta.cpp" />
 		<Unit filename="src/door.cpp">
-			<Option virtualFolder="GameObjects/" />
+			<Option virtualFolder="ObjectModifiers/" />
 		</Unit>
 		<Unit filename="src/doorselectstate.cpp">
 			<Option virtualFolder="GameStates/" />
@@ -144,6 +158,12 @@
 		<Unit filename="src/gamestate.cpp">
 			<Option virtualFolder="GameStates/" />
 		</Unit>
+		<Unit filename="src/gate.cpp">
+			<Option virtualFolder="ObjectModifiers/" />
+		</Unit>
+		<Unit filename="src/gatebody.cpp">
+			<Option virtualFolder="GameObjects/" />
+		</Unit>
 		<Unit filename="src/graphicsmanager.cpp" />
 		<Unit filename="src/mainmenustate.cpp">
 			<Option virtualFolder="GameStates/" />
@@ -151,6 +171,9 @@
 		<Unit filename="src/mapfile.cpp" />
 		<Unit filename="src/maplayer.cpp" />
 		<Unit filename="src/moveprocessor.cpp" />
+		<Unit filename="src/objectmodifier.cpp">
+			<Option virtualFolder="ObjectModifiers/" />
+		</Unit>
 		<Unit filename="src/objecttab.cpp">
 			<Option virtualFolder="GameStates/EditorTabs/" />
 		</Unit>
@@ -160,20 +183,36 @@
 		<Unit filename="src/playingstate.cpp">
 			<Option virtualFolder="GameStates/" />
 		</Unit>
+		<Unit filename="src/point.cpp" />
+		<Unit filename="src/pressswitch.cpp">
+			<Option virtualFolder="ObjectModifiers/" />
+		</Unit>
+		<Unit filename="src/pushblock.cpp">
+			<Option virtualFolder="GameObjects/" />
+		</Unit>
 		<Unit filename="src/room.cpp" />
 		<Unit filename="src/roommap.cpp" />
 		<Unit filename="src/saveloadtab.cpp">
 			<Option virtualFolder="GameStates/EditorTabs/" />
 		</Unit>
 		<Unit filename="src/shader.cpp" />
+		<Unit filename="src/signaler.cpp">
+			<Option virtualFolder="ObjectModifiers/" />
+		</Unit>
 		<Unit filename="src/snakeblock.cpp">
 			<Option virtualFolder="GameObjects/" />
 		</Unit>
 		<Unit filename="src/switch.cpp">
-			<Option virtualFolder="GameObjects/" />
+			<Option virtualFolder="ObjectModifiers/Properties/" />
+		</Unit>
+		<Unit filename="src/switchable.cpp">
+			<Option virtualFolder="ObjectModifiers/Properties/" />
 		</Unit>
 		<Unit filename="src/switchtab.cpp">
 			<Option virtualFolder="GameStates/EditorTabs/" />
+		</Unit>
+		<Unit filename="src/wall.cpp">
+			<Option virtualFolder="GameObjects/" />
 		</Unit>
 		<Extensions>
 			<code_completion />

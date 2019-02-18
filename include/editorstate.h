@@ -1,6 +1,10 @@
 #ifndef EDITORSTATE_H
 #define EDITORSTATE_H
 
+#include <map>
+#include <memory>
+#include <string>
+
 #include "common.h"
 #include "editorbasestate.h"
 #include "editortab.h"
@@ -39,7 +43,7 @@ private:
 class EditorState: public EditorBaseState {
 public:
     EditorState(GraphicsManager* gfx);
-    ~EditorState() = default;
+    ~EditorState();
     void main_loop();
 
     void set_active_room(std::string name);

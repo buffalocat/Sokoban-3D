@@ -4,7 +4,7 @@
 #include "common.h"
 
 class Player;
-class Block;
+class GameObject;
 class RoomMap;
 class DeltaFrame;
 class SnakeBlock;
@@ -15,50 +15,79 @@ enum class MoveStepType {
 };
 
 struct PushComponent {
-    std::vector<Block*> blocks_;
-    std::unordered_set<PushComponent*> pushing_;
+    PushComponent(): blocks_ {}, pushing_ {}, blocked_ {false}, moving_ {false} {}
+    std::vector<GameObject*> blocks_;
+    std::vector<PushComponent*> pushing_;
     bool blocked_;
-    bool pushed_;
-    PushComponent(bool pushed): blocks_ {}, pushing_ {}, blocked_ {false}, pushed_ {pushed} {}
+    bool moving_;
+};
+
+struct FallComponent {
+    void check_land_first(RoomMap*);
+    void settle_first();
+
+    void collect_above(std::vector<GameObject*>& above_list, RoomMap* room_map);
+    void collect_falling_unique(RoomMap* room_map);
+
+    // Make these methods of MoveProcessor!
+    bool drop_check(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame);
+    void check_land_sticky(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame);
+    void handle_unique_blocks(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame);
+    void settle(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame);
+
+    std::vector<GameObject*> blocks_;
+    std::vector<FallComponent*> above_;
+    bool settled_;
 };
 
 class MoveProcessor {
 public:
     MoveProcessor(Player*, RoomMap*, Point3 dir, DeltaFrame*);
     ~MoveProcessor();
+
     bool try_move();
     void move_bound();
     void move_general();
     void color_change_check();
-    void init_movement_components();
-    void move_components();
+
+    void prepare_horizontal_move();
+    void perform_horizontal_step();
+
+    bool compute_push_component_tree(GameObject* block);
+    bool compute_push_component(GameObject* block);
+
+    void collect_moving_and_weak_links(PushComponent* comp, std::vector<GameObject*>& weak_links);
+
     void fall_step();
     void perform_switch_checks();
     void begin_fall_cycle();
+    /*
     void check_land_first();
     void make_fall_delta();
+    */
 
     bool update();
     void abort();
 
-    bool try_move_component(StrongComponent*);
-    bool try_push(StrongComponent*, Point3);
-
 private:
+    std::unordered_map<GameObject*, PushComponent*> push_comps_;
+    std::vector<std::unique_ptr<PushComponent>> push_comps_unique_;
+
+    std::vector<GameObject*> moving_blocks_;
+    std::vector<GameObject*> fall_check_;
+    std::vector<SnakeBlock*> link_break_check_;
+
+    std::unordered_map<GameObject*, FallComponent*> fall_comps_;
+    std::vector<std::unique_ptr<FallComponent>> fall_comps_unique_;
+
+    std::vector<SnakeBlock*> moving_snakes_;
+    std::vector<SnakeBlock*> snakes_to_reset_;
+    std::vector<SnakeBlock*> snakes_to_recheck_;
+
     Player* player_;
     RoomMap* map_;
     DeltaFrame* delta_frame_;
     Point3 dir_;
-    std::vector<std::unique_ptr<PushComponent>> push_comps_unique_;
-    std::unordered_map<Block*, PushComponent*> push_comps_;
-    std::vector<PushComponent*> moving_comps_;
-
-    std::vector<std::unique_ptr<StrongComponent>> move_comps_;
-    std::vector<Block*> moving_blocks_;
-    std::vector<Block*> fall_check_;
-    std::vector<SnakeBlock*> link_add_check_;
-    std::vector<SnakeBlock*> link_break_check_;
-    std::vector<std::unique_ptr<WeakComponent>> fall_comps_;
 
     unsigned int frames_;
     MoveStepType state_;

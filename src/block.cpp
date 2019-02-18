@@ -1,4 +1,4 @@
-#include "block.h"
+
 #include "graphicsmanager.h"
 #include "delta.h"
 #include "roommap.h"
@@ -8,7 +8,7 @@
 #include "animation.h"
 
 #include "graphicsmanager.h"
-
+/*
 
 Block::Block(Point3 pos, ColorCycle color, bool car):
 GameObject(pos), animation_ {}, comp_ {}, color_ {color}, car_ {car} {}
@@ -277,3 +277,4 @@ void StickyBlock::draw(GraphicsManager* gfx) {
     gfx->set_color(COLORS[color()]);
     gfx->draw_cube();
 }
+*/

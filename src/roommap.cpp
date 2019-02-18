@@ -2,7 +2,7 @@
 
 #include "gameobject.h"
 #include "delta.h"
-#include "block.h"
+
 #include "snakeblock.h"
 #include "switch.h"
 #include "mapfile.h"
@@ -114,9 +114,9 @@ void RoomMap::batch_shift(std::vector<GameObject*> objs, Point3 dpos, DeltaFrame
     }
 }
 
-void RoomMap::create(std::unique_ptr<GameObject> obj, Point3 pos, DeltaFrame* delta_frame) {
+void RoomMap::create(std::unique_ptr<GameObject> obj, DeltaFrame* delta_frame) {
     obj_array_->push_object(std::move(obj));
-    at(pos) = obj->id_;
+    at(obj->pos_) = obj->id_;
 }
 
 // TODO (maybe): Consider allowing for a general callback function here
@@ -174,10 +174,13 @@ void RoomMap::set_initial_state(bool editor_mode) {
                     gate->check_waiting(this, nullptr);
                     continue;
                 }
+                // This doesn't even make sense in the current model!
+                /*
                 auto sw = dynamic_cast<Switch*>(obj);
                 if (sw) {
                     sw->check_send_signal(this, nullptr);
                 }
+                */
                 auto sb = dynamic_cast<SnakeBlock*>(obj);
                 if (sb) {
                     sb->check_add_local_links(this, nullptr);
@@ -185,7 +188,9 @@ void RoomMap::set_initial_state(bool editor_mode) {
             }
         }
     }
-    check_signalers(nullptr, nullptr);
+    // TODO: fix (well, fix this whole method actually)
+    std::vector<GameObject*> dummy {};
+    check_signalers(nullptr, dummy);
 }
 
 // The room keeps track of some things which must be forgotten after a move or undo
@@ -198,7 +203,8 @@ void RoomMap::push_signaler(std::unique_ptr<Signaler> signaler) {
     signalers_.push_back(std::move(signaler));
 }
 
-void RoomMap::check_signalers(DeltaFrame* delta_frame, std::vector<Block*>* fall_check) {
+// NOTE: this function breaks the "locality" rule, but it's probably not a big deal.
+void RoomMap::check_signalers(DeltaFrame* delta_frame, std::vector<GameObject*>& fall_check) {
     for (auto& signaler : signalers_) {
         signaler->check_send_signal(this, delta_frame, fall_check);
     }
@@ -209,6 +215,6 @@ void RoomMap::remove_from_signalers(GameObject* obj) {
                                     [obj](std::unique_ptr<Signaler>& sig) {return sig->remove_object(obj);}), signalers_.end());
 }
 
-void RoomMap::make_fall_trail(Block* block, int height, int drop) {
+void RoomMap::make_fall_trail(GameObject* block, int height, int drop) {
     effects_->push_trail(block, height, drop);
 }

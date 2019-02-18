@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #include "gameobject.h"
-#include "block.h"
+
 #include "player.h"
 #include "room.h"
 #include "roommap.h"
@@ -21,7 +21,7 @@ testing_ {testing} {
     room_->room_map()->set_initial_state(false);
 }
 
-PlayingState::~PlayingState() = default;
+PlayingState::~PlayingState() {}
 
 void PlayingState::init_player(Point3 pos) {
     RidingState rs;

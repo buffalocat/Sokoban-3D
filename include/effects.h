@@ -3,6 +3,7 @@
 
 #include "common.h"
 
+class GameObject;
 class GraphicsManager;
 
 struct FallTrail {
@@ -18,7 +19,7 @@ public:
     ~Effects();
     void sort_by_distance(float angle);
     void draw(GraphicsManager*);
-    void push_trail(Block*, int height, int drop);
+    void push_trail(GameObject*, int height, int drop);
 
 private:
     std::vector<FallTrail> trails_;

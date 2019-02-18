@@ -4,7 +4,7 @@
 #include "room.h"
 #include "roommap.h"
 
-#include "block.h"
+
 #include "switch.h"
 #include "door.h"
 #include "snakeblock.h"

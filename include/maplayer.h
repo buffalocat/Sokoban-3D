@@ -12,7 +12,7 @@ class GraphicsManager;
 
 class MapLayerIterator {
 public:
-    virtual ~MapLayerIterator() = 0;
+    virtual ~MapLayerIterator();
 
     virtual void advance() = 0;
     virtual bool done() = 0;
@@ -44,7 +44,7 @@ private:
 
 class SparseMapLayerIterator: public MapLayerIterator {
 public:
-    SparseMapLayerIterator(std::unordered_map<Point, int, PointHash>& map, int z);
+    SparseMapLayerIterator(std::unordered_map<Point2, int, Point2Hash>& map, int z);
     ~SparseMapLayerIterator();
 
     void advance();
@@ -54,8 +54,8 @@ public:
     int id();
 
 private:
-    std::unordered_map<Point, int, PointHash>::iterator iter_;
-    std::unordered_map<Point, int, PointHash>::iterator end_;
+    std::unordered_map<Point2, int, Point2Hash>::iterator iter_;
+    std::unordered_map<Point2, int, Point2Hash>::iterator end_;
     Point3 pos_;
     int id_;
 
@@ -68,7 +68,7 @@ public:
     MapLayer(RoomMap*, int z);
     virtual ~MapLayer() = 0;
 
-    virtual int& at(Point pos) = 0;
+    virtual int& at(Point2 pos) = 0;
 
     virtual MapCode type() = 0;
     virtual std::unique_ptr<MapLayerIterator> begin_iter() = 0;
@@ -83,7 +83,7 @@ public:
     FullMapLayer(RoomMap*, int width, int height, int z);
     ~FullMapLayer();
 
-    int& at(Point pos);
+    int& at(Point2 pos);
 
     MapCode type();
     std::unique_ptr<MapLayerIterator> begin_iter();
@@ -100,13 +100,13 @@ public:
     SparseMapLayer(RoomMap*, int z);
     ~SparseMapLayer();
 
-    int& at(Point pos);
+    int& at(Point2 pos);
 
     MapCode type();
     std::unique_ptr<MapLayerIterator> begin_iter();
 
 private:
-    std::unordered_map<Point, int, PointHash> map_;
+    std::unordered_map<Point2, int, Point2Hash> map_;
 };
 
 #endif // MAPLAYER_H

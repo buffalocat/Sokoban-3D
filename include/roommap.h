@@ -1,12 +1,14 @@
 #ifndef ROOMMAP_H
 #define ROOMMAP_H
 
-#include "gameobjectarray.h"
-#include "common.h"
-#include "maplayer.h"
-#include "switch.h"
-#include "effects.h"
+#include <unordered_set>
 
+#include "common.h"
+
+class GameObjectArray;
+class Signaler;
+class Effects;
+class MapLayer;
 class GraphicsManager;
 class DeltaFrame;
 class GameObject;
@@ -19,7 +21,7 @@ typedef void(GameObject::*MapCallback)(RoomMap*,DeltaFrame*);
 class RoomMap {
 public:
     RoomMap(GameObjectArray& objs, int width, int height, int depth);
-    ~RoomMap() = default;
+    ~RoomMap();
     bool valid(Point3 pos);
 
     void push_full();
@@ -28,10 +30,13 @@ public:
     int& at(Point3);
 
     GameObject* view(Point3 pos);
-    void take(GameObject*, DeltaFrame*);
-    void put(GameObject*, DeltaFrame*);
-    void create(std::unique_ptr<GameObject>, Point3, DeltaFrame*);
+    void take(GameObject*);
+    void put(GameObject*);
+    void create(std::unique_ptr<GameObject>, DeltaFrame*);
     void destroy(Point3, DeltaFrame*);
+
+    void shift(GameObject*, Point3, DeltaFrame*);
+    void batch_shift(std::vector<GameObject*>, Point3, DeltaFrame*);
 
     void serialize(MapFileO& file) const;
 
@@ -41,10 +46,11 @@ public:
     void reset_local_state();
 
     void push_signaler(std::unique_ptr<Signaler>);
-    void check_signalers(DeltaFrame*, std::vector<Block*>*);
+    void check_signalers(DeltaFrame*, std::vector<GameObject*>&);
     void remove_from_signalers(GameObject*);
+    void alert_activated_listeners(DeltaFrame*);
 
-    void make_fall_trail(Block*, int height, int drop);
+    void make_fall_trail(GameObject*, int height, int drop);
 
 // Public "private" members
     int width_;

@@ -2,6 +2,7 @@
 
 #include "room.h"
 #include "roommap.h"
+#include "gameobject.h"
 #include "door.h"
 #include "editorstate.h"
 #include "doorselectstate.h"
@@ -81,7 +82,7 @@ void DoorTab::main_loop(EditorRoom* eroom) {
 }
 
 void DoorTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
-    Door* door = dynamic_cast<Door*>(eroom->room->room_map()->view(pos));
+    Door* door = dynamic_cast<Door*>(eroom->room->room_map()->view(pos)->modifier());
     if (door) {
         entrance_ = door;
     }

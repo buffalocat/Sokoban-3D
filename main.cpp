@@ -6,11 +6,12 @@
 #include <thread>
 #include <chrono>
 
-#include "common.h"
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
 #pragma GCC diagnostic ignored "-Wswitch-default"
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 #include <dear/imgui.h>
 #include <dear/imgui_impl_glfw.h>
@@ -21,7 +22,7 @@
 #include "graphicsmanager.h"
 #include "mainmenustate.h"
 
-#include "block.h"
+
 
 bool window_init(GLFWwindow*&);
 

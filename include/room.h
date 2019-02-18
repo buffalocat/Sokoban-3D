@@ -27,6 +27,8 @@ public:
     void write_to_file(MapFileO& file, Point3 start_pos);
     void load_from_file(GameObjectArray& objs, MapFileI& file, Point3* start_pos=nullptr);
 
+    RoomMap* map();
+
     void draw(GraphicsManager*, Point3 cam_pos, bool ortho, bool one_layer);
     void draw(GraphicsManager*, GameObject* target, bool ortho, bool one_layer);
     void update_view(GraphicsManager*, Point3 vpos, FPoint3 rpos, bool ortho);

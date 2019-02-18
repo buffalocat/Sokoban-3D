@@ -2,6 +2,8 @@
 
 #include <unistd.h>
 
+
+#include "gameobjectarray.h"
 #include "graphicsmanager.h"
 #include "gamestate.h"
 #include "playingstate.h"
@@ -38,6 +40,8 @@ objs_ {std::make_unique<GameObjectArray>()} {
 }
 
 #undef INIT_TAB
+
+EditorState::~EditorState() {}
 
 
 void EditorState::main_loop() {

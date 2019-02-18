@@ -7,8 +7,8 @@
 
 #include <algorithm>
 
-SnakeBlock::SnakeBlock(Point3 pos, ColorCycle color, bool is_car, unsigned char ends):
-Block(pos, color, is_car), links_ {}, target_ {}, distance_ {0}, ends_ {ends}  {}
+SnakeBlock::SnakeBlock(Point3 pos, int color, bool pushable, bool gravitable, unsigned char ends):
+GameObject(pos, color, pushable, gravitable), links_ {}, target_ {}, distance_ {0}, ends_ {ends}  {}
 
 SnakeBlock::~SnakeBlock() {}
 
@@ -17,11 +17,15 @@ ObjCode SnakeBlock::obj_code() {
 }
 
 void SnakeBlock::collect_sticky_links(RoomMap* room_map, Sticky sticky_level, std::vector<GameObject*>& links) {
-    if (!(Sticky::Snake & sticky_level)) {
+    if ((Sticky::Snake & sticky_level) == Sticky::None) {
         return;
     }
     // Insert this Snake's links into the collection of links
-    std::insert(links.end(), links_.begin(), links_.end());
+    links.insert(links.end(), links_.begin(), links_.end());
+}
+
+Sticky SnakeBlock::sticky() {
+    return Sticky::Snake;
 }
 
 void SnakeBlock::toggle_push() {
@@ -52,7 +56,7 @@ void SnakeBlock::draw(GraphicsManager* gfx) {
     model = glm::scale(model, glm::vec3(0.7071f, 1, 0.7071f));
     model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0, 1, 0));
     gfx->set_model(model);
-    gfx->set_color(COLORS[color()]);
+    gfx->set_color(COLORS[color_]);
     if (ends_ == 1) {
         gfx->set_tex(glm::vec2(2,0));
         gfx->draw_cube();
@@ -72,17 +76,17 @@ void SnakeBlock::draw(GraphicsManager* gfx) {
     }
 }
 
-void SnakeBlock::serialize(MapFileO& file) {
-    Block::serialize(file);
-    file << ends_;
-}
+
+void SnakeBlock::serialize(MapFileO& file) {}
 
 GameObject* SnakeBlock::deserialize(MapFileI& file) {
+    /*
     Point3 pos {file.read_point3()};
-    ColorCycle color {file.read_color_cycle()};
     unsigned char b[2];
     file.read(b, 2);
     return new SnakeBlock(pos, color, b[0], b[1]);
+    */
+    return nullptr;
 }
 
 bool SnakeBlock::relation_check() {
@@ -105,28 +109,6 @@ void SnakeBlock::relation_serialize(MapFileO& file) {
         file << MapCode::SnakeLink;
         file << pos_;
         file << link_encode;
-    }
-}
-
-
-void SnakeBlock::root_init(Point3 dir) {
-    if (links_.size() == 2) {
-        bool in_front = false;
-        Point3 front_pos = pos_ + dir;
-        for (auto link : links_) {
-            if (link->pos_ == front_pos) {
-                in_front = true;
-            }
-        }
-        if (!in_front) {
-            static_cast<SnakeComponent*>(comp_)->set_pushed();
-        }
-    }
-}
-
-void SnakeBlock::get_weak_links(RoomMap* room_map, std::vector<Block*>& links) {
-    for (auto link : links_) {
-        links.push_back(link);
     }
 }
 
@@ -156,7 +138,7 @@ void SnakeBlock::check_add_local_links(RoomMap* room_map, DeltaFrame* delta_fram
     }
     for (auto& d : H_DIRECTIONS) {
         auto snake = dynamic_cast<SnakeBlock*>(room_map->view(shifted_pos(d)));
-        if (snake && color() == snake->color() && snake->available() && !in_links(snake) && !snake->confused(room_map)) {
+        if (snake && color_ == snake->color_ && snake->available() && !in_links(snake) && !snake->confused(room_map)) {
             add_link(snake, delta_frame);
         }
     }
@@ -186,7 +168,7 @@ void SnakeBlock::remove_moving_links(DeltaFrame* delta_frame) {
 void SnakeBlock::update_links_color(RoomMap* room_map, DeltaFrame* delta_frame) {
     auto links_copy = links_;
     for (auto link : links_copy) {
-        if (color() != link->color()) {
+        if (color_ != link->color_) {
             remove_link(link, delta_frame);
         }
     }
@@ -201,20 +183,15 @@ bool SnakeBlock::confused(RoomMap* room_map) {
     unsigned int available_count = 0;
     for (auto& d : H_DIRECTIONS) {
         auto snake = dynamic_cast<SnakeBlock*>(room_map->view(shifted_pos(d)));
-        if (snake && color() == snake->color() && (snake->available() || in_links(snake))) {
+        if (snake && color_ == snake->color_ && (snake->available() || in_links(snake))) {
             ++available_count;
         }
     }
     return available_count > ends_;
 }
 
-void SnakeBlock::reset_target() {
-    target_ = nullptr;
-    distance_ = 0;
-}
-
 void SnakeBlock::cleanup() {
-    reset_target();
+    reset_distance_and_target();
     for (SnakeBlock* link : links_) {
         link->links_.erase(std::find(link->links_.begin(), link->links_.end(), this));
     }
@@ -228,9 +205,10 @@ void SnakeBlock::reinit() {
 
 
 SnakePuller::SnakePuller(RoomMap* room_map, DeltaFrame* delta_frame,
-                         std::vector<SnakeBlock*>& add_link_check,
-                         std::vector<Block*>& moving_blocks):
-room_map_ {room_map}, delta_frame_ {delta_frame}, add_link_check_ {add_link_check}, moving_blocks_ {moving_blocks} {}
+                         std::vector<SnakeBlock*>& moving_snakes,
+                         std::unordered_set<SnakeBlock*>& add_link_check,
+                         std::vector<GameObject*>& fall_check):
+room_map_ {room_map}, delta_frame_ {delta_frame}, moving_snakes_ {moving_snakes}, add_link_check_ {add_link_check}, fall_check_ {fall_check} {}
 
 SnakePuller::~SnakePuller() {}
 
@@ -240,8 +218,7 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
     }
     SnakeBlock* prev {};
     for (SnakeBlock* link : cur->links_) {
-        auto comp = static_cast<SnakeComponent*>(link->s_comp());
-        if (comp && comp->pushed()) {
+        if (link->pushed_and_moving()) {
             prev = link;
             break;
         }
@@ -258,8 +235,9 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
     while (true) {
         // If we reach the end of the snake, we can pull it
         if (cur->links_.size() == 1) {
-            add_link_check_.push_back(cur);
-            pull(cur);
+            add_link_check_.insert(cur);
+            // Prepare the pull! but don't do it yet!
+            //perform_pulls(cur);
             break;
         }
         // Progress down the snake
@@ -275,8 +253,7 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
             }
         }
         // If we reach another block with a component initialized, nothing gets pulled (yet)
-        auto comp = dynamic_cast<SnakeComponent*>(cur->comp_);
-        if (comp && comp->good()) {
+        if (cur->pushed_and_moving()) {
             return;
         }
         // If we reach a block with an initialized but shorter distance, we're done
@@ -284,11 +261,13 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
             // The chain was odd length; split the middle block!
             if (d == cur->distance_) {
                 std::vector<SnakeBlock*> links = cur->links_;
-                room_map_->take(cur, delta_frame_);
+                room_map_->destroy(cur, delta_frame_);
                 for (SnakeBlock* link : links) {
-                    auto split = std::make_unique<SnakeBlock>(link->pos_, cur->color_, cur->car_, 1);
+                    /*
+                    auto split = std::make_unique<SnakeBlock>(link->pos_, cur->color_, 1);
                     split->set_linear_animation(link->pos_ - cur->pos_);
                     pull(link);
+                    */
                     //TODO: FIX!!!
                 }
             }
@@ -304,11 +283,11 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
                     below_release_.push_back(below);
                 }
                 */
-                add_link_check_.push_back(cur);
-                add_link_check_.push_back(prev);
+                add_link_check_.insert(cur);
+                add_link_check_.insert(prev);
                 cur->remove_link(prev, delta_frame_);
-                pull(cur);
-                pull(prev);
+                //pull(cur);
+                //pull(prev);
             }
             return;
         }
@@ -316,7 +295,9 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
     }
 }
 
-void SnakePuller::pull(SnakeBlock* cur) {
+void SnakePuller::perform_pulls() {
+    /*
+    for cur in snakes_to_pull:
     while (SnakeBlock* next = cur->target_) {
         cur->reset_target();
         moving_blocks_.push_back(cur);
@@ -324,4 +305,5 @@ void SnakePuller::pull(SnakeBlock* cur) {
         cur = next;
     }
     cur->reset_target();
+    */
 }

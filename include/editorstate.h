@@ -43,7 +43,7 @@ private:
 class EditorState: public EditorBaseState {
 public:
     EditorState(GraphicsManager* gfx);
-    ~EditorState();
+    virtual ~EditorState();
     void main_loop();
 
     void set_active_room(std::string name);

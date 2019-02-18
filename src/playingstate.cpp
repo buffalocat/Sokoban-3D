@@ -4,6 +4,8 @@
 
 #include "gameobject.h"
 
+#include "gameobjectarray.h"
+#include "delta.h"
 #include "player.h"
 #include "room.h"
 #include "roommap.h"
@@ -12,10 +14,10 @@
 #include "mapfile.h"
 
 PlayingState::PlayingState(std::string name, Point3 pos, bool testing):
-GameState(), loaded_rooms_ {}, objs_ {std::make_unique<GameObjectArray>()},
-move_processor_ {}, room_ {}, player_ {},
-undo_stack_ {MAX_UNDO_DEPTH},
-testing_ {testing} {
+    GameState(), loaded_rooms_ {}, objs_ {std::make_unique<GameObjectArray>()},
+    move_processor_ {}, room_ {}, player_ {},
+    undo_stack_ {std::make_unique<UndoStack>(MAX_UNDO_DEPTH)},
+    testing_ {testing} {
     activate_room(name);
     init_player(pos);
     room_->room_map()->set_initial_state(false);
@@ -25,9 +27,10 @@ PlayingState::~PlayingState() {}
 
 void PlayingState::init_player(Point3 pos) {
     RidingState rs;
-    Block* block = dynamic_cast<Block*>(room_->room_map()->view({pos.x, pos.y, pos.z - 1}));
-    if (block) {
-        if (block->car()) {
+    // TODO: fix this hack
+    GameObject* below = room_->room_map()->view({pos.x, pos.y, pos.z - 1});
+    if (below) {
+        if (dynamic_cast<Car*>(below->modifier())) {
             rs = RidingState::Riding;
         } else {
             rs = RidingState::Bound;
@@ -37,7 +40,7 @@ void PlayingState::init_player(Point3 pos) {
     }
     auto player = std::make_unique<Player>(pos, rs);
     player_ = player.get();
-    room_->room_map()->put_quiet(std::move(player));
+    room_->room_map()->create(std::move(player), nullptr);
 }
 
 void PlayingState::main_loop() {
@@ -47,7 +50,7 @@ void PlayingState::main_loop() {
     handle_input();
     room_->draw(gfx_, player_, false, false);
     if (!move_processor_) {
-        undo_stack_.push(std::move(delta_frame_));
+        undo_stack_->push(std::move(delta_frame_));
     }
 }
 
@@ -67,14 +70,14 @@ void PlayingState::handle_input() {
             if (move_processor_) {
                 move_processor_->abort();
                 move_processor_.reset(nullptr);
-                room_->map_->reset_local_sate();
+                room_->room_map()->reset_local_state();
                 delta_frame_->revert();
                 delta_frame_ = std::make_unique<DeltaFrame>();
                 if (player_) {
                     room_->set_cam_pos(player_->pos());
                 }
-            } else if (undo_stack_.non_empty()) {
-                undo_stack_.pop();
+            } else if (undo_stack_->non_empty()) {
+                undo_stack_->pop();
                 if (player_) {
                     room_->set_cam_pos(player_->pos());
                 }
@@ -93,7 +96,7 @@ void PlayingState::handle_input() {
     if (move_processor_) {
         if (move_processor_->update()) {
             move_processor_.reset(nullptr);
-            undo_stack_.push(std::move(delta_frame_));
+            undo_stack_->push(std::move(delta_frame_));
             delta_frame_ = std::make_unique<DeltaFrame>();
         } else {
             return;
@@ -116,11 +119,13 @@ void PlayingState::handle_input() {
                 return;
             }
             input_cooldown = MAX_COOLDOWN;
+            // TODO: Make this be triggered by a listener instead!
+            /*
             Door* door = dynamic_cast<Door*>(room_map->view(player_->shifted_pos({0,0,-1})));
-            // When doors are switchable, check for state too!
             if (door && door->dest() && door->state()) {
                 use_door(door->dest());
             }
+            */
             return;
         }
     }
@@ -163,7 +168,9 @@ bool PlayingState::load_room(std::string name) {
     return true;
 }
 
+// IMPORTANT TODO: Fix door movement
 void PlayingState::use_door(MapLocation* dest) {
+    /*
     if (!loaded_rooms_.count(dest->name)) {
         load_room(dest->name);
     }
@@ -173,20 +180,17 @@ void PlayingState::use_door(MapLocation* dest) {
     if (dest_map->view(dest->pos)) {
         return;
     }
-    Block* car = player_->get_car(cur_map, true);
-    if (car) {
-        if (dest_map->view(dest->pos)) {
-            return;
-        }
-    }
-    delta_frame_->push(std::make_unique<DoorMoveDelta>(this, room_, player_->pos()));
+    delta_frame_->push(std::make_unique<DoorMoveDelta>(this, room_, player_->pos_));
     room_ = dest_room;
-    auto player_unique = cur_map->take_quiet(player_);
-    if (car) {
-        auto car_unique = cur_map->take_quiet(car);
-        car->set_pos(dest->pos);
-        dest_map->put_quiet(std::move(car_unique));
+    cur_map->take(player_);
+    if (Car* car = player_->get_car(cur_map, true)) {
+        cur_map->take(car);
+        car->pos_ = dest->pos + Point3{0,0,1};
+        dest_map->put(car);
+        player_->pos_ = dest->pos + Point3{0,0,2};
+    } else {
+        player_->pos_ = dest->pos + Point3{0,0,1};
     }
-    player_->set_pos(dest->pos);
-    dest_map->put_quiet(std::move(player_unique));
+    dest_map->put(player_);
+    */
 }

@@ -1,21 +1,32 @@
 #include "roommap.h"
 
+#include <algorithm>
+
+#include "gameobjectarray.h"
+
 #include "gameobject.h"
 #include "delta.h"
 
 #include "snakeblock.h"
 #include "switch.h"
+#include "signaler.h"
 #include "mapfile.h"
 
-#include <algorithm>
+#include "objectmodifier.h"
+
+#include "maplayer.h"
+
+#include "effects.h"
 
 RoomMap::RoomMap(GameObjectArray& obj_array, int width, int height, int depth):
 obj_array_ {obj_array}, width_ {width}, height_ {height}, depth_ {depth},
 layers_ {}, listeners_ {}, signalers_ {},
 effects_ {std::make_unique<Effects>()} {}
 
+RoomMap::~RoomMap() {}
+
 bool RoomMap::valid(Point3 pos) {
-    return (0 <= pos.x) && (pos.x < width_) && (0 <= pos.y) && (pos.y < height_) && (0 <= pos.z) && (pos.z < layers_.size());
+    return (0 <= pos.x) && (pos.x < width_) && (0 <= pos.y) && (pos.y < height_) && (0 <= pos.z) && ((unsigned int)(pos.z) < layers_.size());
 }
 
 void RoomMap::push_full() {
@@ -69,7 +80,7 @@ void RoomMap::serialize(MapFileO& file) const {
     }
     // Serialize Signalers
     for (auto& signaler : signalers_) {
-        signaler->serialize(file);
+        //signaler->serialize(file);
     }
 }
 
@@ -110,33 +121,49 @@ void RoomMap::batch_shift(std::vector<GameObject*> objs, Point3 dpos, DeltaFrame
         put(obj);
     }
     if (delta_frame) {
-        delta_frame->push(std::make_unique<MotionDelta>(obj, dpos, this));
+        delta_frame->push(std::make_unique<BatchMotionDelta>(objs, dpos, this));
     }
+}
+
+void RoomMap::create(std::unique_ptr<GameObject> obj) {
+    GameObject* raw = obj.get();
+    obj_array_.push_object(std::move(obj));
+    at(raw->pos_) = raw->id_;
 }
 
 void RoomMap::create(std::unique_ptr<GameObject> obj, DeltaFrame* delta_frame) {
-    obj_array_->push_object(std::move(obj));
-    at(obj->pos_) = obj->id_;
+    GameObject* raw = obj.get();
+    obj_array_.push_object(std::move(obj));
+    at(raw->pos_) = raw->id_;
+    delta_frame->push(std::make_unique<CreationDelta>(raw, this));
+}
+
+void RoomMap::destroy(GameObject* obj) {
+    at(obj->pos_) -= obj->id_;
+    obj->cleanup_on_destruction(this);
+}
+
+void RoomMap::destroy(GameObject* obj, DeltaFrame* delta_frame) {
+    at(obj->pos_) -= obj->id_;
+    obj->cleanup_on_destruction(this);
+    delta_frame->push(std::make_unique<DeletionDelta>(obj, this));
 }
 
 // TODO (maybe): Consider allowing for a general callback function here
-void RoomMap::add_listener(GameObject* obj, MapCallback callback, Point3 pos) {
-    listeners_[pos].push_back(std::make_pair(obj, callback));
+void RoomMap::add_listener(ObjectModifier* obj, Point3 pos) {
+    listeners_[pos].push_back(obj);
 }
 
-void RoomMap::alert_activated_listeners(DeltaFrame* delta_frame) {
-    for (auto& p : activated_listeners_) {
-        p.first->p.second(this, delta_frame);
-    }
-}
-
-void RoomMap::remove_listener(GameObject* obj, Point3 pos) {
+void RoomMap::remove_listener(ObjectModifier* obj, Point3 pos) {
     auto& cur_lis = listeners_[pos];
-    cur_lis.erase(std::remove_if(cur_lis.begin(), cur_lis.end(),
-                                 [](auto p) {return p.first == obj}), cur_lis.end());
-    if (cur_listeners.size() == 0) {
+    cur_lis.erase(std::remove(cur_lis.begin(), cur_lis.end(), obj), cur_lis.end());
+    if (cur_lis.size() == 0) {
         listeners_.erase(pos);
     }
+}
+
+void RoomMap::activate_listener_of(ObjectModifier* obj) {
+    activated_listeners_.insert(obj);
 }
 
 void RoomMap::activate_listeners(Point3 pos) {
@@ -146,12 +173,18 @@ void RoomMap::activate_listeners(Point3 pos) {
     }
 }
 
+void RoomMap::alert_activated_listeners(DeltaFrame* delta_frame, MoveProcessor* mp) {
+    for (ObjectModifier* obj : activated_listeners_) {
+        obj->map_callback(this, delta_frame, mp);
+    }
+}
+
 void RoomMap::draw(GraphicsManager* gfx, float angle) {
     for (auto& layer : layers_) {
-        for (auto it = layer.begin_iter(); !it->done(); it->advance()) {
+        for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
             int id = it->id();
             if (id) {
-                objs[id]->draw(gfx, it->pos());
+                obj_array_[id]->draw(gfx, it->pos());
             }
         }
     }
@@ -159,7 +192,18 @@ void RoomMap::draw(GraphicsManager* gfx, float angle) {
     effects_->draw(gfx);
 }
 
+void RoomMap::draw_layer(GraphicsManager* gfx, int z) {
+    MapLayer* layer = layers_[z].get();
+    for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
+        int id = it->id();
+        if (id) {
+            obj_array_[id]->draw(gfx, it->pos());
+        }
+    }
+}
+
 void RoomMap::set_initial_state(bool editor_mode) {
+    /*
     // Gates don't get activated in editor mode!
     // When we add in other things we won't do the early return though.
     if (editor_mode) {
@@ -175,12 +219,11 @@ void RoomMap::set_initial_state(bool editor_mode) {
                     continue;
                 }
                 // This doesn't even make sense in the current model!
-                /*
                 auto sw = dynamic_cast<Switch*>(obj);
                 if (sw) {
                     sw->check_send_signal(this, nullptr);
                 }
-                */
+
                 auto sb = dynamic_cast<SnakeBlock*>(obj);
                 if (sb) {
                     sb->check_add_local_links(this, nullptr);
@@ -189,14 +232,12 @@ void RoomMap::set_initial_state(bool editor_mode) {
         }
     }
     // TODO: fix (well, fix this whole method actually)
-    std::vector<GameObject*> dummy {};
-    check_signalers(nullptr, dummy);
+    check_signalers(nullptr, nullptr);*/
 }
 
 // The room keeps track of some things which must be forgotten after a move or undo
 void RoomMap::reset_local_state() {
     activated_listeners_ = {};
-    snakes_to_update_ = {};
 }
 
 void RoomMap::push_signaler(std::unique_ptr<Signaler> signaler) {
@@ -204,9 +245,9 @@ void RoomMap::push_signaler(std::unique_ptr<Signaler> signaler) {
 }
 
 // NOTE: this function breaks the "locality" rule, but it's probably not a big deal.
-void RoomMap::check_signalers(DeltaFrame* delta_frame, std::vector<GameObject*>& fall_check) {
+void RoomMap::check_signalers(DeltaFrame* delta_frame, MoveProcessor* mp) {
     for (auto& signaler : signalers_) {
-        signaler->check_send_signal(this, delta_frame, fall_check);
+        signaler->check_send_signal(this, delta_frame, mp);
     }
 }
 

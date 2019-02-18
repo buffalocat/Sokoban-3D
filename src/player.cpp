@@ -10,7 +10,7 @@ Player::Player(Point3 pos, RidingState state): PushBlock(pos, PINK, true, true, 
 
 Player::~Player() {}
 
-ObjCode Player::obj_code() const {
+ObjCode Player::obj_code() {
     return ObjCode::Player;
 }
 
@@ -73,7 +73,7 @@ GameObject* Player::deserialize(MapFileI& file) {
 }
 
 // NOTE: if the Player becomes a subclass of a more general "Passenger" type, move this up to that class.
-void Player::collect_special_links(RoomMap* room_map, Sticky sticky_level, std::vector<GameObject*>& links) const {
+void Player::collect_special_links(RoomMap* room_map, Sticky sticky_level, std::vector<GameObject*>& links) {
     if (state_ == RidingState::Riding) {
         links.push_back(room_map->view(shifted_pos({0,0,-1})));
     }

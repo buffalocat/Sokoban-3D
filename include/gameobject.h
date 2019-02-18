@@ -13,26 +13,29 @@ class RoomMap;
 class GraphicsManager;
 class MapFileI;
 class MapFileO;
-class PushComponent;
+
+struct Component;
+struct PushComponent;
+struct FallComponent;
 
 // Base class of all objects that occupy a tile in a RoomMap
 class GameObject {
 public:
     virtual ~GameObject();
-    //virtual ObjCode obj_code() const = 0;
+    // TODO: REPLACE WITH REAL CODE
+    virtual ObjCode obj_code() {return ObjCode::Gate;}
 
-    virtual void serialize(MapFileO& file) const;
-    virtual bool relation_check() const;
-    virtual void relation_serialize(MapFileO& file) const;
+    virtual void serialize(MapFileO& file);
+    virtual bool relation_check();
+    virtual void relation_serialize(MapFileO& file);
 
     //TODO: decide which of these getters are useful
-    Point3 pos() const;
-    Point2 posh() const;
-    int z() const;
-    Point3 shifted_pos(Point3 d) const;
+    Point3 pos();
+    Point2 posh();
+    int z();
+    Point3 shifted_pos(Point3 d);
 
-    //NOTE: draw might not be physically const after some optimization!
-    virtual void draw(GraphicsManager*, Point3 p);
+    virtual void draw(GraphicsManager*, Point3 p) {}
 
     virtual void setup_on_put(RoomMap*);
     virtual void cleanup_on_take(RoomMap*);
@@ -40,9 +43,14 @@ public:
     virtual void setup_on_undestruction(RoomMap*);
     virtual void cleanup_on_destruction(RoomMap*);
 
-    virtual void collect_sticky_links(RoomMap*, Sticky sticky_level, std::vector<GameObject*>& links) const = 0;
-    virtual void collect_special_links(RoomMap*, Sticky sticky_level, std::vector<GameObject*>& links) const;
-    virtual bool pretend_push(Point3 d);
+    PushComponent* push_comp();
+    FallComponent* fall_comp();
+
+    void collect_sticky_component(RoomMap*, Sticky, Component*);
+    virtual Sticky sticky() = 0;
+    bool has_sticky_neighbor(RoomMap*);
+    virtual void collect_sticky_links(RoomMap*, Sticky, std::vector<GameObject*>& links) = 0;
+    virtual void collect_special_links(RoomMap*, Sticky, std::vector<GameObject*>& links);
 
     ObjectModifier* modifier();
 
@@ -53,8 +61,6 @@ public:
     void shift_pos_from_animation();
     FPoint3 real_pos();
 
-    virtual void collect_strong_component(RoomMap*, PushComponent*, Point3 dir, std::unordered_map<GameObject*, PushComponent*>& push_comps);
-
 protected:
     GameObject(Point3 pos, int color, bool pushable, bool gravitable);
 
@@ -63,9 +69,12 @@ protected:
     std::unique_ptr<ObjectModifier> modifier_;
     std::unique_ptr<Animation> animation_;
 public:
+    Component* comp_;
     Point3 pos_;
     int id_;
     int color_;
+    // TODO: remove this later
+    int color() {return color_;}
     bool pushable_;
     bool gravitable_;
 };

@@ -6,6 +6,8 @@
 #include "graphicsmanager.h"
 
 
+MapLayerIterator::~MapLayerIterator() {}
+
 // TODO: Make the Iterator more like a real Iterator!!!!!!!
 FullMapLayerIterator::FullMapLayerIterator(std::vector<std::vector<int>>& map, int z, int width, int height):
 MapLayerIterator(),

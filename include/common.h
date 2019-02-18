@@ -43,10 +43,7 @@ enum class Sticky : unsigned char {
     All = 7,
 };
 
-Sticky operator &(Sticky a, Sticky b) {
-    return static_cast<Sticky>(static_cast<unsigned char>(a) &
-                               static_cast<unsigned char>(b));
-}
+Sticky operator &(Sticky a, Sticky b);
 
 enum class RidingState {
     Free = 1,

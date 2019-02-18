@@ -14,6 +14,10 @@ Point3 ObjectModifier::shifted_pos(Point3 d) const {
     return parent_->pos_ + d;
 }
 
+Point3 ObjectModifier::pos_above() const {
+    return parent_->pos_ + Point3{0,0,1};
+}
+
 int ObjectModifier::color() const {
     return parent_->color_;
 }

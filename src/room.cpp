@@ -9,6 +9,8 @@
 #include "snakeblock.h"
 #include "door.h"
 #include "switch.h"
+#include "switchable.h"
+#include "signaler.h"
 #include "mapfile.h"
 
 Room::Room(std::string name): name_ {name},
@@ -46,7 +48,7 @@ void Room::draw(GraphicsManager* gfx, Point3 cam_pos, bool ortho, bool one_layer
     }
 }
 
-void Room::draw(GraphicsManager* gfx, Block* target, bool ortho, bool one_layer) {
+void Room::draw(GraphicsManager* gfx, GameObject* target, bool ortho, bool one_layer) {
     update_view(gfx, target->pos(), target->real_pos(), ortho);
     if (one_layer) {
         map_->draw_layer(gfx, target->z());
@@ -148,12 +150,15 @@ void Room::load_from_file(GameObjectArray& objs, MapFileI& file, Point3* start_p
     }
 }
 
+// TODO: fix (de)serialization in general!!!!!
+
 #define CASE_OBJCODE(CLASS)\
 case ObjCode::CLASS:\
-    map_->put_quiet(std::unique_ptr<GameObject>(CLASS::deserialize(file)));\
+    map_->create(std::unique_ptr<GameObject>(CLASS::deserialize(file)));\
     break;
 
 void Room::read_objects(MapFileI& file) {
+    /*
     unsigned char b[1];
     while (true) {
         file.read(b, 1);
@@ -178,6 +183,7 @@ void Room::read_objects(MapFileI& file) {
             break;
         }
     }
+    */
 }
 
 #undef CASE_OBJCODE
@@ -225,11 +231,12 @@ void Room::read_snake_link(MapFileI& file) {
 void Room::read_door_dest(MapFileI& file) {
     Point3 pos {file.read_point3()};
     Point3 exit_pos {file.read_point3()};
-    auto door = static_cast<Door*>(map_->view(pos));
+    auto door = static_cast<Door*>(map_->view(pos)->modifier());
     door->set_dest(exit_pos, file.read_str());
 }
 
 void Room::read_signaler(MapFileI& file) {
+    /*
     unsigned char b[4];
     file.read(b, 4);
     auto signaler = std::make_unique<Signaler>(b[0], b[1] & 1, b[1] & 2);
@@ -240,4 +247,5 @@ void Room::read_signaler(MapFileI& file) {
         signaler->push_switchable(static_cast<Switchable*>(map_->view(file.read_point3())));
     }
     map_->push_signaler(std::move(signaler));
+    */
 }

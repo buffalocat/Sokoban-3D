@@ -11,12 +11,14 @@ class Effects;
 class MapLayer;
 class GraphicsManager;
 class DeltaFrame;
+class MoveProcessor;
 class GameObject;
+class ObjectModifier;
 class SnakeBlock;
 class MapFileO;
 class RoomMap;
 
-typedef void(GameObject::*MapCallback)(RoomMap*,DeltaFrame*);
+typedef void(ObjectModifier::*MapCallback)(RoomMap*,DeltaFrame*);
 
 class RoomMap {
 public:
@@ -32,8 +34,10 @@ public:
     GameObject* view(Point3 pos);
     void take(GameObject*);
     void put(GameObject*);
+    void create(std::unique_ptr<GameObject>);
     void create(std::unique_ptr<GameObject>, DeltaFrame*);
-    void destroy(Point3, DeltaFrame*);
+    void destroy(GameObject*);
+    void destroy(GameObject*, DeltaFrame*);
 
     void shift(GameObject*, Point3, DeltaFrame*);
     void batch_shift(std::vector<GameObject*>, Point3, DeltaFrame*);
@@ -41,14 +45,20 @@ public:
     void serialize(MapFileO& file) const;
 
     void draw(GraphicsManager*, float angle);
+    void draw_layer(GraphicsManager*, int z);
 
     void set_initial_state(bool editor_mode);
     void reset_local_state();
 
     void push_signaler(std::unique_ptr<Signaler>);
-    void check_signalers(DeltaFrame*, std::vector<GameObject*>&);
+    void check_signalers(DeltaFrame*, MoveProcessor*);
     void remove_from_signalers(GameObject*);
-    void alert_activated_listeners(DeltaFrame*);
+
+    void add_listener(ObjectModifier*, Point3);
+    void remove_listener(ObjectModifier*, Point3);
+    void activate_listeners(Point3);
+    void activate_listener_of(ObjectModifier* obj);
+    void alert_activated_listeners(DeltaFrame*, MoveProcessor*);
 
     void make_fall_trail(GameObject*, int height, int drop);
 
@@ -61,11 +71,10 @@ private:
     GameObjectArray& obj_array_;
     std::vector<std::unique_ptr<MapLayer>> layers_;
 
-    std::unordered_map<Point3, std::vector<std::pair<GameObject*, MapCallback>>, Point3Hash> listeners_;
+    std::unordered_map<Point3, std::vector<ObjectModifier*>, Point3Hash> listeners_;
     std::vector<std::unique_ptr<Signaler>> signalers_;
 
-    std::unordered_set<GameObject*> activated_listeners_;
-    std::unordered_set<SnakeBlock*> snakes_to_update_;
+    std::unordered_set<ObjectModifier*> activated_listeners_;
 
     // TODO: find more appropriate place for this
     std::unique_ptr<Effects> effects_;

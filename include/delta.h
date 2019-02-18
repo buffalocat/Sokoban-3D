@@ -15,6 +15,7 @@ class Switch;
 class Signaler;
 class Player;
 class PlayingState;
+class Car;
 
 struct Point;
 enum class Layer;
@@ -192,12 +193,12 @@ private:
 
 class ColorChangeDelta: public Delta {
 public:
-    ColorChangeDelta(GameObject* obj);
+    ColorChangeDelta(Car* car);
     ~ColorChangeDelta();
     void revert();
 
 private:
-    GameObject* obj_;
+    Car* car_;
 };
 
 #endif // DELTA_H

@@ -8,7 +8,7 @@ class Player: public PushBlock {
 public:
     Player(Point3 pos, RidingState state);
     ~Player();
-    ObjCode obj_code() const;
+    ObjCode obj_code();
     void serialize(MapFileO& file);
     static GameObject* deserialize(MapFileI& file);
     void set_riding(RidingState);
@@ -16,7 +16,7 @@ public:
     void toggle_riding(RoomMap* room_map, DeltaFrame*);
     Car* get_car(RoomMap* room_map, bool strict);
 
-    virtual void collect_special_links(RoomMap*, Sticky sticky_level, std::vector<GameObject*>& links) const;
+    virtual void collect_special_links(RoomMap*, Sticky sticky_level, std::vector<GameObject*>& links);
 
     void draw(GraphicsManager*);
 

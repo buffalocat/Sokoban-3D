@@ -8,19 +8,17 @@
 
 class SnakeBlock: public GameObject {
 public:
-    SnakeBlock(Point3 pos, bool is_car, unsigned char ends);
+    SnakeBlock(Point3 pos, int color, bool pushable, bool gravitable, unsigned char ends);
     virtual ~SnakeBlock();
-    virtual ObjCode obj_code() const;
-    void serialize(MapFileO& file) const;
+    virtual ObjCode obj_code();
+    void serialize(MapFileO& file);
     static GameObject* deserialize(MapFileI& file);
-    bool relation_check() const;
-    void relation_serialize(MapFileO& file) const;
+    bool relation_check();
+    void relation_serialize(MapFileO& file);
 
-    //void root_init(Point3);
+    void collect_sticky_links(RoomMap*, Sticky sticky_level, std::vector<GameObject*>& links);
 
-    void collect_sticky_links(RoomMap*, Sticky sticky_level, std::vector<GameObject*>& links) const;
-
-    bool in_links(SnakeBlock* sb) const;
+    bool in_links(SnakeBlock* sb);
     void add_link(SnakeBlock*, DeltaFrame*);
     void remove_link(SnakeBlock*, DeltaFrame*);
 
@@ -45,6 +43,8 @@ public:
     void cleanup();
     void reinit();
 
+    Sticky sticky();
+
 private:
     std::vector<SnakeBlock*> links_;
     // Temporary data members, which should only be nontrivial during move computations
@@ -60,7 +60,7 @@ class SnakePuller {
 public:
     SnakePuller(RoomMap*, DeltaFrame*,
                 std::vector<SnakeBlock*>& moving_snakes,
-                std::unordered_set<SnakeBlock*>& link_add_check,
+                std::unordered_set<SnakeBlock*>& add_link_check,
                 std::vector<GameObject*>& fall_check);
     ~SnakePuller();
     void prepare_pull(SnakeBlock*);
@@ -69,7 +69,9 @@ public:
 private:
     RoomMap* room_map_;
     DeltaFrame* delta_frame_;
-    std::vector<GameObject*>& add_link_check_;
+    std::vector<SnakeBlock*>& moving_snakes_;
+    std::unordered_set<SnakeBlock*>& add_link_check_;
+    std::vector<GameObject*>& fall_check_;
     Point3 dir_;
 };
 

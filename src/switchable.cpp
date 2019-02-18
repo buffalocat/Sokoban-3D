@@ -1,5 +1,8 @@
 #include "switchable.h"
 
+#include "delta.h"
+#include "moveprocessor.h"
+
 Switchable::Switchable(bool default_state, bool initial_state):
 default_ {default_state},
 active_ {(bool)(default_state ^ initial_state)},
@@ -19,7 +22,7 @@ bool Switchable::state() {
     return default_ ^ active_;
 }
 
-void Switchable::receive_signal(bool signal, RoomMap* room_map, DeltaFrame* delta_frame, std::vector<Block*>* fall_check) {
+void Switchable::receive_signal(bool signal, RoomMap* room_map, DeltaFrame* delta_frame, MoveProcessor* mp) {
     if (active_ ^ waiting_ == signal) {
         return;
     }
@@ -29,11 +32,13 @@ void Switchable::receive_signal(bool signal, RoomMap* room_map, DeltaFrame* delt
     waiting_ = !can_set_state(default_ ^ signal, room_map);
     if (active_ != waiting_ ^ signal) {
         active_ = !active_;
-        apply_state_change(room_map, fall_check);
+        apply_state_change(room_map, mp);
     }
 }
 
-void Switchable::apply_state_change(RoomMap* room_map, std::vector<Block*>* fall_check) {}
+void Switchable::apply_state_change(RoomMap* room_map, MoveProcessor* mp) {
+
+}
 
 void Switchable::check_waiting(RoomMap* room_map, DeltaFrame* delta_frame) {
     if (waiting_ && can_set_state(!(default_ ^ active_), room_map)) {
@@ -42,6 +47,6 @@ void Switchable::check_waiting(RoomMap* room_map, DeltaFrame* delta_frame) {
         }
         waiting_ = false;
         active_ = !active_;
-        apply_state_change(room_map, nullptr);
+        //apply_state_change(room_map, nullptr);
     }
 }

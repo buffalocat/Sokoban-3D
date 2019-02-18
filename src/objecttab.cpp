@@ -9,6 +9,8 @@
 #include "door.h"
 #include "snakeblock.h"
 #include "gameobject.h"
+#include "colorcycle.h"
+#include "wall.h"
 
 ObjectTab::ObjectTab(EditorState* editor, GraphicsManager* gfx): EditorTab(editor, gfx) {}
 
@@ -41,6 +43,7 @@ void block_options() {
 }
 
 void ObjectTab::main_loop(EditorRoom* eroom) {
+    /*
     ImGui::Text("The Object Tab");
 
     ImGui::BeginChild("active layer pane##OBJECT", ImVec2(380, 450), true);
@@ -93,10 +96,8 @@ void ObjectTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
     int x = pos.x;
     int y = pos.y;
     std::unique_ptr<GameObject> obj;
-    ColorCycle color_cycle {color};
-    if (two_colors) {
-        color_cycle.insert_color(alt_color);
-    }
+    // TODO: FIX OBJECT CREATION
+    /*
     switch (obj_code) {
     case (int)ObjCode::Wall :
         obj = std::make_unique<Wall>();
@@ -125,7 +126,8 @@ void ObjectTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
     default:
         return;
     }
-    room_map->put_quiet(std::move(obj));
+    */
+    room_map->create(std::move(obj), nullptr);
 }
 
 void ObjectTab::handle_right_click(EditorRoom* eroom, Point3 pos) {
@@ -136,6 +138,6 @@ void ObjectTab::handle_right_click(EditorRoom* eroom, Point3 pos) {
             return;
         }
         room_map->remove_from_signalers(obj);
-        room_map->take_quiet(obj);
+        room_map->take(obj);
     }
 }

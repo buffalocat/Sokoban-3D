@@ -27,6 +27,8 @@ public:
 
     void draw(GraphicsManager*);
 
+    void map_callback(RoomMap*, DeltaFrame*);
+
     void check_above_occupied(RoomMap*, DeltaFrame*);
     void check_above_vacant(RoomMap*, DeltaFrame*);
 

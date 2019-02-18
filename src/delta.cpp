@@ -180,13 +180,11 @@ void RidingStateDelta::revert() {
     player_->set_riding(state_);
 }
 
-// TODO: Fix when Car is a ObjectModifier
-/*
-ColorChangeDelta::ColorChangeDelta(GameObject* obj): obj_ {obj} {}
+
+ColorChangeDelta::ColorChangeDelta(Car* car): car_ {car} {}
 
 ColorChangeDelta::~ColorChangeDelta() {}
 
 void ColorChangeDelta::revert() {
-    obj_->cycle_color(true);
+    car_->cycle_color(true);
 }
-*/

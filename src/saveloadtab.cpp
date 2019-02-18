@@ -1,5 +1,7 @@
 #include "saveloadtab.h"
 
+#include <iostream>
+
 #include "room.h"
 #include "roommap.h"
 #include "gameobject.h"
@@ -60,9 +62,10 @@ void SaveLoadTab::main_loop(EditorRoom* eroom) {
 void SaveLoadTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
     RoomMap* room_map = eroom->room->room_map();
     if (!room_map->view(pos)) {
-        auto player = room_map->take_quiet(eroom->start_pos);
-        player->set_pos(pos);
+        auto player = room_map->view(eroom->start_pos);
+        room_map->take(player);
+        player->pos_ = pos;
         eroom->start_pos = pos;
-        room_map->put_quiet(std::move(player));
+        room_map->put(player);
     }
 }

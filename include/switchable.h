@@ -6,6 +6,7 @@
 class RoomMap;
 class DeltaFrame;
 class GameObject;
+class MoveProcessor;
 
 class Switchable {
 public:
@@ -14,8 +15,8 @@ public:
     void set_aw(bool active, bool waiting, RoomMap*);
     bool state();
     virtual bool can_set_state(bool state, RoomMap*) = 0;
-    void receive_signal(bool signal, RoomMap*, DeltaFrame*, std::vector<GameObject*>&);
-    virtual void apply_state_change(RoomMap*, std::vector<GameObject*>&);
+    void receive_signal(bool signal, RoomMap*, DeltaFrame*, MoveProcessor*);
+    virtual void apply_state_change(RoomMap*, MoveProcessor*);
     void check_waiting(RoomMap*, DeltaFrame*);
 
 protected:

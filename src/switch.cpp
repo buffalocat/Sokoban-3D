@@ -4,12 +4,13 @@
 #include "delta.h"
 #include "graphicsmanager.h"
 #include "mapfile.h"
+#include "signaler.h"
 
 #include <algorithm>
 
 
 
-Switch::Switch(Point3 pos, bool persistent, bool active): GameObject(pos),
+Switch::Switch(bool persistent, bool active):
 persistent_ {persistent}, active_ {active}, signalers_ {} {}
 
 Switch::~Switch() {}

@@ -7,6 +7,7 @@ class RoomMap;
 class DeltaFrame;
 class Signaler;
 
+// TODO: fix the modifier property hierarchy (Switch : ObjectModifier ???)
 // For now, the only kind of switch is the pressure plate
 class Switch {
 public:

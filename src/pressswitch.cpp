@@ -41,20 +41,24 @@ void PressSwitch::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame) 
 }
 
 bool PressSwitch::should_toggle(RoomMap* room_map) {
-    return active_ ^ (room_map->view(shifted_pos({0,0,1})) != nullptr);
+    return active_ ^ (room_map->view(pos_above()) != nullptr);
+}
+
+void PressSwitch::map_callback(RoomMap* room_map, DeltaFrame* delta_frame) {
+    check_send_signal(room_map, delta_frame);
 }
 
 void PressSwitch::setup_on_put(RoomMap* room_map) {
-    room_map->add_listener(this, &PressSwitch::check_send_signal, shifted_pos({0,0,1}));
-    room_map->activate_listener(this);
+    room_map->add_listener(this, pos_above());
+    room_map->activate_listener_of(this);
 }
 
 void PressSwitch::cleanup_on_take(RoomMap* room_map) {
-    room_map->remove_listener(this, pos_ + {0,0,1});
+    room_map->remove_listener(this, pos_above());
 }
 
 void PressSwitch::draw(GraphicsManager* gfx) {
-    Point3 p = pos_;
+    Point3 p = pos();
     gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
     gfx->set_color(COLORS[GREY]);
     gfx->draw_cube();

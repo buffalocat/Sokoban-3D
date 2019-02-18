@@ -10,6 +10,8 @@ GameObjectArray::GameObjectArray(): array_ {} {
     array_[1]->id_ = 1;
 }
 
+GameObjectArray::~GameObjectArray() {}
+
 void GameObjectArray::push_object(std::unique_ptr<GameObject> obj) {
     obj->id_ = array_.size();
     array_.push_back(std::move(obj));

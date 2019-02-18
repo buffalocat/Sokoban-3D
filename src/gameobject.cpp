@@ -13,32 +13,33 @@
 
 // id_ begins in an "inconsistent" state - it *must* be set by the GameObjectArray
 GameObject::GameObject(Point3 pos, int color, bool pushable, bool gravitable):
-modifier_ {}, animation_ {}, pos_ {pos}, id_ {-1},
-color_ {color}, pushable_ {pushable}, gravitable_ {gravitable} {}
+    modifier_ {}, animation_ {}, comp_ {},
+    pos_ {pos}, id_ {-1},
+    color_ {color}, pushable_ {pushable}, gravitable_ {gravitable} {}
 
 GameObject::~GameObject() {}
 
-void GameObject::serialize(MapFileO& file) const {}
+void GameObject::serialize(MapFileO& file) {}
 
-bool GameObject::relation_check() const {
+bool GameObject::relation_check() {
     return false;
 }
 
-void GameObject::relation_serialize(MapFileO& file) const {}
+void GameObject::relation_serialize(MapFileO& file) {}
 
-Point3 GameObject::pos() const {
+Point3 GameObject::pos() {
     return pos_;
 }
 
-Point2 GameObject::posh() const {
+Point2 GameObject::posh() {
     return {pos_.x, pos_.y};
 }
 
-int GameObject::z() const {
+int GameObject::z() {
     return pos_.z;
 }
 
-Point3 GameObject::shifted_pos(Point3 d) const {
+Point3 GameObject::shifted_pos(Point3 d) {
     return pos_ + d;
 }
 
@@ -54,31 +55,50 @@ ObjectModifier* GameObject::modifier() {
     return modifier_.get();
 }
 
+// NOTE: these can be static_casts as long as the code using them is careful
+PushComponent* GameObject::push_comp() {
+    return dynamic_cast<PushComponent*>(comp_);
+}
 
-void GameObject::collect_strong_component(RoomMap* room_map, PushComponent* comp, Point3 dir,
-        std::unordered_map<GameObject*, PushComponent*>& push_comps) {
+FallComponent* GameObject::fall_comp() {
+    return dynamic_cast<FallComponent*>(comp_);
+}
+
+
+void GameObject::collect_sticky_component(RoomMap* room_map, Sticky sticky_level, Component* comp) {
     std::vector<GameObject*> to_check {this};
     while (!to_check.empty()) {
         GameObject* cur = to_check.back();
         to_check.pop_back();
-        if (push_comps.count(cur)) {
+        if (cur->comp_) {
             continue;
         }
-        push_comps[cur] = comp;
+        cur->comp_ = comp;
         comp->blocks_.push_back(cur);
-        cur->collect_sticky_links(room_map, Sticky::Strong, to_check);
+        cur->collect_sticky_links(room_map, sticky_level, to_check);
+        cur->collect_special_links(room_map, sticky_level, to_check);
         if (modifier_) {
-            modifier_->collect_sticky_links(room_map, Sticky::Strong, to_check);
+            modifier_->collect_sticky_links(room_map, sticky_level, to_check);
         }
     }
 }
 
-void GameObject::collect_special_links(RoomMap*, Sticky, std::vector<GameObject*>&) const {}
+bool GameObject::has_sticky_neighbor(RoomMap* room_map) {
+    for (Point3 d : H_DIRECTIONS) {
+        if (GameObject* adj = room_map->view(pos_ + d)) {
+            if ((adj->color_ == color_) && static_cast<bool>(adj->sticky() & sticky())) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void GameObject::collect_special_links(RoomMap*, Sticky, std::vector<GameObject*>&) {}
 
 void GameObject::reset_animation() {
     animation_.reset(nullptr);
 }
-
 
 void GameObject::set_linear_animation(Point3 d) {
     animation_ = std::make_unique<LinearAnimation>(d);

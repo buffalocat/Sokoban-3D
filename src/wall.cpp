@@ -1,6 +1,8 @@
 #include "wall.h"
 
-Wall::Wall(): PushBlock({0,0,0}, ) {}
+#include "graphicsmanager.h"
+
+Wall::Wall(): PushBlock({0,0,0}, 0, false, false, Sticky::None) {}
 
 Wall::~Wall() {}
 

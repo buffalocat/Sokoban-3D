@@ -1,10 +1,13 @@
 #ifndef SIGNALER_H
 #define SIGNALER_H
 
+#include <vector>
+
 class Switchable;
 class Switch;
 class RoomMap;
 class DeltaFrame;
+class MoveProcessor;
 class MapFileO;
 class GameObject;
 
@@ -16,7 +19,7 @@ public:
     void push_switch(Switch*);
     void receive_signal(bool signal);
     void toggle();
-    void check_send_signal(RoomMap*, DeltaFrame*, std::vector<GameObject*>&);
+    void check_send_signal(RoomMap*, DeltaFrame*, MoveProcessor*);
     bool remove_object(GameObject*);
 
     void serialize(MapFileO& file);

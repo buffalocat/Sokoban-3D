@@ -4,6 +4,8 @@
 #include "room.h"
 #include "roommap.h"
 #include "switch.h"
+#include "signaler.h"
+#include "switchable.h"
 
 #include <algorithm>
 
@@ -34,6 +36,7 @@ void SwitchTab::main_loop(EditorRoom* eroom) {
 }
 
 void SwitchTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
+    /*
     RoomMap* room_map = eroom->room->room_map();
     auto swble = dynamic_cast<Switchable*>(room_map->view(pos));
     if (swble && std::find(switchables_.begin(), switchables_.end(), swble) == switchables_.end()) {
@@ -45,10 +48,13 @@ void SwitchTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
         switches_.push_back(sw);
         return;
     }
+    */
 }
 
 void SwitchTab::handle_right_click(EditorRoom* eroom, Point3 pos) {
+    /*
     GameObject* obj = eroom->room->room_map()->view(pos);
     switchables_.erase(std::remove(switchables_.begin(), switchables_.end(), obj), switchables_.end());
     switches_.erase(std::remove(switches_.begin(), switches_.end(), obj), switches_.end());
+    */
 }

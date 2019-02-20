@@ -43,7 +43,7 @@ Car* Player::get_car(RoomMap* room_map, bool strict) {
     }
 }
 
-void Player::draw(GraphicsManager* gfx) {
+void Player::draw(GraphicsManager* gfx, Point3) {
     FPoint3 p = real_pos();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z - 0.5f * (state_ == RidingState::Riding), p.y));
     model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));

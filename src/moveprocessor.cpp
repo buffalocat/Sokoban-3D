@@ -15,6 +15,7 @@ push_comps_unique_ {}, fall_comps_unique_ {},
 moving_blocks_ {}, fall_check_ {}, link_break_check_ {},
 moving_snakes_ {}, snakes_to_reset_ {}, snakes_to_recheck_ {},
 player_ {player}, map_ {room_map}, delta_frame_ {delta_frame}, dir_ {dir},
+layers_fallen_ {},
 frames_ {0}, state_ {MoveStepType::Horizontal} {}
 
 MoveProcessor::~MoveProcessor() {}
@@ -65,10 +66,9 @@ bool MoveProcessor::update() {
         perform_switch_checks();
         begin_fall_cycle();
         return true;
-    } else {
-        for (GameObject* block : moving_blocks_) {
-            block->update_animation();
-        }
+    }
+    for (GameObject* block : moving_blocks_) {
+        block->update_animation();
     }
     return false;
 }
@@ -215,7 +215,7 @@ void MoveProcessor::perform_horizontal_step() {
     }
     // MAP BECOMES INCONSISTENT HERE (potential ID overlap)
     snake_puller.perform_pulls();
-    map_->batch_shift(std::move(moving_blocks_), dir_, delta_frame_);
+    map_->batch_shift(moving_blocks_, dir_, delta_frame_);
     // MAP BECOMES CONSISTENT AGAIN HERE
     for (auto sb : link_add_check) {
         sb->check_add_local_links(map_, delta_frame_);
@@ -258,9 +258,9 @@ void MoveProcessor::fall_step() {
     for (auto& comp : fall_comps_unique_) {
         comp->collect_falling_unique(map_);
     }
-    int layers_fallen = 0;
+    layers_fallen_ = 0;
     while (true) {
-        ++layers_fallen;
+        ++layers_fallen_;
         bool done_falling = true;
         for (auto& comp : fall_comps_unique_) {
             if (drop_check(comp.get())) {
@@ -290,6 +290,10 @@ void MoveProcessor::collect_above(FallComponent* comp, std::vector<GameObject*>&
 void MoveProcessor::check_land_first(FallComponent* comp) {
     std::vector<FallComponent*> comps_below;
     for (GameObject* block : comp->blocks_) {
+        // TODO: fix this hack
+        if (block->pos_.z <= 0) {
+            continue;
+        }
         GameObject* below = map_->view(block->shifted_pos({0,0,-1}));
         if (below) {
             if (FallComponent* comp_below = below->fall_comp()) {
@@ -353,11 +357,11 @@ bool MoveProcessor::drop_check(FallComponent* comp) {
 
 void MoveProcessor::check_land_sticky(FallComponent* comp) {
     for (GameObject* block : comp->blocks_) {
-        // NOTE: make this more flexible if gravity ever changes!
         if (block->pos_.z < 0) {
             continue;
         }
-        if (map_->view(block->shifted_pos({0,0,-1})) || block->has_sticky_neighbor(map_)) {
+        // TODO: fix this hack
+        if (((block->pos_.z > 0) && map_->view(block->shifted_pos({0,0,-1}))) || block->has_sticky_neighbor(map_)) {
             settle(comp);
             return;
         }

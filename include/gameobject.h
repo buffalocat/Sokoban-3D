@@ -22,16 +22,16 @@ struct FallComponent;
 class GameObject {
 public:
     virtual ~GameObject();
-    // TODO: REPLACE WITH REAL CODE
-    virtual ObjCode obj_code() = 0;
 
+    virtual ObjCode obj_code() = 0;
     virtual void serialize(MapFileO& file) = 0;
     virtual bool relation_check();
     virtual void relation_serialize(MapFileO& file);
 
     Point3 shifted_pos(Point3 d);
 
-    virtual void draw(GraphicsManager*, Point3 p) {}
+    // TODO: make this pure virtual, with no Point arg
+    virtual void draw(GraphicsManager*, Point3) {}
 
     virtual void setup_on_put(RoomMap*);
     virtual void cleanup_on_take(RoomMap*);

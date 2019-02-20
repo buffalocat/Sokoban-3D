@@ -144,9 +144,3 @@ void GraphicsManager::set_tex(glm::vec2 tex) {
 void GraphicsManager::draw_cube() {
     glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 }
-
-/*
-void GraphicsManager::draw_trail() {
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-}
-*/

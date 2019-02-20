@@ -126,7 +126,7 @@ void RoomMap::batch_shift(std::vector<GameObject*> objs, Point3 dpos, DeltaFrame
         put(obj);
     }
     if (delta_frame) {
-        delta_frame->push(std::make_unique<BatchMotionDelta>(objs, dpos, this));
+        delta_frame->push(std::make_unique<BatchMotionDelta>(std::move(objs), dpos, this));
     }
 }
 
@@ -151,7 +151,9 @@ void RoomMap::destroy(GameObject* obj) {
 void RoomMap::destroy(GameObject* obj, DeltaFrame* delta_frame) {
     at(obj->pos_) -= obj->id_;
     obj->cleanup_on_destruction(this);
-    delta_frame->push(std::make_unique<DeletionDelta>(obj, this));
+    if (delta_frame) {
+        delta_frame->push(std::make_unique<DeletionDelta>(obj, this));
+    }
 }
 
 // TODO (maybe): Consider allowing for a general callback function here
@@ -188,7 +190,9 @@ void RoomMap::draw(GraphicsManager* gfx, float angle) {
     for (auto& layer : layers_) {
         for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
             int id = it->id();
-            if (id) {
+
+            if (id > GLOBAL_WALL_ID) {
+                id = id;
                 obj_array_[id]->draw(gfx, it->pos());
             }
         }

@@ -127,7 +127,7 @@ void ObjectTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
         return;
     }
     */
-    room_map->create(std::move(obj), nullptr);
+    room_map->create(std::move(obj));
 }
 
 void ObjectTab::handle_right_click(EditorRoom* eroom, Point3 pos) {

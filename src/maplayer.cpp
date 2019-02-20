@@ -32,6 +32,7 @@ Point3 FullMapLayerIterator::pos() {
 }
 
 int FullMapLayerIterator::id() {
+    Point3 pos {pos_};
     return map_[pos_.x][pos_.y];
 }
 
@@ -75,7 +76,8 @@ MapLayer::MapLayer(RoomMap* room_map, int z): parent_map_ {room_map}, z_ {z} {}
 
 MapLayer::~MapLayer() {}
 
-FullMapLayer::FullMapLayer(RoomMap* room_map, int width, int height, int z): MapLayer(room_map, z), map_ {} {
+FullMapLayer::FullMapLayer(RoomMap* room_map, int width, int height, int z):
+        MapLayer(room_map, z), map_ {}, width_ {width}, height_ {height} {
     for (int i = 0; i != width; ++i) {
         map_.push_back({});
         for (int j = 0; j != height; ++j) {

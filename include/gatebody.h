@@ -11,8 +11,8 @@ class GateBody: public PushBlock {
 public:
     GateBody(Gate* base);
     ~GateBody();
+
     ObjCode obj_code();
-    static GameObject* deserialize(MapFileI& file);
 
     void draw(GraphicsManager*);
 

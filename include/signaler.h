@@ -9,20 +9,21 @@ class RoomMap;
 class DeltaFrame;
 class MoveProcessor;
 class MapFileO;
-class GameObject;
+class ObjectModifier;
 
 class Signaler {
 public:
     Signaler(unsigned char threshold, bool persistent, bool active);
     ~Signaler();
+
+    void serialize(MapFileO& file);
+
     void push_switchable(Switchable*);
     void push_switch(Switch*);
     void receive_signal(bool signal);
     void toggle();
     void check_send_signal(RoomMap*, DeltaFrame*, MoveProcessor*);
-    bool remove_object(GameObject*);
-
-    void serialize(MapFileO& file);
+    bool remove_object(ObjectModifier*);
 
 private:
     unsigned char count_;

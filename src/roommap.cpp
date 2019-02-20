@@ -19,9 +19,14 @@
 #include "effects.h"
 
 RoomMap::RoomMap(GameObjectArray& obj_array, int width, int height, int depth):
-obj_array_ {obj_array}, width_ {width}, height_ {height}, depth_ {depth},
+obj_array_ {obj_array}, width_ {width}, height_ {height}, depth_ {},
 layers_ {}, listeners_ {}, signalers_ {},
-effects_ {std::make_unique<Effects>()} {}
+effects_ {std::make_unique<Effects>()} {
+    // TODO: Eventually, fix the way that maplayers are chosen
+    for (int i = 0; i < depth; ++i) {
+        push_full();
+    }
+}
 
 RoomMap::~RoomMap() {}
 
@@ -251,7 +256,10 @@ void RoomMap::check_signalers(DeltaFrame* delta_frame, MoveProcessor* mp) {
     }
 }
 
-void RoomMap::remove_from_signalers(GameObject* obj) {
+void RoomMap::remove_from_signalers(ObjectModifier* obj) {
+    if (!obj) {
+        return;
+    }
     signalers_.erase(std::remove_if(signalers_.begin(), signalers_.end(),
                                     [obj](std::unique_ptr<Signaler>& sig) {return sig->remove_object(obj);}), signalers_.end());
 }

@@ -6,6 +6,7 @@
 #include "graphicsmanager.h"
 #include "gameobject.h"
 
+#include "pushblock.h"
 #include "snakeblock.h"
 #include "door.h"
 #include "switch.h"
@@ -14,7 +15,7 @@
 #include "mapfile.h"
 
 Room::Room(std::string name): name_ {name},
-map_ {}, camera_ {} {}
+map_ {}, camera_ {}, offset_pos_ {0,0} {}
 
 Room::~Room() {}
 
@@ -49,9 +50,9 @@ void Room::draw(GraphicsManager* gfx, Point3 cam_pos, bool ortho, bool one_layer
 }
 
 void Room::draw(GraphicsManager* gfx, GameObject* target, bool ortho, bool one_layer) {
-    update_view(gfx, target->pos(), target->real_pos(), ortho);
+    update_view(gfx, target->pos_, target->real_pos(), ortho);
     if (one_layer) {
-        map_->draw_layer(gfx, target->z());
+        map_->draw_layer(gfx, target->pos_.z);
     } else {
         map_->draw(gfx, camera_->get_rotation());
     }
@@ -109,8 +110,14 @@ void Room::load_from_file(GameObjectArray& objs, MapFileI& file, Point3* start_p
         file.read(b, 1);
         switch (static_cast<MapCode>(b[0])) {
         case MapCode::Dimensions:
-            file.read(b, 2);
-            initialize(objs, b[0], b[1], 16);
+            file.read(b, 3);
+            initialize(objs, b[0], b[1], b[2]);
+            break;
+        case MapCode::FullLayer:
+            map_->push_full();
+            break;
+        case MapCode::SparseLayer:
+            map_->push_sparse();
             break;
         case MapCode::DefaultPos:
             file.read(b, 3);
@@ -118,10 +125,13 @@ void Room::load_from_file(GameObjectArray& objs, MapFileI& file, Point3* start_p
                 *start_pos = {b[0], b[1], b[2]};
             }
             break;
+        case MapCode::OffsetPos:
+            file >> offset_pos_;
+            break;
         case MapCode::Objects:
             read_objects(file);
             break;
-        case MapCode::CameraRect:
+        case MapCode::CameraRects:
             read_camera_rects(file);
             break;
         case MapCode::SnakeLink:
@@ -133,11 +143,11 @@ void Room::load_from_file(GameObjectArray& objs, MapFileI& file, Point3* start_p
         case MapCode::Signaler:
             read_signaler(file);
             break;
-        case MapCode::FullLayer:
-            map_->push_full();
+        case MapCode::Walls:
+            read_walls(file);
             break;
-        case MapCode::SparseLayer:
-            map_->push_sparse();
+        case MapCode::PlayerData:
+            read_player_data(file);
             break;
         case MapCode::End:
             reading_file = false;
@@ -154,28 +164,23 @@ void Room::load_from_file(GameObjectArray& objs, MapFileI& file, Point3* start_p
 
 #define CASE_OBJCODE(CLASS)\
 case ObjCode::CLASS:\
-    map_->create(std::unique_ptr<GameObject>(CLASS::deserialize(file)));\
+    map_->create(std::move(CLASS::deserialize(file)));\
     break;
 
 void Room::read_objects(MapFileI& file) {
-    /*
-    unsigned char b[1];
+    unsigned char b;
     while (true) {
-        file.read(b, 1);
-        switch (static_cast<ObjCode>(b[0])) {
-        CASE_OBJCODE(Wall)
-        CASE_OBJCODE(NonStickBlock)
-        CASE_OBJCODE(WeakBlock)
-        CASE_OBJCODE(StickyBlock)
+        file.read(&b, 1);
+        switch (static_cast<ObjCode>(b)) {
+        CASE_OBJCODE(PushBlock)
         CASE_OBJCODE(SnakeBlock)
-        CASE_OBJCODE(Door)
+        // Walls should never be encountered here, so ignore them
+        case ObjCode::Wall:
+            break;
         // NOTE: this is a temporary fix to deal with the player for now
+        // The Player's position SHOULD be saved in real save files
         case ObjCode::Player:
             break;
-        //CASE_OBJCODE(Player)
-        CASE_OBJCODE(PressSwitch)
-        CASE_OBJCODE(Gate)
-        CASE_OBJCODE(GateBody)
         case ObjCode::NONE:
             return;
         default :
@@ -183,7 +188,6 @@ void Room::read_objects(MapFileI& file) {
             break;
         }
     }
-    */
 }
 
 #undef CASE_OBJCODE
@@ -236,16 +240,22 @@ void Room::read_door_dest(MapFileI& file) {
 }
 
 void Room::read_signaler(MapFileI& file) {
-    /*
-    unsigned char b[4];
-    file.read(b, 4);
-    auto signaler = std::make_unique<Signaler>(b[0], b[1] & 1, b[1] & 2);
-    for (int i = 0; i < b[2]; ++i) {
-        signaler->push_switch(static_cast<Switch*>(map_->view(file.read_point3())));
-    }
+    unsigned char b[5];
+    file.read(b, 5);
+    auto signaler = std::make_unique<Signaler>(b[0], b[1], b[2]);
     for (int i = 0; i < b[3]; ++i) {
-        signaler->push_switchable(static_cast<Switchable*>(map_->view(file.read_point3())));
+        signaler->push_switch(static_cast<Switch*>(map_->view(file.read_point3())->modifier()));
+    }
+    for (int i = 0; i < b[4]; ++i) {
+        signaler->push_switchable(static_cast<Switchable*>(map_->view(file.read_point3())->modifier()));
     }
     map_->push_signaler(std::move(signaler));
-    */
+}
+
+void Room::read_walls(MapFileI& file) {
+
+}
+
+void Room::read_player_data(MapFileI& file) {
+
 }

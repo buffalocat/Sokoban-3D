@@ -14,12 +14,8 @@ ObjCode GateBody::obj_code() {
     return ObjCode::GateBody;
 }
 
-/*GameObject* GateBody::deserialize(MapFileI& file) {
-    return new GateBody(file.read_point3());
-}*/
-
 void GateBody::draw(GraphicsManager* gfx) {
-    Point3 p = pos();
+    Point3 p = pos_;
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y));
     model = glm::scale(model, glm::vec3(0.7f, 1.0f, 0.7f));
     gfx->set_model(model);

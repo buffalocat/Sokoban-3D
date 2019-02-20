@@ -37,12 +37,15 @@ private:
     std::string name_;
     std::unique_ptr<RoomMap> map_;
     std::unique_ptr<Camera> camera_;
+    Point2_S16 offset_pos_;
 
     void read_objects(MapFileI& file);
     void read_camera_rects(MapFileI& file);
     void read_snake_link(MapFileI& file);
     void read_door_dest(MapFileI& file);
     void read_signaler(MapFileI& file);
+    void read_walls(MapFileI& file);
+    void read_player_data(MapFileI& file);
 };
 
 #endif // ROOM_H

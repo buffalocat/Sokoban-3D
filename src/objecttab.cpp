@@ -137,7 +137,7 @@ void ObjectTab::handle_right_click(EditorRoom* eroom, Point3 pos) {
         if (obj->obj_code() == ObjCode::Player) {
             return;
         }
-        room_map->remove_from_signalers(obj);
+        room_map->remove_from_signalers(obj->modifier());
         room_map->take(obj);
     }
 }

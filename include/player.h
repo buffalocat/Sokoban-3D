@@ -1,6 +1,8 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include <memory>
+
 #include "pushblock.h"
 #include "car.h"
 
@@ -10,7 +12,7 @@ public:
     ~Player();
     ObjCode obj_code();
     void serialize(MapFileO& file);
-    static GameObject* deserialize(MapFileI& file);
+    static std::unique_ptr<GameObject> deserialize(MapFileI& file);
     void set_riding(RidingState);
     RidingState state();
     void toggle_riding(RoomMap* room_map, DeltaFrame*);

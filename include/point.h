@@ -3,7 +3,13 @@
 
 #include <ostream>
 
+// Standard Points serialize their components as unsigned chars
 struct Point2 {
+    int x;
+    int y;
+};
+
+struct Point2_S16 {
     int x;
     int y;
 };
@@ -21,6 +27,7 @@ struct FPoint3 {
     float x;
     float y;
     float z;
+    FPoint3(): x {}, y {}, z {} {}
     FPoint3(float ax, float ay, float az): x {ax}, y {ay}, z {az} {}
     FPoint3(const Point3& p): x {static_cast<float>(p.x)}, y {static_cast<float>(p.y)}, z {static_cast<float>(p.z)} {}
 };

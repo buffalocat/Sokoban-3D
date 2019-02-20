@@ -1,5 +1,7 @@
 #include "signaler.h"
 
+#include <algorithm>
+
 #include "switch.h"
 #include "switchable.h"
 #include "delta.h"
@@ -46,10 +48,8 @@ void Signaler::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame, Mov
 }
 
 void Signaler::serialize(MapFileO& file) {
-    /*
     file << MapCode::Signaler;
-    file << threshold_;
-    file << (persistent_ | (active_ << 1));
+    file << threshold_ << persistent_ << active_;
     file << switches_.size();
     file << switchables_.size();
     for (auto& obj : switches_) {
@@ -58,13 +58,10 @@ void Signaler::serialize(MapFileO& file) {
     for (auto& obj : switchables_) {
         file << obj->pos();
     }
-    */
 }
 
-bool Signaler::remove_object(GameObject* obj) {
-    /*
-    switchables_.erase(std::remove(switchables_.begin(), switchables_.end(), obj), switchables_.end());
-    switches_.erase(std::remove(switches_.begin(), switches_.end(), obj), switches_.end());
+bool Signaler::remove_object(ObjectModifier* obj) {
+    switchables_.erase(std::remove(switchables_.begin(), switchables_.end(), dynamic_cast<Switchable*>(obj)), switchables_.end());
+    switches_.erase(std::remove(switches_.begin(), switches_.end(), dynamic_cast<Switch*>(obj)), switches_.end());
     return switchables_.empty() || switches_.empty();
-    */
 }

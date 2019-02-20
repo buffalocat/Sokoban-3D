@@ -52,7 +52,7 @@ public:
 
     void push_signaler(std::unique_ptr<Signaler>);
     void check_signalers(DeltaFrame*, MoveProcessor*);
-    void remove_from_signalers(GameObject*);
+    void remove_from_signalers(ObjectModifier*);
 
     void add_listener(ObjectModifier*, Point3);
     void remove_listener(ObjectModifier*, Point3);

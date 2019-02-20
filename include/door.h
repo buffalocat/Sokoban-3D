@@ -20,13 +20,15 @@ struct MapLocation {
     MapLocation(Point3 p, std::string room_name);
 };
 
-class Door: public ObjectModifier, public Switchable {
+class Door: public Switchable {
 public:
     Door(GameObject* parent, bool def);
     ~Door();
-    ObjCode obj_code();
+
+    ModCode mod_code();
     void serialize(MapFileO& file);
-    static GameObject* deserialize(MapFileI& file);
+    static ObjectModifier* deserialize(MapFileI& file);
+
     bool relation_check();
     void relation_serialize(MapFileO& file);
     bool can_set_state(bool state, RoomMap*);

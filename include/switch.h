@@ -2,16 +2,16 @@
 #define SWITCH_H
 
 #include <vector>
+#include "objectmodifier.h"
 
+class GameObject;
 class RoomMap;
 class DeltaFrame;
 class Signaler;
 
-// TODO: fix the modifier property hierarchy (Switch : ObjectModifier ???)
-// For now, the only kind of switch is the pressure plate
-class Switch {
+class Switch: public ObjectModifier {
 public:
-    Switch(bool persistent, bool active);
+    Switch(GameObject* parent, bool persistent, bool active);
     virtual ~Switch();
     void push_signaler(Signaler*);
     virtual void check_send_signal(RoomMap*, DeltaFrame*) = 0;

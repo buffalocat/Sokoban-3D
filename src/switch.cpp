@@ -1,16 +1,12 @@
 #include "switch.h"
 
 #include "roommap.h"
-#include "delta.h"
-#include "graphicsmanager.h"
-#include "mapfile.h"
 #include "signaler.h"
 
 #include <algorithm>
 
 
-
-Switch::Switch(bool persistent, bool active):
+Switch::Switch(GameObject* parent, bool persistent, bool active): ObjectModifier(parent),
 persistent_ {persistent}, active_ {active}, signalers_ {} {}
 
 Switch::~Switch() {}

@@ -6,9 +6,12 @@
 
 class PushBlock: public GameObject {
 public:
-    PushBlock(Point3 pos, int color, bool pushable, bool gravitable, Sticky sticky);
+    PushBlock(Point3 pos, unsigned char color, bool pushable, bool gravitable, Sticky sticky);
     virtual ~PushBlock();
+
+    virtual ObjCode obj_code();
     virtual void serialize(MapFileO& file);
+    static std::unique_ptr<GameObject> deserialize(MapFileI& file);
 
     void collect_sticky_links(RoomMap*, Sticky, std::vector<GameObject*>& links);
 

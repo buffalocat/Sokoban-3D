@@ -11,13 +11,15 @@ class GateBody;
 class GraphicsManager;
 class MapFileO;
 
-class Gate: public ObjectModifier, public Switchable {
+class Gate: public Switchable {
 public:
     Gate(GameObject* parent, GateBody* body, bool def);
     virtual ~Gate();
-    ObjCode obj_code();
+
+    ModCode mod_code();
     void serialize(MapFileO& file);
-    //static GameObject* deserialize(MapFileI& file);
+    static std::unique_ptr<ObjectModifier> deserialize(GameObject*, MapFileI& file);
+
     bool can_set_state(bool state, RoomMap*);
     void apply_state_change(RoomMap*, std::vector<GameObject*>&);
 

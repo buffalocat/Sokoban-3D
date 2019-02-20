@@ -103,8 +103,9 @@ SparseMapLayer::SparseMapLayer(RoomMap* room_map, int z): MapLayer(room_map, z),
 
 SparseMapLayer::~SparseMapLayer() {}
 
+// TODO: fix the way that SparseMapLayers can fill up with empty data
 int& SparseMapLayer::at(Point2 pos) {
-    return map_.at(pos);
+    return map_[pos];
 }
 
 MapCode SparseMapLayer::type() {

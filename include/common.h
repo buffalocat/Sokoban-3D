@@ -55,16 +55,19 @@ const int GLOBAL_WALL_ID = 1;
 
 enum class ObjCode {
     NONE = 0,
-    Wall = 1,
-    NonStickBlock = 2,
-    WeakBlock = 3,
-    StickyBlock = 4,
-    SnakeBlock = 5,
-    Door = 6,
-    Player = 7,
-    PressSwitch = 8,
-    Gate = 9,
-    GateBody = 10,
+    PushBlock = 1,
+    SnakeBlock = 2,
+    Wall = 3,
+    Player = 4,
+    GateBody = 5,
+};
+
+enum class ModCode {
+    NONE = 0,
+    Door = 1,
+    Car = 2,
+    PressSwitch = 3,
+    Gate = 4,
 };
 
 enum class CameraCode {
@@ -143,16 +146,18 @@ const std::string MAPS_MAIN = "maps\\main\\";
 const std::string MAPS_TEMP = "maps\\temp\\";
 
 enum class MapCode {
-    Dimensions = 1, // Gets width and height as 1 byte integers
-    DefaultPos = 2, // Mark the position to start the player at when loading from this map (only useful for testing, or a select few rooms)
-    Objects = 3, // Read in all map objects
-    CameraRect = 4, // Get a camera context rectangle
-    SnakeLink = 5, // Link two snakes (1 = Right, 2 = Down)
-    DoorDest = 6, // Give a door a destination Map + Pos
-    Signaler = 7, // List of Switches and Switchables linked to a Signaler
-    FullLayer = 8, // Create a new full layer
-    SparseLayer = 9, // Create a new sparse layer
-    Walls = 10,
+    Dimensions = 1, // The dimensions of the room as 1 byte integers
+    FullLayer = 2, // Create a new full layer
+    SparseLayer = 3, // Create a new sparse layer
+    DefaultPos = 4, // Mark the position to start the player at when loading from this map (only useful for testing, or a select few rooms)
+    OffsetPos = 5, // The position that (0,0) was at when the room was created
+    Objects = 6, // Read in all map objects
+    CameraRects = 7, // Get a camera context rectangle
+    SnakeLink = 8, // Link two snakes (1 = Right, 2 = Down)
+    DoorDest = 9, // Give a door a destination Map + Pos
+    Signaler = 10, // List of Switches and Switchables linked to a Signaler
+    Walls = 11, // List of positions of walls
+    PlayerData = 12, // Like Walls, the Player is listed separately from other objects
     End = 255,
 };
 

@@ -8,7 +8,6 @@ public:
     Wall();
     ~Wall();
     ObjCode obj_code();
-    static GameObject* deserialize(MapFileI& file);
 
     void draw(GraphicsManager*, Point3 p={0,0,0});
 };

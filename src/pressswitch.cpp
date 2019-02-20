@@ -6,12 +6,12 @@
 #include "graphicsmanager.h"
 
 PressSwitch::PressSwitch(GameObject* parent, unsigned char color, bool persistent, bool active):
-ObjectModifier(parent), Switch(persistent, active), color_ {color} {}
+Switch(parent, persistent, active), color_ {color} {}
 
 PressSwitch::~PressSwitch() {}
 
-ObjCode PressSwitch::obj_code() {
-    return ObjCode::PressSwitch;
+ModCode PressSwitch::mod_code() {
+    return ModCode::PressSwitch;
 }
 
 void PressSwitch::serialize(MapFileO& file) {

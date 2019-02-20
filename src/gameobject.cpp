@@ -12,32 +12,18 @@
 #include "moveprocessor.h"
 
 // id_ begins in an "inconsistent" state - it *must* be set by the GameObjectArray
-GameObject::GameObject(Point3 pos, int color, bool pushable, bool gravitable):
+GameObject::GameObject(Point3 pos, unsigned char color, bool pushable, bool gravitable):
     modifier_ {}, animation_ {}, comp_ {},
     pos_ {pos}, id_ {-1},
     color_ {color}, pushable_ {pushable}, gravitable_ {gravitable} {}
 
 GameObject::~GameObject() {}
 
-void GameObject::serialize(MapFileO& file) {}
-
 bool GameObject::relation_check() {
     return false;
 }
 
 void GameObject::relation_serialize(MapFileO& file) {}
-
-Point3 GameObject::pos() {
-    return pos_;
-}
-
-Point2 GameObject::posh() {
-    return {pos_.x, pos_.y};
-}
-
-int GameObject::z() {
-    return pos_.z;
-}
 
 Point3 GameObject::shifted_pos(Point3 d) {
     return pos_ + d;

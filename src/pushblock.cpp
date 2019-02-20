@@ -1,13 +1,27 @@
 #include "pushblock.h"
 
 #include "roommap.h"
+#include "mapfile.h"
 
-PushBlock::PushBlock(Point3 pos, int color, bool pushable, bool gravitable, Sticky sticky):
+PushBlock::PushBlock(Point3 pos, unsigned char color, bool pushable, bool gravitable, Sticky sticky):
     GameObject(pos, color, pushable, gravitable), sticky_ {sticky} {}
 
 PushBlock::~PushBlock() {}
 
-void PushBlock::serialize(MapFileO& file) {}
+ObjCode PushBlock::obj_code() {
+    return ObjCode::PushBlock;
+}
+
+void PushBlock::serialize(MapFileO& file) {
+    file << color_ << pushable_ << gravitable_ << sticky_;
+}
+
+std::unique_ptr<GameObject> PushBlock::deserialize(MapFileI& file) {
+    Point3 pos {file.read_point3()};
+    unsigned char b[4];
+    file.read(b, 4);
+    return std::make_unique<PushBlock>(pos, b[0], b[1], b[2], static_cast<Sticky>(b[3]));
+}
 
 void PushBlock::collect_sticky_links(RoomMap* room_map, Sticky sticky_level, std::vector<GameObject*>& links) {
     Sticky sticky_condition = sticky_ & sticky_level;

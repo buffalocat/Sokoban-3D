@@ -63,13 +63,14 @@ void Player::draw(GraphicsManager* gfx) {
 }
 
 void Player::serialize(MapFileO& file) {
+
     file << state_;
 }
 
-GameObject* Player::deserialize(MapFileI& file) {
-    unsigned char b[4];
-    file.read(b, 4);
-    return new Player(Deser::p3(b), static_cast<RidingState>(b[3]));
+std::unique_ptr<GameObject> Player::deserialize(MapFileI& file) {
+    Point3 pos = file.read_point3();
+    RidingState state = static_cast<RidingState>(file.read_byte());
+    return std::make_unique<Player>(pos, state);
 }
 
 // NOTE: if the Player becomes a subclass of a more general "Passenger" type, move this up to that class.

@@ -7,7 +7,7 @@
 
 #include <algorithm>
 
-SnakeBlock::SnakeBlock(Point3 pos, int color, bool pushable, bool gravitable, unsigned char ends):
+SnakeBlock::SnakeBlock(Point3 pos, unsigned char color, bool pushable, bool gravitable, unsigned char ends):
 GameObject(pos, color, pushable, gravitable), links_ {}, target_ {}, distance_ {0}, ends_ {ends}  {}
 
 SnakeBlock::~SnakeBlock() {}
@@ -15,6 +15,41 @@ SnakeBlock::~SnakeBlock() {}
 ObjCode SnakeBlock::obj_code() {
     return ObjCode::SnakeBlock;
 }
+
+void SnakeBlock::serialize(MapFileO& file) {
+    file << color_ << pushable_ << gravitable_ << ends_;
+}
+
+std::unique_ptr<GameObject> SnakeBlock::deserialize(MapFileI& file) {
+    Point3 pos {file.read_point3()};
+    unsigned char b[4];
+    file.read(b, 4);
+    return std::make_unique<SnakeBlock>(pos, b[0], b[1], b[2], b[3]);
+}
+
+bool SnakeBlock::relation_check() {
+    return true;
+}
+
+void SnakeBlock::relation_serialize(MapFileO& file) {
+    unsigned char link_encode = 0;
+    for (auto& link : links_) {
+        Point3 q = link->pos_;
+        // Snake links are always adjacent, and we only bother to
+        // record links to the Right or Down
+        if (q.x > pos_.x) {
+            ++link_encode;
+        } else if (q.y > pos_.y) {
+            link_encode += 2;
+        }
+    }
+    if (link_encode) {
+        file << MapCode::SnakeLink;
+        file << pos_;
+        file << link_encode;
+    }
+}
+
 
 void SnakeBlock::collect_sticky_links(RoomMap* room_map, Sticky sticky_level, std::vector<GameObject*>& links) {
     if ((Sticky::Snake & sticky_level) == Sticky::None) {
@@ -76,41 +111,6 @@ void SnakeBlock::draw(GraphicsManager* gfx) {
     }
 }
 
-
-void SnakeBlock::serialize(MapFileO& file) {}
-
-GameObject* SnakeBlock::deserialize(MapFileI& file) {
-    /*
-    Point3 pos {file.read_point3()};
-    unsigned char b[2];
-    file.read(b, 2);
-    return new SnakeBlock(pos, color, b[0], b[1]);
-    */
-    return nullptr;
-}
-
-bool SnakeBlock::relation_check() {
-    return true;
-}
-
-void SnakeBlock::relation_serialize(MapFileO& file) {
-    unsigned char link_encode = 0;
-    for (auto& link : links_) {
-        Point3 q = link->pos();
-        // Snake links are always adjacent, and we only bother to
-        // record links to the Right or Down
-        if (q.x > pos_.x) {
-            ++link_encode;
-        } else if (q.y > pos_.y) {
-            link_encode += 2;
-        }
-    }
-    if (link_encode) {
-        file << MapCode::SnakeLink;
-        file << pos_;
-        file << link_encode;
-    }
-}
 
 bool SnakeBlock::in_links(SnakeBlock* sb) {
     return std::find(links_.begin(), links_.end(), sb) != links_.end();

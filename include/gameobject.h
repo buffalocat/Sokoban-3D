@@ -23,16 +23,12 @@ class GameObject {
 public:
     virtual ~GameObject();
     // TODO: REPLACE WITH REAL CODE
-    virtual ObjCode obj_code() {return ObjCode::Gate;}
+    virtual ObjCode obj_code() = 0;
 
-    virtual void serialize(MapFileO& file);
+    virtual void serialize(MapFileO& file) = 0;
     virtual bool relation_check();
     virtual void relation_serialize(MapFileO& file);
 
-    //TODO: decide which of these getters are useful
-    Point3 pos();
-    Point2 posh();
-    int z();
     Point3 shifted_pos(Point3 d);
 
     virtual void draw(GraphicsManager*, Point3 p) {}
@@ -62,7 +58,7 @@ public:
     FPoint3 real_pos();
 
 protected:
-    GameObject(Point3 pos, int color, bool pushable, bool gravitable);
+    GameObject(Point3 pos, unsigned char color, bool pushable, bool gravitable);
 
 // Data members
 protected:
@@ -72,9 +68,9 @@ public:
     Component* comp_;
     Point3 pos_;
     int id_;
-    int color_;
+    unsigned char color_;
     // TODO: remove this later
-    int color() {return color_;}
+    unsigned char color() {return color_;}
     bool pushable_;
     bool gravitable_;
 };

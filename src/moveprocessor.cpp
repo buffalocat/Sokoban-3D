@@ -89,7 +89,7 @@ void MoveProcessor::color_change_check() {
     }
     fall_check_.push_back(car->parent_);
     for (Point3 d : DIRECTIONS) {
-        if (GameObject* block = map_->view(car->parent_->shifted_pos(d))) {
+        if (GameObject* block = map_->view(car->shifted_pos(d))) {
             fall_check_.push_back(block);
         }
     }

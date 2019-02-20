@@ -11,13 +11,14 @@ class RoomMap;
 class DeltaFrame;
 class GraphicsManager;
 
-class PressSwitch: public ObjectModifier, public Switch {
+class PressSwitch: public Switch {
 public:
     PressSwitch(GameObject* parent, unsigned char color, bool persistent, bool active);
     ~PressSwitch();
-    ObjCode obj_code();
+
+    ModCode mod_code();
     void serialize(MapFileO& file);
-    static GameObject* deserialize(MapFileI& file);
+    static ObjectModifier* deserialize(GameObject*, MapFileI& file);
 
     void check_send_signal(RoomMap*, DeltaFrame*);
     bool should_toggle(RoomMap*);

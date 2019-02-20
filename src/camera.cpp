@@ -4,8 +4,6 @@
 #include "roommap.h"
 #include "mapfile.h"
 
-
-
 CameraContext::CameraContext(int x, int y, int w, int h, int priority): x_ {x}, y_ {y}, w_ {w}, h_ {h}, priority_ {priority} {}
 
 CameraContext::~CameraContext() {}
@@ -68,10 +66,10 @@ void FreeCameraContext::serialize(MapFileO& file) {
 }
 
 CameraContext* FreeCameraContext::deserialize(MapFileI& file) {
-    unsigned char b[11];
-    file.read(b, 11);
-    return new FreeCameraContext(b[0], b[1], b[2], b[3], b[4],
-                                 Deser::f(b+5), Deser::f(b+7), Deser::f(b+9));
+    int x, y, w, h, p;
+    float rad, tilt, rot;
+    file >> x >> y >> w >> h >> p >> rad >> tilt >> rot;
+    return new FreeCameraContext(x, y, w, h, p, rad, tilt, rot);
 }
 
 
@@ -106,11 +104,11 @@ void FixedCameraContext::serialize(MapFileO& file) {
 }
 
 CameraContext* FixedCameraContext::deserialize(MapFileI& file) {
-    unsigned char b[17];
-    file.read(b, 17);
-    return new FixedCameraContext(b[0], b[1], b[2], b[3], b[4],
-                                  Deser::f(b+5), Deser::f(b+7), Deser::f(b+9),
-                                  Deser::fp3(b+11));
+    int x, y, w, h, p;
+    float rad, tilt, rot;
+    FPoint3 center {};
+    file >> x >> y >> w >> h >> p >> rad >> tilt >> rot >> center;
+    return new FixedCameraContext(x, y, w, h, p, rad, tilt, rot, center);
 }
 
 ClampedCameraContext::ClampedCameraContext(int x, int y, int w, int h, int priority, float radius, float tilt, int xpad, int ypad):
@@ -144,11 +142,10 @@ void ClampedCameraContext::serialize(MapFileO& file) {
 }
 
 CameraContext* ClampedCameraContext::deserialize(MapFileI& file) {
-    unsigned char b[11];
-    file.read(b, 11);
-    return new ClampedCameraContext(b[0], b[1], b[2], b[3], b[4],
-                                    Deser::f(b+5), Deser::f(b+7),
-                                    b[9], b[10]);
+    int x, y, w, h, p, xpad, ypad;
+    float rad, tilt;
+    file >> x >> y >> w >> h >> p >> rad >> tilt >> xpad >> ypad;
+    return new ClampedCameraContext(x, y, w, h, p, rad, tilt, xpad, ypad);
 }
 
 NullCameraContext::NullCameraContext(int x, int y, int w, int h, int priority):
@@ -166,9 +163,9 @@ void NullCameraContext::serialize(MapFileO& file) {
 }
 
 CameraContext* NullCameraContext::deserialize(MapFileI& file) {
-    unsigned char b[5];
-    file.read(b, 5);
-    return new NullCameraContext(b[0], b[1], b[2], b[3], b[4]);
+    int x, y, w, h, p;
+    file >> x >> y >> w >> h >> p;
+    return new NullCameraContext(x, y, w, h, p);
 }
 
 
@@ -186,7 +183,7 @@ Camera::Camera(int w, int h): width_ {w}, height_ {h},
 }
 
 void Camera::serialize(MapFileO& file) {
-    file << MapCode::CameraRect;
+    file << MapCode::CameraRects;
     for (auto& context : loaded_contexts_) {
         context->serialize(file);
     }

@@ -5,6 +5,7 @@ class MapFileO;
 
 class ColorCycle {
 public:
+    ColorCycle();
     ColorCycle(unsigned char color);
     ColorCycle(unsigned char* b);
     ~ColorCycle();

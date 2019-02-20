@@ -15,7 +15,3 @@ void Wall::draw(GraphicsManager* gfx, Point3 p) {
     gfx->set_color(GREYS[p.z % NUM_GREYS]);
     gfx->draw_cube();
 }
-
-GameObject* Wall::deserialize(MapFileI& file) {
-    return new Wall();
-}

@@ -74,12 +74,12 @@ void PlayingState::handle_input() {
                 delta_frame_->revert();
                 delta_frame_ = std::make_unique<DeltaFrame>();
                 if (player_) {
-                    room_->set_cam_pos(player_->pos());
+                    room_->set_cam_pos(player_->pos_);
                 }
             } else if (undo_stack_->non_empty()) {
                 undo_stack_->pop();
                 if (player_) {
-                    room_->set_cam_pos(player_->pos());
+                    room_->set_cam_pos(player_->pos_);
                 }
             }
             return;
@@ -108,7 +108,7 @@ void PlayingState::handle_input() {
     RoomMap* room_map = room_->room_map();
     // TODO: Make a real "death" flag/state
     // Don't allow other input if player is "dead"
-    if (!dynamic_cast<Player*>(room_map->view(player_->pos()))) {
+    if (!dynamic_cast<Player*>(room_map->view(player_->pos_))) {
         return;
     }
     for (auto p : MOVEMENT_KEYS) {

@@ -3,7 +3,7 @@
 #include "delta.h"
 #include "moveprocessor.h"
 
-Switchable::Switchable(bool default_state, bool initial_state):
+Switchable::Switchable(GameObject* parent, bool default_state, bool initial_state): ObjectModifier(parent),
 default_ {default_state},
 active_ {(bool)(default_state ^ initial_state)},
 waiting_ {(bool)(default_state ^ initial_state)} {}

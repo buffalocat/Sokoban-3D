@@ -1,18 +1,21 @@
 #ifndef SNAKEBLOCK_H
 #define SNAKEBLOCK_H
 
+#include <memory>
 #include <unordered_set>
+
 
 #include "common.h"
 #include "gameobject.h"
 
 class SnakeBlock: public GameObject {
 public:
-    SnakeBlock(Point3 pos, int color, bool pushable, bool gravitable, unsigned char ends);
+    SnakeBlock(Point3 pos, unsigned char color, bool pushable, bool gravitable, unsigned char ends);
     virtual ~SnakeBlock();
+
     virtual ObjCode obj_code();
     void serialize(MapFileO& file);
-    static GameObject* deserialize(MapFileI& file);
+    static std::unique_ptr<GameObject> deserialize(MapFileI& file);
     bool relation_check();
     void relation_serialize(MapFileO& file);
 

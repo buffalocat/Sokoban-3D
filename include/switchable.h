@@ -3,14 +3,16 @@
 
 #include <vector>
 
+#include "objectmodifier.h"
+
 class RoomMap;
 class DeltaFrame;
 class GameObject;
 class MoveProcessor;
 
-class Switchable {
+class Switchable: public ObjectModifier {
 public:
-    Switchable(bool default_state, bool initial_state);
+    Switchable(GameObject* parent, bool default_state, bool initial_state);
     virtual ~Switchable();
     void set_aw(bool active, bool waiting, RoomMap*);
     bool state();

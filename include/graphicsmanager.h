@@ -26,7 +26,7 @@ public:
     void set_view(glm::mat4);
     void set_projection(glm::mat4);
     void set_color(glm::vec4);
-    void set_tex(glm::vec2);
+    void set_tex(Texture);
 
     void draw_cube();
     //void draw_trail();
@@ -40,7 +40,7 @@ private:
     glm::mat4 projection_;
 
     glm::vec4 color_;
-    glm::vec2 tex_;
+    Texture tex_;
 
     void init_vertex_attributes();
     void init_cube_buffer();

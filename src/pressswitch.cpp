@@ -68,13 +68,13 @@ void PressSwitch::draw(GraphicsManager* gfx) {
     gfx->set_color(COLORS[color_]);
     if (persistent_) {
         if (active_) {
-            gfx->set_tex(glm::vec2(2,1));
+            gfx->set_tex(Texture::SwitchDown);
         } else {
-            gfx->set_tex(glm::vec2(1,1));
+            gfx->set_tex(Texture::SwitchUp);
         }
     } else {
-        gfx->set_tex(glm::vec2(0,1));
+        gfx->set_tex(Texture::Cross);
     }
     gfx->draw_cube();
-    gfx->set_tex(glm::vec2(0,0));
+    gfx->set_tex(Texture::Blank);
 }

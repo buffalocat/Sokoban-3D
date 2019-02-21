@@ -290,10 +290,6 @@ void MoveProcessor::collect_above(FallComponent* comp, std::vector<GameObject*>&
 void MoveProcessor::check_land_first(FallComponent* comp) {
     std::vector<FallComponent*> comps_below;
     for (GameObject* block : comp->blocks_) {
-        // TODO: fix this hack
-        if (block->pos_.z <= 0) {
-            continue;
-        }
         GameObject* below = map_->view(block->shifted_pos({0,0,-1}));
         if (below) {
             if (FallComponent* comp_below = below->fall_comp()) {
@@ -360,8 +356,7 @@ void MoveProcessor::check_land_sticky(FallComponent* comp) {
         if (block->pos_.z < 0) {
             continue;
         }
-        // TODO: fix this hack
-        if (((block->pos_.z > 0) && map_->view(block->shifted_pos({0,0,-1}))) || block->has_sticky_neighbor(map_)) {
+        if (map_->view(block->shifted_pos({0,0,-1})) || block->has_sticky_neighbor(map_)) {
             settle(comp);
             return;
         }

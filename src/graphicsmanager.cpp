@@ -132,10 +132,12 @@ void GraphicsManager::set_color(glm::vec4 color) {
     }
 }
 
-void GraphicsManager::set_tex(glm::vec2 tex) {
+void GraphicsManager::set_tex(Texture tex) {
     if (tex != tex_) {
         tex_ = tex;
-        shader_.setVec2("tex", tex);
+        float u = (int)tex % TEXTURE_ATLAS_SIZE;
+        float v = (int)tex / TEXTURE_ATLAS_SIZE;
+        shader_.setVec2("tex", glm::vec2(u,v));
     }
 }
 

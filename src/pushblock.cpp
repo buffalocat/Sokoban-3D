@@ -2,6 +2,7 @@
 
 #include "roommap.h"
 #include "mapfile.h"
+#include "graphicsmanager.h"
 
 PushBlock::PushBlock(Point3 pos, unsigned char color, bool pushable, bool gravitable, Sticky sticky):
     GameObject(pos, color, pushable, gravitable), sticky_ {sticky} {}
@@ -40,15 +41,21 @@ Sticky PushBlock::sticky() {
 }
 
 
-void PushBlock::draw(GraphicsManager* gfx, Point3 p) {
-    /*
-    if (car_) {
-        FPoint3 p {real_pos()};
-        glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z + 0.5, p.y));
-        model = glm::scale(model, glm::vec3(0.7f, 0.1f, 0.7f));
-        gfx->set_model(model);
-        gfx->set_color(COLORS[LIGHT_GREY]);
-        gfx->draw_cube();
+void PushBlock::draw(GraphicsManager* gfx, Point3) {
+    FPoint3 p {real_pos()};
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y));
+    gfx->set_model(model);
+    gfx->set_color(COLORS[color_]);
+    switch (sticky_) {
+    case Sticky::None:
+        gfx->set_tex(Texture::Edges);
+        break;
+    case Sticky::Weak:
+        gfx->set_tex(Texture::Corners);
+        break;
+    case Sticky::Strong:
+        gfx->set_tex(Texture::Blank);
+        break;
     }
-    */
+    gfx->draw_cube();
 }

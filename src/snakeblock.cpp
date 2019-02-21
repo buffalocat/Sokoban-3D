@@ -93,9 +93,9 @@ void SnakeBlock::draw(GraphicsManager* gfx) {
     gfx->set_model(model);
     gfx->set_color(COLORS[color_]);
     if (ends_ == 1) {
-        gfx->set_tex(glm::vec2(2,0));
+        gfx->set_tex(Texture::Edges);
         gfx->draw_cube();
-        gfx->set_tex(glm::vec2(0,0));
+        gfx->set_tex(Texture::Blank);
     } else {
         gfx->draw_cube();
     }

@@ -85,7 +85,7 @@ void RoomMap::serialize(MapFileO& file) const {
     }
     // Serialize Signalers
     for (auto& signaler : signalers_) {
-        //signaler->serialize(file);
+        signaler->serialize(file);
     }
 }
 
@@ -93,9 +93,15 @@ int& RoomMap::at(Point3 pos) {
     return layers_[pos.z]->at(pos.h());
 }
 
-// Pretend that every out-of-bounds "object" is a Wall.
+// Pretend that every out-of-bounds "object" is a Wall, unless it's below the map
 GameObject* RoomMap::view(Point3 pos) {
-    return valid(pos) ? obj_array_[layers_[pos.z]->at(pos.h())] : obj_array_[GLOBAL_WALL_ID];
+    if (pos.z < 0) {
+        return nullptr;
+    } else if (valid(pos)) {
+        return obj_array_[layers_[pos.z]->at(pos.h())];
+    } else {
+        return obj_array_[GLOBAL_WALL_ID];
+    }
 }
 
 void RoomMap::take(GameObject* obj) {
@@ -129,6 +135,8 @@ void RoomMap::batch_shift(std::vector<GameObject*> objs, Point3 dpos, DeltaFrame
         delta_frame->push(std::make_unique<BatchMotionDelta>(std::move(objs), dpos, this));
     }
 }
+
+#include <iostream>
 
 void RoomMap::create(std::unique_ptr<GameObject> obj) {
     GameObject* raw = obj.get();
@@ -190,13 +198,12 @@ void RoomMap::draw(GraphicsManager* gfx, float angle) {
     for (auto& layer : layers_) {
         for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
             int id = it->id();
-
             if (id > GLOBAL_WALL_ID) {
-                id = id;
                 obj_array_[id]->draw(gfx, it->pos());
             }
         }
     }
+    // TODO: draw walls!
     effects_->sort_by_distance(angle);
     effects_->draw(gfx);
 }

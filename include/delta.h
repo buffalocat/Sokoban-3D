@@ -65,7 +65,7 @@ public:
 
 private:
     GameObject* obj_;
-    RoomMap* room_map_;
+    RoomMap* map_;
 };
 
 
@@ -77,7 +77,7 @@ public:
 
 private:
     GameObject* obj_;
-    RoomMap* room_map_;
+    RoomMap* map_;
 };
 
 
@@ -90,7 +90,7 @@ public:
 private:
     GameObject* obj_;
     Point3 dpos_;
-    RoomMap* room_map_;
+    RoomMap* map_;
 };
 
 
@@ -103,7 +103,7 @@ public:
 private:
     std::vector<GameObject*> objs_;
     Point3 dpos_;
-    RoomMap* room_map_;
+    RoomMap* map_;
 };
 
 
@@ -152,7 +152,7 @@ public:
 
 private:
     Switchable* obj_;
-    RoomMap* room_map_;
+    RoomMap* map_;
     bool active_;
     bool waiting_;
 };

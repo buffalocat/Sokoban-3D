@@ -25,11 +25,11 @@ public:
     void add_link(SnakeBlock*, DeltaFrame*);
     void remove_link(SnakeBlock*, DeltaFrame*);
 
-    void draw(GraphicsManager*);
+    void draw(GraphicsManager*, Point3);
 
     bool available();
     bool confused(RoomMap*);
-    void collect_maybe_confused_links(RoomMap*, std::unordered_set<SnakeBlock*>& check);
+    void collect_maybe_confused_neighbors(RoomMap*, std::unordered_set<SnakeBlock*>& check);
     void update_links_color(RoomMap*, DeltaFrame*);
     void check_add_local_links(RoomMap*, DeltaFrame*);
     void remove_moving_links(DeltaFrame*);
@@ -43,8 +43,10 @@ public:
     void reset_distance_and_target();
     bool pushed_and_moving();
 
-    void cleanup();
-    void reinit();
+    void cleanup_on_destruction(RoomMap*);
+    void setup_on_undestruction(RoomMap*);
+
+    std::unique_ptr<SnakeBlock> make_split_copy();
 
     Sticky sticky();
 
@@ -62,20 +64,20 @@ private:
 class SnakePuller {
 public:
     SnakePuller(RoomMap*, DeltaFrame*,
-                std::vector<SnakeBlock*>& moving_snakes,
-                std::unordered_set<SnakeBlock*>& add_link_check,
+                std::vector<GameObject*>& moving_blocks,
+                std::unordered_set<SnakeBlock*>& link_add_check,
                 std::vector<GameObject*>& fall_check);
     ~SnakePuller();
     void prepare_pull(SnakeBlock*);
     void perform_pulls();
 
 private:
-    RoomMap* room_map_;
+    RoomMap* map_;
     DeltaFrame* delta_frame_;
-    std::vector<SnakeBlock*>& moving_snakes_;
-    std::unordered_set<SnakeBlock*>& add_link_check_;
+    std::vector<SnakeBlock*> snakes_to_pull_;
+    std::vector<GameObject*>& moving_blocks_;
+    std::unordered_set<SnakeBlock*>& link_add_check_;
     std::vector<GameObject*>& fall_check_;
-    Point3 dir_;
 };
 
 #endif // SNAKEBLOCK_H

@@ -37,6 +37,10 @@ void GameObject::cleanup_on_destruction(RoomMap*) {}
 
 void GameObject::setup_on_undestruction(RoomMap*) {}
 
+void GameObject::set_modifier(std::unique_ptr<ObjectModifier> mod) {
+    modifier_ = std::move(mod);
+}
+
 ObjectModifier* GameObject::modifier() {
     return modifier_.get();
 }
@@ -99,6 +103,8 @@ void GameObject::update_animation() {
 void GameObject::shift_pos_from_animation() {
     pos_ = animation_->shift_pos(pos_);
 }
+
+#include <iostream>
 
 FPoint3 GameObject::real_pos() {
     if (animation_) {

@@ -28,6 +28,21 @@ effects_ {std::make_unique<Effects>()} {
     }
 }
 
+/*
+#include <iostream>
+
+void RoomMap::print_snakes() {
+    for (auto& layer : layers_) {
+        for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
+            SnakeBlock* obj = dynamic_cast<SnakeBlock*>(obj_array_[it->id()]);
+            if (obj) {
+                std::cout << "snake at " << obj->pos_ << "with d = " << obj->distance_ << std::endl;
+            }
+        }
+    }
+}
+*/
+
 RoomMap::~RoomMap() {}
 
 bool RoomMap::valid(Point3 pos) {
@@ -119,14 +134,21 @@ void RoomMap::put(GameObject* obj) {
 void RoomMap::shift(GameObject* obj, Point3 dpos, DeltaFrame* delta_frame) {
     take(obj);
     obj->pos_ += dpos;
+    put(obj);
+    // NOTE: putting animation here is a bit of a hack, but it works!
+    // Animation only gets set if we're not undoing!
     if (delta_frame) {
+        obj->set_linear_animation(dpos);
         delta_frame->push(std::make_unique<MotionDelta>(obj, dpos, this));
     }
-    put(obj);
 }
 
 void RoomMap::batch_shift(std::vector<GameObject*> objs, Point3 dpos, DeltaFrame* delta_frame) {
     for (auto obj : objs) {
+
+        if (delta_frame) {
+            obj->set_linear_animation(dpos);
+        }
         take(obj);
         obj->pos_ += dpos;
         put(obj);
@@ -141,27 +163,38 @@ void RoomMap::batch_shift(std::vector<GameObject*> objs, Point3 dpos, DeltaFrame
 void RoomMap::create(std::unique_ptr<GameObject> obj) {
     GameObject* raw = obj.get();
     obj_array_.push_object(std::move(obj));
-    at(raw->pos_) = raw->id_;
+    at(raw->pos_) += raw->id_;
 }
 
 void RoomMap::create(std::unique_ptr<GameObject> obj, DeltaFrame* delta_frame) {
     GameObject* raw = obj.get();
     obj_array_.push_object(std::move(obj));
-    at(raw->pos_) = raw->id_;
+    at(raw->pos_) += raw->id_;
     delta_frame->push(std::make_unique<CreationDelta>(raw, this));
 }
 
-void RoomMap::destroy(GameObject* obj) {
-    at(obj->pos_) -= obj->id_;
+void RoomMap::uncreate(GameObject* obj) {
     obj->cleanup_on_destruction(this);
+    take(obj);
+    obj_array_.destroy(obj);
+}
+
+void RoomMap::destroy(GameObject* obj) {
+    obj->cleanup_on_destruction(this);
+    take(obj);
 }
 
 void RoomMap::destroy(GameObject* obj, DeltaFrame* delta_frame) {
-    at(obj->pos_) -= obj->id_;
     obj->cleanup_on_destruction(this);
+    take(obj);
     if (delta_frame) {
         delta_frame->push(std::make_unique<DeletionDelta>(obj, this));
     }
+}
+
+void RoomMap::undestroy(GameObject* obj) {
+    put(obj);
+    obj->setup_on_undestruction(this);
 }
 
 // TODO (maybe): Consider allowing for a general callback function here

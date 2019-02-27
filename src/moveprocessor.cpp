@@ -1,7 +1,8 @@
 #include "moveprocessor.h"
 
-#include "common.h"
+#include <iostream>
 
+#include "common.h"
 #include "gameobject.h"
 #include "snakeblock.h"
 #include "player.h"
@@ -56,7 +57,9 @@ void MoveProcessor::move_bound() {
 
 void MoveProcessor::move_general() {
     prepare_horizontal_move();
-    perform_horizontal_step();
+    if (!moving_blocks_.empty()) {
+        perform_horizontal_step();
+    }
     push_comps_unique_.clear();
 }
 
@@ -192,31 +195,27 @@ void MoveProcessor::perform_horizontal_step() {
     fall_check_ = moving_blocks_;
     // Keep a list of snakes which did not move but may have gained links anyway
     std::unordered_set<SnakeBlock*> link_add_check {};
+    link_add_check.insert(moving_snakes_.begin(), moving_snakes_.end());
     for (auto sb : link_break_check_) {
         fall_check_.push_back(sb);
         // NOTE: May be made redundant by the link_add_check insertion for all moving_snakes_!
         link_add_check.insert(sb);
         sb->remove_moving_links(delta_frame_);
     }
-    SnakePuller snake_puller {map_, delta_frame_, moving_snakes_, link_add_check, fall_check_};
+    SnakePuller snake_puller {map_, delta_frame_, moving_blocks_, link_add_check, fall_check_};
     for (auto sb : moving_snakes_) {
+        sb->collect_maybe_confused_neighbors(map_, link_add_check);
         snake_puller.prepare_pull(sb);
     }
-    // TODO: Move this inside prepare_pull() (don't forget to include tails!)
-    // BIGGER TODO: Figure out the failure mode of Weird Stuff happening when
-    // stuff gets pulled in a weird direction
-    /*
-    for (auto sb : moving_snakes_) {
-        sb->collect_maybe_confused_links(map_, link_add_check);
-    }
-    */
-    for (auto block : moving_blocks_) {
-        block->set_linear_animation(dir_);
-    }
     // MAP BECOMES INCONSISTENT HERE (potential ID overlap)
+    // In this section of code, the map can't be viewed
+    auto forward_moving_blocks = moving_blocks_;
     snake_puller.perform_pulls();
-    map_->batch_shift(moving_blocks_, dir_, delta_frame_);
+    map_->batch_shift(std::move(forward_moving_blocks), dir_, delta_frame_);
     // MAP BECOMES CONSISTENT AGAIN HERE
+    for (auto sb : moving_snakes_) {
+        sb->reset_distance_and_target();
+    }
     for (auto sb : link_add_check) {
         sb->check_add_local_links(map_, delta_frame_);
     }
@@ -290,6 +289,9 @@ void MoveProcessor::collect_above(FallComponent* comp, std::vector<GameObject*>&
 void MoveProcessor::check_land_first(FallComponent* comp) {
     std::vector<FallComponent*> comps_below;
     for (GameObject* block : comp->blocks_) {
+        if (!block->gravitable_) {
+            comp->settle_first();
+        }
         GameObject* below = map_->view(block->shifted_pos({0,0,-1}));
         if (below) {
             if (FallComponent* comp_below = below->fall_comp()) {

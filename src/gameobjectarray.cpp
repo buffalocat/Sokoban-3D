@@ -20,3 +20,8 @@ void GameObjectArray::push_object(std::unique_ptr<GameObject> obj) {
 GameObject* GameObjectArray::operator[](int id) {
     return array_[id].get();
 }
+
+// TODO: use a minheap of "deleted IDs" to potentially reuse object IDs.
+void GameObjectArray::destroy(GameObject* obj) {
+    array_[obj->id_].reset(nullptr);
+}

@@ -30,6 +30,10 @@ bool ObjectModifier::gravitable() {
     return parent_->gravitable_;
 }
 
+std::unique_ptr<ObjectModifier> ObjectModifier::duplicate() {
+    return nullptr;
+}
+
 void ObjectModifier::map_callback(RoomMap*, DeltaFrame*, MoveProcessor*) {}
 
 void ObjectModifier::collect_sticky_links(RoomMap*, Sticky, std::vector<GameObject*>&) {}

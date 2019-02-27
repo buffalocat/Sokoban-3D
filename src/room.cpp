@@ -92,6 +92,10 @@ void Room::write_to_file(MapFileO& file, Point3 start_pos) {
     file << MapCode::Dimensions;
     file << map_->width_;
     file << map_->height_;
+    file << map_->depth_;
+
+    file << MapCode::OffsetPos;
+    file << offset_pos_;
 
     file << MapCode::DefaultPos;
     file << start_pos;
@@ -113,11 +117,11 @@ void Room::load_from_file(GameObjectArray& objs, MapFileI& file, Point3* start_p
             file.read(b, 3);
             initialize(objs, b[0], b[1], b[2]);
             break;
-        case MapCode::FullLayer:
-            map_->push_full();
+        case MapCode::FullLayer: // These codes are useless for now!
+            //map_->push_full();
             break;
         case MapCode::SparseLayer:
-            map_->push_sparse();
+            //map_->push_sparse();
             break;
         case MapCode::DefaultPos:
             file.read(b, 3);
@@ -153,7 +157,7 @@ void Room::load_from_file(GameObjectArray& objs, MapFileI& file, Point3* start_p
             reading_file = false;
             break;
         default :
-            std::cout << "unknown state code! " << b[0] << std::endl;
+            std::cout << "unknown state code! " << (int)b[0] << std::endl;
             //throw std::runtime_error("Unknown State code encountered in .map file (it's probably corrupt/an old version)");
             break;
         }
@@ -253,7 +257,12 @@ void Room::read_signaler(MapFileI& file) {
 }
 
 void Room::read_walls(MapFileI& file) {
-
+    unsigned char b[1];
+    file.read(b, 1);
+    Point3 pos;
+    for (int i = 0; i < b[0]; ++i) {
+        file >> pos;
+    }
 }
 
 void Room::read_player_data(MapFileI& file) {

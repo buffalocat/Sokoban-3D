@@ -36,8 +36,10 @@ public:
     void put(GameObject*);
     void create(std::unique_ptr<GameObject>);
     void create(std::unique_ptr<GameObject>, DeltaFrame*);
+    void uncreate(GameObject*);
     void destroy(GameObject*);
     void destroy(GameObject*, DeltaFrame*);
+    void undestroy(GameObject*);
 
     void shift(GameObject*, Point3, DeltaFrame*);
     void batch_shift(std::vector<GameObject*>, Point3, DeltaFrame*);

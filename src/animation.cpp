@@ -7,7 +7,9 @@ Animation::~Animation() {}
 
 LinearAnimation::LinearAnimation(Point3 d): Animation(), d_ {d}, frames_ {MOVEMENT_FRAMES - 1} {}
 
-LinearAnimation::~LinearAnimation() {}
+LinearAnimation::~LinearAnimation() {
+
+}
 
 bool LinearAnimation::update() {
     --frames_;

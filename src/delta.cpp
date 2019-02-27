@@ -64,44 +64,41 @@ void UndoStack::reset() {
 
 //TODO: make sure DeletionDelta is right
 DeletionDelta::DeletionDelta(GameObject* obj, RoomMap* room_map):
-obj_ {obj}, room_map_ {room_map} {
-    obj_->cleanup_on_destruction(room_map);
-}
+obj_ {obj}, map_ {room_map} {}
 
 DeletionDelta::~DeletionDelta() {}
 
 void DeletionDelta::revert() {
-    obj_->setup_on_undestruction(room_map_);
-    room_map_->put(obj_);
+    map_->undestroy(obj_);
 }
 
 
-CreationDelta::CreationDelta(GameObject* obj, RoomMap* room_map): obj_ {obj}, room_map_ {room_map} {}
+CreationDelta::CreationDelta(GameObject* obj, RoomMap* room_map): obj_ {obj}, map_ {room_map} {}
 
 CreationDelta::~CreationDelta() {}
 
 void CreationDelta::revert() {
-    room_map_->take(obj_);
+    map_->uncreate(obj_);
 }
 
 
 MotionDelta::MotionDelta(GameObject* obj, Point3 dpos, RoomMap* room_map):
-obj_ {obj}, dpos_ {dpos}, room_map_ {room_map} {}
+obj_ {obj}, dpos_ {dpos}, map_ {room_map} {}
 
 MotionDelta::~MotionDelta() {}
 
 void MotionDelta::revert() {
-    room_map_->shift(obj_, -dpos_, nullptr);
+    map_->shift(obj_, -dpos_, nullptr);
 }
 
 
 BatchMotionDelta::BatchMotionDelta(std::vector<GameObject*> objs, Point3 dpos, RoomMap* room_map):
-objs_ {objs}, dpos_ {dpos}, room_map_ {room_map} {}
+objs_ {objs}, dpos_ {dpos}, map_ {room_map} {}
 
 BatchMotionDelta::~BatchMotionDelta() {}
 
 void BatchMotionDelta::revert() {
-    room_map_->batch_shift(objs_, -dpos_, nullptr);
+    map_->batch_shift(objs_, -dpos_, nullptr);
 }
 
 AddLinkDelta::AddLinkDelta(SnakeBlock* a, SnakeBlock* b): a_ {a}, b_ {b} {}
@@ -144,12 +141,12 @@ void DoorMoveDelta::revert() {
 
 
 SwitchableDelta::SwitchableDelta(Switchable* obj, bool active, bool waiting, RoomMap* room_map):
-obj_ {obj}, room_map_ {room_map}, active_ {active}, waiting_ {waiting} {}
+obj_ {obj}, map_ {room_map}, active_ {active}, waiting_ {waiting} {}
 
 SwitchableDelta::~SwitchableDelta() {}
 
 void SwitchableDelta::revert() {
-    obj_->set_aw(active_, waiting_, room_map_);
+    obj_->set_aw(active_, waiting_, map_);
 }
 
 

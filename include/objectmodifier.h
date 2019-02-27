@@ -31,6 +31,9 @@ public:
     bool pushable();
     bool gravitable();
 
+    // TODO: This should actually be pure virtual! But we don't care for now.
+    virtual std::unique_ptr<ObjectModifier> duplicate();
+
     // Every type of Modifier can have at most one callback function for map listeners
     virtual void map_callback(RoomMap*, DeltaFrame*, MoveProcessor*);
     virtual void collect_sticky_links(RoomMap*, Sticky, std::vector<GameObject*>&);

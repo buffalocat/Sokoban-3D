@@ -48,6 +48,7 @@ public:
     virtual void collect_sticky_links(RoomMap*, Sticky, std::vector<GameObject*>& links) = 0;
     virtual void collect_special_links(RoomMap*, Sticky, std::vector<GameObject*>& links);
 
+    void set_modifier(std::unique_ptr<ObjectModifier> mod);
     ObjectModifier* modifier();
 
     //TODO: fix

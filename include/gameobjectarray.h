@@ -13,6 +13,7 @@ public:
     ~GameObjectArray();
     void push_object(std::unique_ptr<GameObject> obj);
     GameObject* operator[](int id);
+    void destroy(GameObject* obj);
 
 private:
     std::vector<std::unique_ptr<GameObject>> array_;

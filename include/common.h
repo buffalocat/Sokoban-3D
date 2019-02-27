@@ -78,14 +78,7 @@ enum class CameraCode {
     Null = 4,
 };
 
-struct ObjCodeHash {
-    std::size_t operator()(const ObjCode& c) const;
-};
-
-struct CameraCodeHash {
-    std::size_t operator()(const CameraCode& c) const;
-};
-
+// TODO: make this better and safer
 enum {
     GREEN = 0,
     PINK = 1,

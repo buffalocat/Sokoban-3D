@@ -12,6 +12,7 @@ public:
     GateBody(Gate* parent);
     ~GateBody();
 
+    bool skip_serialization();
     ObjCode obj_code();
 
     void draw(GraphicsManager*);

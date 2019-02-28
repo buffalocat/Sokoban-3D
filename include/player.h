@@ -11,8 +11,8 @@ public:
     Player(Point3 pos, RidingState state);
     ~Player();
     ObjCode obj_code();
-    void serialize(MapFileO& file);
-    static std::unique_ptr<GameObject> deserialize(MapFileI& file);
+
+    bool skip_serialization();
     void set_riding(RidingState);
     RidingState state();
     void toggle_riding(RoomMap* room_map, DeltaFrame*);

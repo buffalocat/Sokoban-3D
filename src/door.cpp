@@ -60,3 +60,10 @@ void Door::draw(GraphicsManager* gfx, FPoint3 p) {
     }
     gfx->draw_cube();
 }
+
+std::unique_ptr<ObjectModifier> Door::duplicate(GameObject* parent) {
+    auto dup = std::make_unique<Door>(*this);
+    dup->parent_ = parent;
+    dup->dest_ = std::make_unique<MapLocation>(*dest_);
+    return std::move(dup);
+}

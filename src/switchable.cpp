@@ -2,13 +2,25 @@
 
 #include "delta.h"
 #include "moveprocessor.h"
+#include "signaler.h"
 
 Switchable::Switchable(GameObject* parent, bool default_state, bool initial_state): ObjectModifier(parent),
 default_ {default_state},
 active_ {(bool)(default_state ^ initial_state)},
-waiting_ {(bool)(default_state ^ initial_state)} {}
+waiting_ {(bool)(default_state ^ initial_state)},
+signalers_ {} {}
 
 Switchable::~Switchable() {}
+
+void Switchable::push_signaler(Signaler* signaler) {
+    signalers_.push_back(signaler);
+}
+
+void Switchable::connect_to_signalers() {
+    for (Signaler* s : signalers_) {
+        s->push_switchable(this);
+    }
+}
 
 void Switchable::set_aw(bool active, bool waiting, RoomMap* room_map) {
     if (active_ != active) {
@@ -47,4 +59,14 @@ void Switchable::check_waiting(RoomMap* room_map, DeltaFrame* delta_frame, MoveP
         active_ = !active_;
         apply_state_change(room_map, mp);
     }
+}
+
+void Switchable::cleanup_on_destruction(RoomMap* room_map) {
+    for (Signaler* s : signalers_) {
+        s->remove_object(this);
+    }
+}
+
+void Switchable::setup_on_undestruction(RoomMap* room_map) {
+    connect_to_signalers();
 }

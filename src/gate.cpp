@@ -28,11 +28,7 @@ void Gate::deserialize(MapFileI& file, RoomMap* room_map, GameObject* parent) {
     auto gate = std::make_unique<Gate>(parent, nullptr, b[0], b[1], b[2]);
     auto gate_body_unique = std::make_unique<GateBody>(gate.get());
     gate->body_ = gate_body_unique.get();
-    if (gate->state()) {
-        room_map->create(std::move(gate_body_unique));
-    } else {
-        room_map->create_abstract(std::move(gate_body_unique));
-    }
+    room_map->create_abstract(std::move(gate_body_unique));
     parent->set_modifier(std::move(gate));
 }
 
@@ -83,4 +79,12 @@ void Gate::draw(GraphicsManager* gfx, FPoint3 p) {
     gfx->set_model(model);
     gfx->set_color(COLORS[color_]);
     gfx->draw_cube();
+}
+
+std::unique_ptr<ObjectModifier> Gate::duplicate(GameObject* parent) {
+    // TODO: copy the GateBody too!!!
+    auto dup = std::make_unique<Gate>(*this);
+    dup->parent_ = parent;
+    dup->connect_to_signalers();
+    return std::move(dup);
 }

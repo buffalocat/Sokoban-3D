@@ -9,6 +9,7 @@ public:
     ~Wall();
     ObjCode obj_code();
 
+    bool skip_serialization();
     void draw(GraphicsManager*);
 };
 

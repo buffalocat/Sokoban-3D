@@ -9,7 +9,7 @@
 #include "objectmodifier.h"
 #include "animation.h"
 
-#include "moveprocessor.h"
+#include "component.h"
 
 // id_ begins in an "inconsistent" state - it *must* be set by the GameObjectArray
 GameObject::GameObject(Point3 pos, int color, bool pushable, bool gravitable):
@@ -26,6 +26,10 @@ GameObject::GameObject(const GameObject& obj):
     color_ {obj.color_}, pushable_ {obj.pushable_}, gravitable_ {obj.gravitable_} {}
 
 bool GameObject::relation_check() {
+    return false;
+}
+
+bool GameObject::skip_serialization() {
     return false;
 }
 

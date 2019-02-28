@@ -22,6 +22,10 @@ RidingState Player::state() {
     return state_;
 }
 
+bool Player::skip_serialization() {
+    return true;
+}
+
 void Player::toggle_riding(RoomMap* room_map, DeltaFrame* delta_frame) {
     if (state_ == RidingState::Riding) {
         delta_frame->push(std::make_unique<RidingStateDelta>(this, state_));
@@ -65,16 +69,11 @@ void Player::draw(GraphicsManager* gfx) {
     }
 }
 
-void Player::serialize(MapFileO& file) {
-
-    file << state_;
-}
-
-std::unique_ptr<GameObject> Player::deserialize(MapFileI& file) {
+/*std::unique_ptr<GameObject> Player::deserialize(MapFileI& file) {
     Point3 pos = file.read_point3();
     RidingState state = static_cast<RidingState>(file.read_byte());
     return std::make_unique<Player>(pos, state);
-}
+}*/
 
 // NOTE: if the Player becomes a subclass of a more general "Passenger" type, move this up to that class.
 void Player::collect_special_links(RoomMap* room_map, Sticky sticky_level, std::vector<GameObject*>& links) {

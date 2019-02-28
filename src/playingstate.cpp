@@ -113,8 +113,9 @@ void PlayingState::handle_input() {
     }
     for (auto p : MOVEMENT_KEYS) {
         if (glfwGetKey(window_, p.first) == GLFW_PRESS) {
-            move_processor_ = std::make_unique<MoveProcessor>(player_, room_map, p.second, delta_frame_.get());
-            if (!move_processor_->try_move()) {
+            move_processor_ = std::make_unique<MoveProcessor>(room_map, delta_frame_.get());
+            // p.second == direction of movement
+            if (!move_processor_->try_move(player_, p.second)) {
                 move_processor_.reset(nullptr);
                 return;
             }
@@ -134,7 +135,10 @@ void PlayingState::handle_input() {
         input_cooldown = MAX_COOLDOWN;
         return;
     } else if (glfwGetKey(window_, GLFW_KEY_C) == GLFW_PRESS) {
-        MoveProcessor(player_, room_map, {0,0,0}, delta_frame_.get()).color_change_check();
+        move_processor_ = std::make_unique<MoveProcessor>(room_map, delta_frame_.get());
+        move_processor_->color_change(player_);
+        // TODO: when there's color change animation, don't reset MP yet!
+        move_processor_.reset(nullptr);
         input_cooldown = MAX_COOLDOWN;
         return;
     }
@@ -163,7 +167,7 @@ bool PlayingState::load_room(std::string name) {
     auto room = std::make_unique<Room>(name);
     room->load_from_file(*objs_, file);
     // Load dynamic component!
-    //room->room_map()->set_initial_state(false);
+    room->room_map()->set_initial_state(false);
     loaded_rooms_[name] = std::move(room);
     return true;
 }

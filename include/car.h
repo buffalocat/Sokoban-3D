@@ -17,8 +17,9 @@ public:
 
     void collect_sticky_links(RoomMap*, Sticky, std::vector<GameObject*>&);
 
-    void insert_color(int color);
     bool cycle_color(bool undo);
+
+    std::unique_ptr<ObjectModifier> duplicate(GameObject*);
 
     ColorCycle color_cycle_;
 };

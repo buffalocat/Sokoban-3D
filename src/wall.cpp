@@ -10,6 +10,12 @@ ObjCode Wall::obj_code() {
     return ObjCode::Wall;
 }
 
+// NOTE: Defining this is redundant, as it's not possible to create
+// a Wall whose ID isn't GLOBAL_WALL_ID (at least without save hacking)
+bool Wall::skip_serialization() {
+    return true;
+}
+
 // TODO: make this empty, replace with a batch drawing mechanism!
 void Wall::draw(GraphicsManager* gfx) {
 /*

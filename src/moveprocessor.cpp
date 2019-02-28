@@ -4,28 +4,26 @@
 
 #include "common.h"
 #include "gameobject.h"
-#include "snakeblock.h"
 #include "player.h"
 #include "delta.h"
 #include "roommap.h"
 #include "switch.h"
-#include "component.h"
 
-MoveProcessor::MoveProcessor(Player* player, RoomMap* room_map, Point3 dir, DeltaFrame* delta_frame):
-push_comps_unique_ {}, fall_comps_unique_ {},
-moving_blocks_ {}, fall_check_ {}, link_break_check_ {},
-moving_snakes_ {}, snakes_to_reset_ {}, snakes_to_recheck_ {},
-player_ {player}, map_ {room_map}, delta_frame_ {delta_frame}, dir_ {dir},
-layers_fallen_ {},
+#include "horizontalstepprocessor.h"
+#include "fallstepprocessor.h"
+
+MoveProcessor::MoveProcessor(RoomMap* room_map, DeltaFrame* delta_frame):
+fall_check_ {}, moving_blocks_ {},
+map_ {room_map}, delta_frame_ {delta_frame},
 frames_ {0}, state_ {MoveStepType::Horizontal} {}
 
 MoveProcessor::~MoveProcessor() {}
 
-bool MoveProcessor::try_move() {
-    if (player_->state() == RidingState::Bound) {
-        move_bound();
+bool MoveProcessor::try_move(Player* player, Point3 dir) {
+    if (player->state() == RidingState::Bound) {
+        move_bound(player, dir);
     } else {
-        move_general();
+        move_general(player, dir);
     }
     if (moving_blocks_.empty()) {
         return false;
@@ -34,35 +32,30 @@ bool MoveProcessor::try_move() {
     return true;
 }
 
-void MoveProcessor::move_bound() {
+void MoveProcessor::move_bound(Player* player, Point3 dir) {
     // This is more complicated in 3D...
     // For now, don't let bound player push anything
-    if (map_->view(player_->shifted_pos(dir_))) {
+    if (map_->view(player->shifted_pos(dir))) {
         return;
     }
     // If the player is bound, it's on top of a block!
-    GameObject* car = map_->view(player_->shifted_pos({0,0,-1}));
-    GameObject* adj = map_->view(car->shifted_pos(dir_));
+    GameObject* car = map_->view(player->shifted_pos({0,0,-1}));
+    GameObject* adj = map_->view(car->shifted_pos(dir));
     if (adj && car->color_ == adj->color_) {
-        map_->take(player_);
-        player_->set_linear_animation(dir_);
+        map_->take(player);
+        player->set_linear_animation(dir);
         if (delta_frame_) {
-            delta_frame_->push(std::make_unique<MotionDelta>(player_, dir_, map_));
+            delta_frame_->push(std::make_unique<MotionDelta>(player, dir, map_));
         }
-        moving_blocks_.push_back(player_);
-        player_->shift_pos_from_animation();
-        map_->put(player_);
+        moving_blocks_.push_back(player);
+        player->shift_pos_from_animation();
+        map_->put(player);
     }
 }
 
-void MoveProcessor::move_general() {
-    prepare_horizontal_move();
-    if (!moving_blocks_.empty()) {
-        perform_horizontal_step();
-    }
-    push_comps_unique_.clear();
+void MoveProcessor::move_general(Player* player, Point3 dir) {
+    HorizontalStepProcessor(map_, delta_frame_, dir, fall_check_, moving_blocks_).run(player);
 }
-
 
 bool MoveProcessor::update() {
     if (--frames_ == 0) {
@@ -82,8 +75,8 @@ void MoveProcessor::abort() {
     }
 }
 
-void MoveProcessor::color_change_check() {
-    Car* car = player_->get_car(map_, false);
+void MoveProcessor::color_change(Player* player) {
+    Car* car = player->get_car(map_, false);
     if (!(car && car->cycle_color(false))) {
         return;
     }
@@ -99,125 +92,12 @@ void MoveProcessor::color_change_check() {
     begin_fall_cycle();
 }
 
-// Try to push the block and build the resulting component tree
-// Return whether block is able to move
-bool MoveProcessor::compute_push_component_tree(GameObject* block) {
-    snakes_to_reset_ = {};
-    snakes_to_recheck_ = {};
-    if (!compute_push_component(block)) {
-        for (auto snake : snakes_to_reset_) {
-            // "Unpush" snakes that we thought we pushed, but didn't really
-            snake->toggle_push();
-        }
-        return false;
-    }
-    std::vector<GameObject*> weak_links {};
-    // Ensures that snakes which were "pushed late" still drag their links
-    for (auto snake : snakes_to_recheck_) {
-        snake->collect_sticky_links(map_, Sticky::Snake, weak_links);
-    }
-    collect_moving_and_weak_links(block->push_comp(), weak_links);
-    for (auto link : weak_links) {
-        if (!compute_push_component_tree(link)) {
-            if (auto sb = dynamic_cast<SnakeBlock*>(link)) {
-                link_break_check_.push_back(sb);
-            }
-        }
-    }
-    return true;
-}
-
-// Try to push the component containing block
-// Return whether block is able to move
-bool MoveProcessor::compute_push_component(GameObject* start_block) {
-    if (PushComponent* comp = start_block->push_comp()) {
-        return !comp->blocked_;
-    }
-    auto comp_unique = std::make_unique<PushComponent>();
-    PushComponent* comp = comp_unique.get();
-    push_comps_unique_.push_back(std::move(comp_unique));
-    start_block->collect_sticky_component(map_, Sticky::Strong, comp);
-    for (auto block : comp->blocks_) {
-        if (!block->pushable_) {
-            comp->blocked_ = true;
-            break;
-        }
-        if (GameObject* in_front = map_->view(block->pos_ + dir_)) {
-            if (in_front->pushable_ && compute_push_component(in_front)) {
-                comp->add_pushing(in_front->push_comp());
-                if (SnakeBlock* sb = dynamic_cast<SnakeBlock*>(in_front)) {
-                    sb->toggle_push();
-                    snakes_to_reset_.push_back(sb);
-                    if (sb->pushed_and_moving()) {
-                        snakes_to_recheck_.push_back(sb);
-                    }
-                }
-            } else {
-                // The thing we tried to push wasn't pushable or couldn't move
-                comp->blocked_ = true;
-                break;
-            }
-        }
-    }
-    return !comp->blocked_;
-}
-
-
-void MoveProcessor::collect_moving_and_weak_links(PushComponent* comp, std::vector<GameObject*>& weak_links) {
-    if (comp->moving_) {
-        return;
-    }
-    comp->moving_ = true;
-    for (GameObject* block : comp->blocks_) {
-        moving_blocks_.push_back(block);
-        if (SnakeBlock* sb = dynamic_cast<SnakeBlock*>(block)) {
-            sb->record_move();
-            // Only pushed snakes should drag their links
-            Sticky sticky_condition = sb->pushed_and_moving() ? Sticky::SnakeWeak : Sticky::Weak;
-            block->collect_sticky_links(map_, sticky_condition, weak_links);
-            moving_snakes_.push_back(sb);
-        } else {
-            block->collect_sticky_links(map_, Sticky::Weak, weak_links);
-        }
-    }
-    for (PushComponent* in_front : comp->pushing_) {
-        collect_moving_and_weak_links(in_front, weak_links);
-    }
-}
-
-void MoveProcessor::prepare_horizontal_move() {
-    // TODO: allow for possibility of multiple/dependent agents
-    compute_push_component_tree(player_);
-}
-
-void MoveProcessor::perform_horizontal_step() {
-    // Any block which moved forward could have moved off a ledge
-    fall_check_ = moving_blocks_;
-    // Keep a list of snakes which did not move but may have gained links anyway
-    std::unordered_set<SnakeBlock*> link_add_check {};
-    link_add_check.insert(moving_snakes_.begin(), moving_snakes_.end());
-    for (auto sb : link_break_check_) {
-        fall_check_.push_back(sb);
-        // NOTE: May be made redundant by the link_add_check insertion for all moving_snakes_!
-        link_add_check.insert(sb);
-        sb->remove_moving_links(delta_frame_);
-    }
-    SnakePuller snake_puller {map_, delta_frame_, moving_blocks_, link_add_check, fall_check_};
-    for (auto sb : moving_snakes_) {
-        sb->collect_maybe_confused_neighbors(map_, link_add_check);
-        snake_puller.prepare_pull(sb);
-    }
-    // MAP BECOMES INCONSISTENT HERE (potential ID overlap)
-    // In this section of code, the map can't be viewed
-    auto forward_moving_blocks = moving_blocks_;
-    snake_puller.perform_pulls();
-    map_->batch_shift(std::move(forward_moving_blocks), dir_, delta_frame_);
-    // MAP BECOMES CONSISTENT AGAIN HERE
-    for (auto sb : moving_snakes_) {
-        sb->reset_distance_and_target();
-    }
-    for (auto sb : link_add_check) {
-        sb->check_add_local_links(map_, delta_frame_);
+void MoveProcessor::begin_fall_cycle() {
+    // TODO: "split" this loop to allow for animation in between fall steps!
+    while (!fall_check_.empty()) {
+        FallStepProcessor(map_, delta_frame_, std::move(fall_check_)).run();
+        fall_check_.clear();
+        perform_switch_checks();
     }
 }
 
@@ -229,174 +109,3 @@ void MoveProcessor::perform_switch_checks() {
 void MoveProcessor::add_to_fall_check(GameObject* obj) {
     fall_check_.push_back(obj);
 }
-
-void MoveProcessor::begin_fall_cycle() {
-    // TODO: "split" this loop to allow for animation in between fall steps!
-    while (!fall_check_.empty()) {
-        fall_step();
-        fall_comps_unique_.clear();
-        fall_check_.clear();
-        map_->check_signalers(delta_frame_, this);
-    }
-}
-
-void MoveProcessor::fall_step() {
-    while (!fall_check_.empty()) {
-        std::vector<GameObject*> next_fall_check {};
-        for (GameObject* block : fall_check_) {
-            if (!block->fall_comp()) {
-                auto comp_unique = std::make_unique<FallComponent>();
-                FallComponent* comp = comp_unique.get();
-                fall_comps_unique_.push_back(std::move(comp_unique));
-                block->collect_sticky_component(map_, Sticky::All, comp);
-                collect_above(comp, next_fall_check);
-            }
-        }
-        fall_check_ = std::move(next_fall_check);
-    }
-    // Initial check for land
-    for (auto& comp : fall_comps_unique_) {
-        check_land_first(comp.get());
-    }
-    for (auto& comp : fall_comps_unique_) {
-        comp->take_falling(map_);
-    }
-    layers_fallen_ = 0;
-    while (true) {
-        ++layers_fallen_;
-        bool done_falling = true;
-        for (auto& comp : fall_comps_unique_) {
-            if (drop_check(comp.get())) {
-                done_falling = false;
-            }
-        }
-        if (done_falling) {
-            break;
-        }
-        for (auto& comp : fall_comps_unique_) {
-            if (!comp->settled_) {
-                check_land_sticky(comp.get());
-            }
-        }
-    }
-}
-
-void MoveProcessor::collect_above(FallComponent* comp, std::vector<GameObject*>& above_list) {
-    for (GameObject* block : comp->blocks_) {
-        GameObject* above = map_->view(block->shifted_pos({0,0,1}));
-        if (above && above->gravitable_ && !above->fall_comp()) {
-            above_list.push_back(above);
-        }
-    }
-}
-
-void MoveProcessor::check_land_first(FallComponent* comp) {
-    std::vector<FallComponent*> comps_below;
-    for (GameObject* block : comp->blocks_) {
-        if (!block->gravitable_) {
-            comp->settle_first();
-        }
-        GameObject* below = map_->view(block->shifted_pos({0,0,-1}));
-        if (below) {
-            if (FallComponent* comp_below = below->fall_comp()) {
-                if (!comp_below->settled_) {
-                    if (comp_below != comp) {
-                        comps_below.push_back(comp_below);
-                    }
-                    continue;
-                }
-            }
-            comp->settle_first();
-            return;
-        }
-    }
-    for (FallComponent* comp_below : comps_below) {
-        comp_below->add_above(comp);
-    }
-}
-
-Component::~Component() {
-    for (GameObject* block : blocks_) {
-        block->comp_ = nullptr;
-    }
-}
-
-void FallComponent::settle_first() {
-    settled_ = true;
-    for (FallComponent* comp : above_) {
-        if (!comp->settled_) {
-            comp->settle_first();
-        }
-    }
-}
-
-void FallComponent::take_falling(RoomMap* room_map) {
-    if (settled_) {
-        return;
-    }
-    for (GameObject* block : blocks_) {
-        room_map->take(block);
-    }
-}
-
-// Returns whether the component is "still falling" (false if stopped or reached oblivion)
-bool MoveProcessor::drop_check(FallComponent* comp) {
-    if (comp->settled_) {
-        return false;
-    }
-    bool alive = false;
-    for (GameObject* block : comp->blocks_) {
-        block->pos_ += {0,0,-1};
-        if (block->pos_.z >= 0) {
-            alive = true;
-        }
-    }
-    if (!alive) {
-        handle_fallen_blocks(comp);
-    }
-    return alive;
-}
-
-void MoveProcessor::check_land_sticky(FallComponent* comp) {
-    for (GameObject* block : comp->blocks_) {
-        if (block->pos_.z < 0) {
-            continue;
-        }
-        if (map_->view(block->shifted_pos({0,0,-1})) || block->has_sticky_neighbor(map_)) {
-            settle(comp);
-            return;
-        }
-    }
-}
-
-void MoveProcessor::handle_fallen_blocks(FallComponent* comp) {
-    comp->settled_ = true;
-    std::vector<GameObject*> live_blocks {};
-    for (GameObject* block : comp->blocks_) {
-        if (block->pos_.z >= 0) {
-            // TODO: put the responsibility of making fall trails in a better place
-            map_->make_fall_trail(block, layers_fallen_, 0);
-            live_blocks.push_back(block);
-            map_->put(block);
-        } else {
-            // NOTE: magic number for trail size
-            map_->make_fall_trail(block, layers_fallen_, 10);
-            block->pos_ += {0,0,layers_fallen_};
-            map_->just_put(block);
-            map_->destroy(block, delta_frame_);
-        }
-    }
-    if (!live_blocks.empty() && delta_frame_) {
-        delta_frame_->push(std::make_unique<BatchMotionDelta>(std::move(live_blocks), Point3{0,0,-layers_fallen_}, map_));
-    }
-}
-
-void MoveProcessor::settle(FallComponent* comp) {
-    handle_fallen_blocks(comp);
-    for (FallComponent* above : comp->above_) {
-        if (!above->settled_) {
-            settle(comp);
-        }
-    }
-}
-

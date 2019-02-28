@@ -52,10 +52,10 @@ void SwitchTab::main_loop(EditorRoom* eroom) {
     if (ImGui::Button("Make Signaler##SWITCH")) {
         auto signaler = std::make_unique<Signaler>(0, switches_.size(), false, false);
         for (auto& obj : switches_) {
-            signaler->push_switch(obj);
+            signaler->push_switch_mutual(obj);
         }
         for (auto& obj : switchables_) {
-            signaler->push_switchable(obj);
+            signaler->push_switchable_mutual(obj);
         }
         eroom->room->room_map()->push_signaler(std::move(signaler));
         switches_ = {};

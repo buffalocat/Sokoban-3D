@@ -74,3 +74,10 @@ void PressSwitch::draw(GraphicsManager* gfx, FPoint3 p) {
     gfx->draw_cube();
     gfx->set_tex(Texture::Blank);
 }
+
+std::unique_ptr<ObjectModifier> PressSwitch::duplicate(GameObject* parent) {
+    auto dup = std::make_unique<PressSwitch>(*this);
+    dup->parent_ = parent;
+    dup->connect_to_signalers();
+    return std::move(dup);
+}

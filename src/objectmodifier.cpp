@@ -30,10 +30,6 @@ bool ObjectModifier::gravitable() {
     return parent_->gravitable_;
 }
 
-std::unique_ptr<ObjectModifier> ObjectModifier::duplicate() {
-    return nullptr;
-}
-
 void ObjectModifier::setup_on_put(RoomMap* room_map) {}
 
 void ObjectModifier::cleanup_on_take(RoomMap* room_map) {}

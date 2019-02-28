@@ -207,7 +207,7 @@ void SnakeBlock::cleanup_on_destruction(RoomMap* room_map) {
 std::unique_ptr<SnakeBlock> SnakeBlock::make_split_copy() {
     auto split = std::make_unique<SnakeBlock>(pos_, color_, pushable_, gravitable_, 1);
     if (modifier_) {
-        split->set_modifier(modifier_->duplicate());
+        split->set_modifier(modifier_->duplicate(split.get()));
     }
     return std::move(split);
 }

@@ -181,6 +181,7 @@ case ModCode::CLASS:\
     CLASS::deserialize(file, map_.get(), obj.get());\
     break;
 
+
 void Room::read_objects(MapFileI& file) {
     unsigned char b;
     std::unique_ptr<GameObject> obj {};
@@ -190,7 +191,7 @@ void Room::read_objects(MapFileI& file) {
         switch (static_cast<ObjCode>(b)) {
         CASE_OBJCODE(PushBlock)
         CASE_OBJCODE(SnakeBlock)
-        // Some object types should just be ignored if they get serialized
+        // Some Object types should never actually be serialized (as "Objects")
         case ObjCode::Wall:
         case ObjCode::Player:
         case ObjCode::GateBody:
@@ -273,10 +274,10 @@ void Room::read_signaler(MapFileI& file) {
     file.read(b, 6);
     auto signaler = std::make_unique<Signaler>(b[0], b[1], b[2], b[3]);
     for (int i = 0; i < b[4]; ++i) {
-        signaler->push_switch(static_cast<Switch*>(map_->view(file.read_point3())->modifier()));
+        signaler->push_switch_mutual(static_cast<Switch*>(map_->view(file.read_point3())->modifier()));
     }
     for (int i = 0; i < b[5]; ++i) {
-        signaler->push_switchable(static_cast<Switchable*>(map_->view(file.read_point3())->modifier()));
+        signaler->push_switchable_mutual(static_cast<Switchable*>(map_->view(file.read_point3())->modifier()));
     }
     map_->push_signaler(std::move(signaler));
 }

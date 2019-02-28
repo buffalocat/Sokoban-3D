@@ -29,7 +29,7 @@ public:
 
     void draw(GraphicsManager*, FPoint3);
 
-    void check_above_vacant(RoomMap*, DeltaFrame*);
+    std::unique_ptr<ObjectModifier> duplicate(GameObject*);
 
     int color_;
 

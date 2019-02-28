@@ -18,6 +18,8 @@
 
 #include "effects.h"
 
+#include "moveprocessor.h"
+
 RoomMap::RoomMap(GameObjectArray& obj_array, int width, int height, int depth):
 obj_array_ {obj_array}, width_ {width}, height_ {height}, depth_ {},
 layers_ {}, listeners_ {}, signalers_ {},
@@ -76,7 +78,7 @@ void RoomMap::serialize(MapFileO& file) const {
                 continue;
             }
             GameObject* obj = obj_array_[it->id()];
-            if (!obj || obj->obj_code() == ObjCode::Player) {
+            if (!obj || obj->skip_serialization()) {
                 continue;
             }
             file << obj->obj_code();
@@ -96,6 +98,7 @@ void RoomMap::serialize(MapFileO& file) const {
     file << ObjCode::NONE;
     // Serialize Wall positions
     file << MapCode::Walls;
+    // TODO: replace this with a smarter run-length encoding type of thing
     file << (int)(wall_pos.size());
     for (Point3 pos : wall_pos) {
         file << pos;
@@ -280,36 +283,30 @@ void RoomMap::draw_layer(GraphicsManager* gfx, int z) {
 }
 
 void RoomMap::set_initial_state(bool editor_mode) {
-    /*
-    // Gates don't get activated in editor mode!
-    // When we add in other things we won't do the early return though.
-    if (editor_mode) {
-        return;
-    }
-    for (int x = 0; x != width_; ++x) {
-        for (int y = 0; y != height_; ++y) {
-            for (int z = 0; z != layers_.size(); ++z) {
-                GameObject* obj = view({x,y,z});
-                auto gate = dynamic_cast<Gate*>(obj);
-                if (gate) {
-                    gate->check_waiting(this, nullptr);
-                    continue;
-                }
-                // This doesn't even make sense in the current model!
-                auto sw = dynamic_cast<Switch*>(obj);
-                if (sw) {
-                    sw->check_send_signal(this, nullptr);
-                }
-
-                auto sb = dynamic_cast<SnakeBlock*>(obj);
-                if (sb) {
-                    sb->check_add_local_links(this, nullptr);
-                }
+    MoveProcessor mp = MoveProcessor(this, nullptr);
+    for (auto& layer : layers_) {
+        for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
+            GameObject* obj = obj_array_[it->id()];
+            if (!obj) {
+                continue;
+            }
+            if (obj->gravitable_) {
+                mp.add_to_fall_check(obj);
+            }
+            if (SnakeBlock* sb = dynamic_cast<SnakeBlock*>(obj)) {
+                sb->check_add_local_links(this, nullptr);
+            }
+            if (ObjectModifier* mod = obj->modifier()) {
+                activate_listener_of(mod);
             }
         }
     }
-    // TODO: fix (well, fix this whole method actually)
-    check_signalers(nullptr, nullptr);*/
+    // In editor mode, use effects of snakes, but not switches or other things.
+    if (editor_mode) {
+        return;
+    }
+    mp.perform_switch_checks();
+    mp.begin_fall_cycle();
 }
 
 // The room keeps track of some things which must be forgotten after a move or undo

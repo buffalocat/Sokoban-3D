@@ -39,6 +39,8 @@ public:
 
     void draw(GraphicsManager*, FPoint3);
 
+    std::unique_ptr<ObjectModifier> duplicate(GameObject*);
+
 private:
     std::unique_ptr<MapLocation> dest_;
 };

@@ -30,6 +30,8 @@ public:
 
     void draw(GraphicsManager*, FPoint3);
 
+    std::unique_ptr<ObjectModifier> duplicate(GameObject*);
+
 private:
     int color_;
 

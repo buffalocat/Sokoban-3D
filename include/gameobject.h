@@ -25,6 +25,7 @@ public:
     GameObject(const GameObject&);
 
     virtual ObjCode obj_code() = 0;
+    virtual bool skip_serialization();
     virtual void serialize(MapFileO& file) = 0;
     virtual bool relation_check();
     virtual void relation_serialize(MapFileO& file);

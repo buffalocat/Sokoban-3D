@@ -8,9 +8,9 @@
 #include "mapfile.h"
 
 Signaler::Signaler(int count, int threshold, bool persistent, bool active):
+switches_ {}, switchables_ {},
 count_ {count}, threshold_ {threshold},
-active_ {active}, persistent_ {persistent},
-switches_ {}, switchables_ {} {}
+active_ {active}, persistent_ {persistent} {}
 
 Signaler::~Signaler() {}
 
@@ -19,6 +19,15 @@ void Signaler::push_switchable(Switchable* obj) {
 }
 
 void Signaler::push_switch(Switch* obj) {
+    switches_.push_back(obj);
+}
+
+void Signaler::push_switchable_mutual(Switchable* obj) {
+    switchables_.push_back(obj);
+    obj->push_signaler(this);
+}
+
+void Signaler::push_switch_mutual(Switch* obj) {
     switches_.push_back(obj);
     obj->push_signaler(this);
 }

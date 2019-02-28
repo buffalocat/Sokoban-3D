@@ -31,12 +31,14 @@ void Car::collect_sticky_links(RoomMap* room_map, Sticky, std::vector<GameObject
     }
 }
 
-void Car::insert_color(int color) {
-    color_cycle_.insert_color(color);
-}
-
 bool Car::cycle_color(bool undo) {
     bool result = color_cycle_.cycle(undo);
     parent_->color_ = color_cycle_.color();
     return result;
+}
+
+std::unique_ptr<ObjectModifier> Car::duplicate(GameObject* parent) {
+    auto dup = std::make_unique<Car>(*this);
+    dup->parent_ = parent;
+    return std::move(dup);
 }

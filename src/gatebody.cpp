@@ -14,6 +14,10 @@ ObjCode GateBody::obj_code() {
     return ObjCode::GateBody;
 }
 
+bool GateBody::skip_serialization() {
+    return true;
+}
+
 void GateBody::draw(GraphicsManager* gfx) {
     Point3 p = pos_;
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y));

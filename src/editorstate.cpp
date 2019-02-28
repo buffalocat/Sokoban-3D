@@ -133,6 +133,7 @@ bool EditorState::load_room(std::string name) {
     //TODO: (consider?) load .mapd file here!!
 
     room->room_map()->create(std::make_unique<Player>(start_pos, RidingState::Free));
+    room->room_map()->set_initial_state(true);
     room->set_cam_pos(start_pos);
     rooms_[name] = std::make_unique<EditorRoom>(std::move(room), start_pos);
     set_active_room(name);

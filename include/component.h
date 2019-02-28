@@ -1,126 +1,33 @@
-/*
 #ifndef COMPONENT_H
 #define COMPONENT_H
 
-#include "common.h"
+#include <vector>
 
-class Block;
+class GameObject;
 class RoomMap;
-class DeltaFrame;
-class SnakeBlock;
 
-enum class MoveComponentState {
-    Contingent = 1,
-    Bad,
-    Good,
+struct Component {
+    virtual ~Component();
+
+    std::vector<GameObject*> blocks_;
 };
 
+struct PushComponent: public Component {
+    void add_pushing(Component* comp);
 
-class Component {
-public:
-    Component();
-    virtual ~Component() = 0;
-
-    virtual void reset_blocks_comps() = 0;
+    std::vector<PushComponent*> pushing_;
+    bool blocked_;
+    bool moving_;
 };
 
+struct FallComponent: Component {
+    void add_above(Component* comp);
 
-class StrongComponent: public Component {
-public:
-    StrongComponent();
-    virtual ~StrongComponent() = 0;
-
-    bool good();
-    bool bad();
-    void set_bad();
-    void add_weak(StrongComponent*);
-    virtual void add_block(Block*);
-    virtual void set_pushed();
-    virtual bool push_recheck();
-    virtual void add_push(StrongComponent*) = 0;
-    virtual std::vector<Point3> to_push(Point3 d) = 0;
-    virtual std::vector<Block*> get_weak_links(RoomMap*) = 0;
-    virtual void resolve_contingent() = 0;
-    virtual void collect_blocks(std::vector<Block*>&, Point3) = 0;
-    const std::vector<Block*>& blocks();
-
-protected:
-    std::vector<StrongComponent*> weak_;
-    MoveComponentState state_;
-};
-
-class ComplexComponent: public StrongComponent {
-public:
-    ComplexComponent();
-    ~ComplexComponent();
-    void add_block(Block*);
-    void add_push(StrongComponent*);
-    std::vector<Point3> to_push(Point3 d);
-    std::vector<Block*> get_weak_links(RoomMap*);
-    void resolve_contingent();
-    void collect_blocks(std::vector<Block*>&, Point3);
-    void reset_blocks_comps();
-
-private:
-    std::vector<Block*> blocks_;
-    std::vector<StrongComponent*> push_;
-};
-
-class SingletonComponent: public StrongComponent {
-public:
-    SingletonComponent(Block* block);
-    ~SingletonComponent();
-    void add_push(StrongComponent*);
-    std::vector<Point3> to_push(Point3 d);
-    std::vector<Block*> get_weak_links(RoomMap*);
-    void resolve_contingent();
-    void collect_blocks(std::vector<Block*>&, Point3);
-    void reset_blocks_comps();
-
-protected:
-    Block* block_;
-    StrongComponent* push_;
-};
-
-class SnakeComponent: public SingletonComponent {
-public:
-    SnakeComponent(Block* block);
-    ~SnakeComponent();
-    void set_pushed();
-    bool pushed();
-    SnakeBlock* block();
-    bool push_recheck();
-    std::vector<Block*> get_weak_links(RoomMap*);
-
-private:
-    bool pushed_;
-};
-
-
-class WeakComponent: public Component {
-public:
-    WeakComponent();
-    ~WeakComponent();
-
-    void add_block(Block*);
-    bool falling();
-
-    void check_land_first(RoomMap*);
     void settle_first();
+    void take_falling(RoomMap* room_map);
 
-    void collect_above(std::vector<Block*>& above_list, RoomMap* room_map);
-    void collect_falling_unique(RoomMap* room_map);
-    void reset_blocks_comps();
-    bool drop_check(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame);
-    void check_land_sticky(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame);
-    void handle_unique_blocks(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame);
-    void settle(int layers_fallen, RoomMap* room_map, DeltaFrame* delta_frame);
-
-private:
-    std::vector<Block*> blocks_;
-    std::vector<WeakComponent*> above_;
-    bool falling_;
+    std::vector<FallComponent*> above_;
+    bool settled_;
 };
 
 #endif // COMPONENT_H
-*/

@@ -13,10 +13,12 @@ ModCode Car::mod_code() {
 }
 
 void Car::serialize(MapFileO& file) {
+    // Ensures color consistency with parent object!
+    color_cycle_.set_current(parent_->color_);
     file << color_cycle_;
 }
 
-void Car::deserialize(MapFileI& file, GameObject* parent) {
+void Car::deserialize(MapFileI& file, RoomMap*, GameObject* parent) {
     ColorCycle color_cycle;
     file >> color_cycle;
     parent->set_modifier(std::make_unique<Car>(parent, color_cycle));
@@ -25,7 +27,7 @@ void Car::deserialize(MapFileI& file, GameObject* parent) {
 void Car::collect_sticky_links(RoomMap* room_map, Sticky, std::vector<GameObject*>& to_check) {
     Player* player = dynamic_cast<Player*>(room_map->view(pos_above()));
     if (player) {
-        //to_check.push_back(player);
+        to_check.push_back(player);
     }
 }
 

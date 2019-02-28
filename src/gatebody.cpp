@@ -6,7 +6,7 @@
 #include "mapfile.h"
 #include "graphicsmanager.h"
 
-GateBody::GateBody(Gate* base): PushBlock(base->pos() + Point3{0,0,1}, base->color(), base->pushable(), base->gravitable(), Sticky::None), base_ {base} {}
+GateBody::GateBody(Gate* parent): PushBlock(parent->pos() + Point3{0,0,1}, parent->color(), parent->pushable(), parent->gravitable(), Sticky::None), parent_ {parent} {}
 
 GateBody::~GateBody() {}
 
@@ -18,6 +18,7 @@ void GateBody::draw(GraphicsManager* gfx) {
     Point3 p = pos_;
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y));
     model = glm::scale(model, glm::vec3(0.7f, 1.0f, 0.7f));
+    gfx->set_tex(Texture::Edges);
     gfx->set_model(model);
     gfx->set_color(COLORS[LIGHT_GREY]);
     gfx->draw_cube();

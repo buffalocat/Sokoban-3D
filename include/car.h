@@ -13,7 +13,7 @@ public:
 
     ModCode mod_code();
     void serialize(MapFileO& file);
-    static void deserialize(MapFileI& file, GameObject*);
+    static void deserialize(MapFileI&, RoomMap*, GameObject*);
 
     void collect_sticky_links(RoomMap*, Sticky, std::vector<GameObject*>&);
 

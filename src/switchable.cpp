@@ -36,17 +36,15 @@ void Switchable::receive_signal(bool signal, RoomMap* room_map, DeltaFrame* delt
     }
 }
 
-void Switchable::apply_state_change(RoomMap* room_map, MoveProcessor* mp) {
+void Switchable::apply_state_change(RoomMap* room_map, MoveProcessor* mp) {}
 
-}
-
-void Switchable::check_waiting(RoomMap* room_map, DeltaFrame* delta_frame) {
+void Switchable::check_waiting(RoomMap* room_map, DeltaFrame* delta_frame, MoveProcessor* mp) {
     if (waiting_ && can_set_state(!(default_ ^ active_), room_map)) {
         if (delta_frame) {
             delta_frame->push(std::make_unique<SwitchableDelta>(this, active_, waiting_, room_map));
         }
         waiting_ = false;
         active_ = !active_;
-        //apply_state_change(room_map, nullptr);
+        apply_state_change(room_map, mp);
     }
 }

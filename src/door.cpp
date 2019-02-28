@@ -28,7 +28,7 @@ void Door::serialize(MapFileO& file) {
     file << default_ << active_;
 }
 
-void Door::deserialize(MapFileI& file, GameObject* parent) {
+void Door::deserialize(MapFileI& file, RoomMap*, GameObject* parent) {
     unsigned char b[2];
     file.read(b, 2);
     parent->set_modifier(std::make_unique<Door>(parent, b[0], b[1]));
@@ -49,8 +49,7 @@ bool Door::can_set_state(bool state, RoomMap* room_map) {
     return true;
 }
 
-void Door::draw(GraphicsManager* gfx) {
-    Point3 p = pos();
+void Door::draw(GraphicsManager* gfx, FPoint3 p) {
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y));
     model = glm::scale(model, glm::vec3(1, 0.1, 1));
     gfx->set_model(model);

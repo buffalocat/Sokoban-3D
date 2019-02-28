@@ -92,8 +92,8 @@ void object_tab_options() {
     case ObjCode::GateBody:
         {
             ImGui::Text("GateBody");
-            Point3 b_pos = static_cast<GateBody*>(obj)->base_->pos();
-            ImGui::Text("See parent Gate at (%d,%d,%d)", b_pos.x, b_pos.y, b_pos.z);
+            Point3 p_pos = static_cast<GateBody*>(obj)->parent_->pos();
+            ImGui::Text("See parent Gate at (%d,%d,%d)", p_pos.x, p_pos.y, p_pos.z);
         }
     case ObjCode::Wall: // No parameters for Wall
     default:

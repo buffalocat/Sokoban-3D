@@ -9,14 +9,14 @@ class Gate;
 // It inherits the color, pushability, and gravitability of its corresponding Gate object
 class GateBody: public PushBlock {
 public:
-    GateBody(Gate* base);
+    GateBody(Gate* parent);
     ~GateBody();
 
     ObjCode obj_code();
 
     void draw(GraphicsManager*);
 
-    Gate* base_;
+    Gate* parent_;
 };
 
 #endif // GATEBODY_H

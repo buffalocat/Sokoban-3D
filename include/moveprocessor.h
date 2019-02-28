@@ -61,6 +61,8 @@ public:
     void perform_switch_checks();
     void begin_fall_cycle();
 
+    void add_to_fall_check(GameObject*);
+
     void check_land_first(FallComponent* comp);
     void collect_above(FallComponent* comp, std::vector<GameObject*>& above_list);
     bool drop_check(FallComponent* comp);

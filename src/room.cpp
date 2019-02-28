@@ -8,6 +8,7 @@
 
 #include "pushblock.h"
 #include "snakeblock.h"
+#include "gatebody.h"
 #include "car.h"
 #include "door.h"
 #include "gate.h"
@@ -177,7 +178,7 @@ case ObjCode::CLASS:\
 
 #define CASE_MODCODE(CLASS)\
 case ModCode::CLASS:\
-    CLASS::deserialize(file, obj.get());\
+    CLASS::deserialize(file, map_.get(), obj.get());\
     break;
 
 void Room::read_objects(MapFileI& file) {
@@ -189,12 +190,10 @@ void Room::read_objects(MapFileI& file) {
         switch (static_cast<ObjCode>(b)) {
         CASE_OBJCODE(PushBlock)
         CASE_OBJCODE(SnakeBlock)
-        // Walls should never be encountered here, so ignore them
+        // Some object types should just be ignored if they get serialized
         case ObjCode::Wall:
-            break;
-        // NOTE: this is a temporary fix to deal with the player for now
-        // The Player's position SHOULD be saved in real save files
         case ObjCode::Player:
+        case ObjCode::GateBody:
             break;
         case ObjCode::NONE:
             return;

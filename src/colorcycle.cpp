@@ -16,9 +16,8 @@ int ColorCycle::color() {
     return color_[index_];
 }
 
-void ColorCycle::insert_color(int color) {
-    color_[size_] = color;
-    ++size_;
+void ColorCycle::set_current(int color) {
+    color_[index_] = color;
 }
 
 bool ColorCycle::cycle(bool undo) {

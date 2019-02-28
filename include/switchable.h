@@ -19,7 +19,7 @@ public:
     virtual bool can_set_state(bool state, RoomMap*) = 0;
     void receive_signal(bool signal, RoomMap*, DeltaFrame*, MoveProcessor*);
     virtual void apply_state_change(RoomMap*, MoveProcessor*);
-    void check_waiting(RoomMap*, DeltaFrame*);
+    void check_waiting(RoomMap*, DeltaFrame*, MoveProcessor*);
 
 protected:
     bool default_;

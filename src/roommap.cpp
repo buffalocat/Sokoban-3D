@@ -175,13 +175,17 @@ void RoomMap::batch_shift(std::vector<GameObject*> objs, Point3 dpos, DeltaFrame
 void RoomMap::create(std::unique_ptr<GameObject> obj) {
     GameObject* raw = obj.get();
     obj_array_.push_object(std::move(obj));
-    at(raw->pos_) += raw->id_;
+    put(raw);
+}
+
+void RoomMap::create_abstract(std::unique_ptr<GameObject> obj) {
+    obj_array_.push_object(std::move(obj));
 }
 
 void RoomMap::create(std::unique_ptr<GameObject> obj, DeltaFrame* delta_frame) {
     GameObject* raw = obj.get();
     obj_array_.push_object(std::move(obj));
-    at(raw->pos_) += raw->id_;
+    put(raw);
     delta_frame->push(std::make_unique<CreationDelta>(raw, this));
 }
 
@@ -233,15 +237,20 @@ void RoomMap::activate_listener_of(ObjectModifier* obj) {
     activated_listeners_.insert(obj);
 }
 
+
 void RoomMap::activate_listeners_at(Point3 pos) {
+    //std::cout << "Activating Listeners at " << pos << "!" << std::endl;
     if (listeners_.count(pos)) {
         auto& cur_lis = listeners_[pos];
+        //std::cout << "There were " << cur_lis.size() << std::endl;
         activated_listeners_.insert(cur_lis.begin(), cur_lis.end());
     }
 }
 
 void RoomMap::alert_activated_listeners(DeltaFrame* delta_frame, MoveProcessor* mp) {
+    //std::cout << "Alerting Listeners!" << std::endl;
     for (ObjectModifier* obj : activated_listeners_) {
+        //std::cout << "One got alerted!!" << std::endl;
         obj->map_callback(this, delta_frame, mp);
     }
 }
@@ -314,6 +323,7 @@ void RoomMap::push_signaler(std::unique_ptr<Signaler> signaler) {
 
 // NOTE: this function breaks the "locality" rule, but it's probably not a big deal.
 void RoomMap::check_signalers(DeltaFrame* delta_frame, MoveProcessor* mp) {
+    //std::cout << "Checking Signalers!" << std::endl;
     for (auto& signaler : signalers_) {
         signaler->check_send_signal(this, delta_frame, mp);
     }

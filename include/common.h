@@ -153,6 +153,7 @@ enum class MapCode {
     Signaler = 10, // List of Switches and Switchables linked to a Signaler
     Walls = 11, // List of positions of walls
     PlayerData = 12, // Like Walls, the Player is listed separately from other objects
+    GateBodyLocation = 13, // Indicates that a GateBody needs to be paired with its parent
     End = 255,
 };
 

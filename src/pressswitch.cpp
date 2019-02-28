@@ -19,7 +19,7 @@ void PressSwitch::serialize(MapFileO& file) {
     file << color_ << persistent_ << active_;
 }
 
-void PressSwitch::deserialize(MapFileI& file, GameObject* parent) {
+void PressSwitch::deserialize(MapFileI& file, RoomMap*, GameObject* parent) {
     unsigned char b[3];
     file.read(b, 3);
     parent->set_modifier(std::make_unique<PressSwitch>(parent, b[0], b[1], b[2]));

@@ -39,6 +39,7 @@ public:
 
     void create(std::unique_ptr<GameObject>);
     void create(std::unique_ptr<GameObject>, DeltaFrame*);
+    void create_abstract(std::unique_ptr<GameObject>);
     void create_wall(Point3);
     void uncreate(GameObject*);
     void destroy(GameObject*);

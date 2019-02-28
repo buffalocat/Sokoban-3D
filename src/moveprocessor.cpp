@@ -226,6 +226,10 @@ void MoveProcessor::perform_switch_checks() {
     map_->check_signalers(delta_frame_, this);
 }
 
+void MoveProcessor::add_to_fall_check(GameObject* obj) {
+    fall_check_.push_back(obj);
+}
+
 void MoveProcessor::begin_fall_cycle() {
     // TODO: "split" this loop to allow for animation in between fall steps!
     while (!fall_check_.empty()) {

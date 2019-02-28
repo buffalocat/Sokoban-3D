@@ -18,7 +18,7 @@ public:
 
     ModCode mod_code();
     void serialize(MapFileO& file);
-    static void deserialize(MapFileI& file, GameObject*);
+    static void deserialize(MapFileI&, RoomMap*, GameObject*);
 
     void map_callback(RoomMap*, DeltaFrame*, MoveProcessor*);
 

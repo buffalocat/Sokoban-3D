@@ -11,7 +11,7 @@ public:
     ~ColorCycle();
 
     int color();
-    void insert_color(int color);
+    void set_current(int color);
     // Returns whether the cycle had an effect (i.e., whether size_ > 1)
     bool cycle(bool undo);
 

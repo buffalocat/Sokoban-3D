@@ -28,7 +28,7 @@ public:
 
     ModCode mod_code();
     void serialize(MapFileO& file);
-    static void deserialize(MapFileI& file, GameObject*);
+    static void deserialize(MapFileI&, RoomMap*, GameObject*);
 
     bool relation_check();
     void relation_serialize(MapFileO& file);
@@ -37,7 +37,7 @@ public:
     void set_dest(Point3, std::string);
     MapLocation* dest();
 
-    void draw(GraphicsManager*);
+    void draw(GraphicsManager*, FPoint3);
 
 private:
     std::unique_ptr<MapLocation> dest_;

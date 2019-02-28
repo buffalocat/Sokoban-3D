@@ -2544,8 +2544,8 @@ void ImGui::ShowStyleEditor(ImGuiStyle* ref)
 
         static ImGuiColorEditFlags alpha_flags = 0;
         ImGui::RadioButton("Opaque", &alpha_flags, 0); ImGui::SameLine();
-        ImGui::RadioButton("Alpha", &alpha_flags, ImGuiColorEditFlags_AlphaPreview); ImGui::SameLine();
-        ImGui::RadioButton("Both", &alpha_flags, ImGuiColorEditFlags_AlphaPreviewHalf);
+        ImGui::RadioButton<int>("Alpha", &alpha_flags, ImGuiColorEditFlags_AlphaPreview); ImGui::SameLine();
+        ImGui::RadioButton<int>("Both", &alpha_flags, ImGuiColorEditFlags_AlphaPreviewHalf);
 
         ImGui::BeginChild("#colors", ImVec2(0, 300), true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_NavFlattened);
         ImGui::PushItemWidth(-160);

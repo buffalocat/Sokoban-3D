@@ -20,7 +20,7 @@ public:
 
     virtual void collect_special_links(RoomMap*, Sticky sticky_level, std::vector<GameObject*>& links);
 
-    void draw(GraphicsManager*, Point3);
+    void draw(GraphicsManager*);
 
 private:
     RidingState state_;

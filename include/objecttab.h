@@ -1,7 +1,6 @@
 #ifndef OBJECTTAB_H
 #define OBJECTTAB_H
 
-#include "common.h"
 #include "editortab.h"
 
 class ObjectTab: public EditorTab {

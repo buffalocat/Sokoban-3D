@@ -34,6 +34,14 @@ std::unique_ptr<ObjectModifier> ObjectModifier::duplicate() {
     return nullptr;
 }
 
+void ObjectModifier::setup_on_put(RoomMap* room_map) {}
+
+void ObjectModifier::cleanup_on_take(RoomMap* room_map) {}
+
+void ObjectModifier::cleanup_on_destruction(RoomMap* room_map) {}
+
+void ObjectModifier::setup_on_undestruction(RoomMap* room_map) {}
+
 void ObjectModifier::map_callback(RoomMap*, DeltaFrame*, MoveProcessor*) {}
 
 void ObjectModifier::collect_sticky_links(RoomMap*, Sticky, std::vector<GameObject*>&) {}

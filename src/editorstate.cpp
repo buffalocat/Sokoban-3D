@@ -15,6 +15,7 @@
 #include "objecttab.h"
 #include "doortab.h"
 #include "switchtab.h"
+#include "modifiertab.h"
 
 #include "room.h"
 #include "roommap.h"
@@ -36,6 +37,7 @@ objs_ {std::make_unique<GameObjectArray>()} {
     INIT_TAB(Object);
     INIT_TAB(Door);
     INIT_TAB(Switch);
+    INIT_TAB(Modifier);
     active_tab_ = tabs_["SaveLoad"].get();
 }
 
@@ -75,7 +77,7 @@ void EditorState::main_loop() {
     ImGui::Text(""); //This consumes the stray SameLine from the loop
 
     // Draw the rest of the editor GUI
-    ImGui::BeginChild("Active Tab Pane##ROOT", ImVec2(400, 600), true);
+    ImGui::BeginChild("Active Tab Pane##ROOT", ImVec2(500, 700), true);
     active_tab_->main_loop(active_room_);
     ImGui::EndChildFrame();
     ImGui::End();

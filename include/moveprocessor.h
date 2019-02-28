@@ -33,7 +33,7 @@ struct FallComponent: Component {
 
     void settle_first();
 
-    void collect_falling_unique(RoomMap* room_map);
+    void take_falling(RoomMap* room_map);
 
     std::vector<FallComponent*> above_;
     bool settled_;
@@ -65,7 +65,7 @@ public:
     void collect_above(FallComponent* comp, std::vector<GameObject*>& above_list);
     bool drop_check(FallComponent* comp);
     void check_land_sticky(FallComponent* comp);
-    void handle_unique_blocks(FallComponent* comp);
+    void handle_fallen_blocks(FallComponent* comp);
     void settle(FallComponent* comp);
 
     bool update();

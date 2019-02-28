@@ -30,12 +30,16 @@ public:
     void push_sparse();
 
     int& at(Point3);
+    GameObject* view(Point3);
 
-    GameObject* view(Point3 pos);
+    void just_take(GameObject*);
+    void just_put(GameObject*);
     void take(GameObject*);
     void put(GameObject*);
+
     void create(std::unique_ptr<GameObject>);
     void create(std::unique_ptr<GameObject>, DeltaFrame*);
+    void create_wall(Point3);
     void uncreate(GameObject*);
     void destroy(GameObject*);
     void destroy(GameObject*, DeltaFrame*);
@@ -58,7 +62,7 @@ public:
 
     void add_listener(ObjectModifier*, Point3);
     void remove_listener(ObjectModifier*, Point3);
-    void activate_listeners(Point3);
+    void activate_listeners_at(Point3);
     void activate_listener_of(ObjectModifier* obj);
     void alert_activated_listeners(DeltaFrame*, MoveProcessor*);
 

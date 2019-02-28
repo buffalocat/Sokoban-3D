@@ -255,7 +255,7 @@ void MoveProcessor::fall_step() {
         check_land_first(comp.get());
     }
     for (auto& comp : fall_comps_unique_) {
-        comp->collect_falling_unique(map_);
+        comp->take_falling(map_);
     }
     layers_fallen_ = 0;
     while (true) {
@@ -326,7 +326,7 @@ void FallComponent::settle_first() {
     }
 }
 
-void FallComponent::collect_falling_unique(RoomMap* room_map) {
+void FallComponent::take_falling(RoomMap* room_map) {
     if (settled_) {
         return;
     }
@@ -348,7 +348,7 @@ bool MoveProcessor::drop_check(FallComponent* comp) {
         }
     }
     if (!alive) {
-        handle_unique_blocks(comp);
+        handle_fallen_blocks(comp);
     }
     return alive;
 }
@@ -365,7 +365,8 @@ void MoveProcessor::check_land_sticky(FallComponent* comp) {
     }
 }
 
-void MoveProcessor::handle_unique_blocks(FallComponent* comp) {
+void MoveProcessor::handle_fallen_blocks(FallComponent* comp) {
+    comp->settled_ = true;
     std::vector<GameObject*> live_blocks {};
     for (GameObject* block : comp->blocks_) {
         if (block->pos_.z >= 0) {
@@ -377,9 +378,8 @@ void MoveProcessor::handle_unique_blocks(FallComponent* comp) {
             // NOTE: magic number for trail size
             map_->make_fall_trail(block, layers_fallen_, 10);
             block->pos_ += {0,0,layers_fallen_};
-            if (delta_frame_) {
-                delta_frame_->push(std::make_unique<DeletionDelta>(block, map_));
-            }
+            map_->just_put(block);
+            map_->destroy(block, delta_frame_);
         }
     }
     if (!live_blocks.empty() && delta_frame_) {
@@ -388,8 +388,7 @@ void MoveProcessor::handle_unique_blocks(FallComponent* comp) {
 }
 
 void MoveProcessor::settle(FallComponent* comp) {
-    comp->settled_ = true;
-    handle_unique_blocks(comp);
+    handle_fallen_blocks(comp);
     for (FallComponent* above : comp->above_) {
         if (!above->settled_) {
             settle(comp);

@@ -13,12 +13,14 @@ class GraphicsManager;
 
 class PressSwitch: public Switch {
 public:
-    PressSwitch(GameObject* parent, unsigned char color, bool persistent, bool active);
+    PressSwitch(GameObject* parent, int color, bool persistent, bool active);
     ~PressSwitch();
 
     ModCode mod_code();
     void serialize(MapFileO& file);
-    static ObjectModifier* deserialize(GameObject*, MapFileI& file);
+    static void deserialize(MapFileI& file, GameObject*);
+
+    void map_callback(RoomMap*, DeltaFrame*, MoveProcessor*);
 
     void check_send_signal(RoomMap*, DeltaFrame*);
     bool should_toggle(RoomMap*);
@@ -26,15 +28,12 @@ public:
     void setup_on_put(RoomMap*);
     void cleanup_on_take(RoomMap*);
 
-    void draw(GraphicsManager*);
-
-    void map_callback(RoomMap*, DeltaFrame*);
-
-    void check_above_occupied(RoomMap*, DeltaFrame*);
-    void check_above_vacant(RoomMap*, DeltaFrame*);
+    void draw(GraphicsManager*, FPoint3);
 
 private:
-    unsigned char color_;
+    int color_;
+
+    friend class ModifierTab;
 };
 
 #endif // PRESSSWITCH_H

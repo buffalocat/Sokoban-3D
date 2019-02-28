@@ -22,7 +22,7 @@ void SwitchTab::main_loop(EditorRoom* eroom) {
     }
 
     if (ImGui::Button("Make Signaler##SWITCH")) {
-        auto signaler = std::make_unique<Signaler>(switches_.size(), false, false);
+        auto signaler = std::make_unique<Signaler>(0, switches_.size(), false, false);
         for (auto& obj : switches_) {
             signaler->push_switch(obj);
         }

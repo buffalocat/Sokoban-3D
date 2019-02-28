@@ -10,7 +10,7 @@
 
 class SnakeBlock: public GameObject {
 public:
-    SnakeBlock(Point3 pos, unsigned char color, bool pushable, bool gravitable, unsigned char ends);
+    SnakeBlock(Point3 pos, int color, bool pushable, bool gravitable, int ends);
     virtual ~SnakeBlock();
 
     virtual ObjCode obj_code();
@@ -25,7 +25,7 @@ public:
     void add_link(SnakeBlock*, DeltaFrame*);
     void remove_link(SnakeBlock*, DeltaFrame*);
 
-    void draw(GraphicsManager*, Point3);
+    void draw(GraphicsManager*);
 
     bool available();
     bool confused(RoomMap*);
@@ -43,20 +43,19 @@ public:
     void reset_distance_and_target();
     bool pushed_and_moving();
 
-    void cleanup_on_destruction(RoomMap*);
-    void setup_on_undestruction(RoomMap*);
+    virtual void cleanup_on_destruction(RoomMap*);
 
     std::unique_ptr<SnakeBlock> make_split_copy();
 
     Sticky sticky();
 
-private:
     std::vector<SnakeBlock*> links_;
+    int ends_;
+
+private:
     // Temporary data members, which should only be nontrivial during move computations
     SnakeBlock* target_;
     unsigned int distance_;
-
-    unsigned char ends_;
 
     friend class SnakePuller;
 };

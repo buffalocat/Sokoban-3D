@@ -22,6 +22,7 @@ struct FallComponent;
 class GameObject {
 public:
     virtual ~GameObject();
+    GameObject(const GameObject&);
 
     virtual ObjCode obj_code() = 0;
     virtual void serialize(MapFileO& file) = 0;
@@ -31,7 +32,7 @@ public:
     Point3 shifted_pos(Point3 d);
 
     // TODO: make this pure virtual, with no Point arg
-    virtual void draw(GraphicsManager*, Point3) {}
+    virtual void draw(GraphicsManager*) = 0;
 
     virtual void setup_on_put(RoomMap*);
     virtual void cleanup_on_take(RoomMap*);
@@ -59,21 +60,22 @@ public:
     FPoint3 real_pos();
 
 protected:
-    GameObject(Point3 pos, unsigned char color, bool pushable, bool gravitable);
+    GameObject(Point3 pos, int color, bool pushable, bool gravitable);
 
 // Data members
-protected:
     std::unique_ptr<ObjectModifier> modifier_;
     std::unique_ptr<Animation> animation_;
 public:
     Component* comp_;
     Point3 pos_;
     int id_;
-    unsigned char color_;
-    // TODO: remove this later
-    unsigned char color() {return color_;}
+    int color_;
     bool pushable_;
     bool gravitable_;
+
+    // This is to prevent writing "dead" objects back to map files
+    // Signalers (and other such structures) will update their lists before saves
+    bool alive_;
 };
 
 #endif // GAMEOBJECT_H

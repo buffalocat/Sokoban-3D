@@ -5,129 +5,145 @@
 #include "roommap.h"
 
 #include "common.h"
-#include "switch.h"
-#include "door.h"
-#include "snakeblock.h"
+
 #include "gameobject.h"
-#include "colorcycle.h"
+#include "pushblock.h"
+#include "snakeblock.h"
 #include "wall.h"
+#include "gatebody.h"
+#include "gate.h"
 
 ObjectTab::ObjectTab(EditorState* editor, GraphicsManager* gfx): EditorTab(editor, gfx) {}
 
 ObjectTab::~ObjectTab() {}
 
-ImVec4 unpack_color(glm::vec4 v) {
-    return ImVec4(v.x, v.y, v.z, v.w);
-}
+// Current object type
+static ObjCode obj_code = ObjCode::NONE;
+static bool inspect_mode = false;
 
-// Object creation variables
-static int obj_code = (int)ObjCode::NONE;
+// Model objects that new objects are created from
+static PushBlock model_pb {Point3{0,0,0}, 0, true, true, Sticky::None};
+static SnakeBlock model_sb {Point3{0,0,0}, 0, true, true, 2};
 
-static int color = GREEN;
-static bool block_push = true;
-static bool block_grav = true;
-static int sticky = (int)Sticky::None;
-static int sb_ends = 2;
+// Object Inspection
+static GameObject* selected_obj = nullptr;
 
-//static bool persistent = false;
-//static bool switchable_state = true;
-
+void object_tab_options();
 
 void ObjectTab::main_loop(EditorRoom* eroom) {
     ImGui::Text("The Object Tab");
+    ImGui::Separator();
 
-    ImGui::BeginChild("active layer pane##OBJECT", ImVec2(380, 450), true);
+    ImGui::Checkbox("Inspect Mode##OBJECT_inspect", &inspect_mode);
 
-    ImGui::RadioButton("Wall##OBJECT_object", &obj_code, (int)ObjCode::Wall);
-    ImGui::RadioButton("PushBlock##OBJECT_object", &obj_code, (int)ObjCode::PushBlock);
-    ImGui::RadioButton("SnakeBlock##OBJECT_object", &obj_code, (int)ObjCode::SnakeBlock);
+    object_tab_options();
+}
 
-    switch (static_cast<ObjCode>(obj_code)) {
-    /*
-    case ObjCode::Door:
-        ImGui::Checkbox("default##SWITCHABLE", &switchable_state);
-        break;
-    case ObjCode::PressSwitch:
-        ImGui::InputInt("color##OBJECT_COLOR", &color);
-        ImGui::ColorButton("##OBJECT_COLOR_BUTTON", unpack_color(COLORS[color]), 0, ImVec2(40,40));
-        ImGui::Checkbox("persistent##SWITCH", &persistent);
-        break;
-    case ObjCode::Gate:
-        ImGui::Checkbox("default##SWITCHABLE", &switchable_state);
-        break;
-    */
+void object_tab_options() {
+    GameObject* obj = nullptr;
+    if (inspect_mode) {
+        if (selected_obj) {
+            obj = selected_obj;
+            Point3 pos = obj->pos_;
+            if (obj->obj_code() == ObjCode::Wall) {
+                ImGui::Text("Wall selected");
+                return;
+            } else {
+                ImGui::Text("Current selected object position: (%d,%d,%d)", pos.x, pos.y, pos.z);
+            }
+        } else {
+            ImGui::Text("No object selected!");
+            return;
+        }
+    } else {
+        ImGui::RadioButton("Wall##OBJECT_object", &obj_code, ObjCode::Wall);
+        ImGui::RadioButton("PushBlock##OBJECT_object", &obj_code, ObjCode::PushBlock);
+        ImGui::RadioButton("SnakeBlock##OBJECT_object", &obj_code, ObjCode::SnakeBlock);
+    }
+    ImGui::Separator();
+    switch (obj ? obj->obj_code() : obj_code) {
     case ObjCode::PushBlock:
-        ImGui::Checkbox("Pushable?##OBJECT_push", &block_push);
-        ImGui::Checkbox("Gravitable?##OBJECT_grav", &block_grav);
-        ImGui::InputInt("color##OBJECT_COLOR", &color);
-        ImGui::ColorButton("##OBJECT_COLOR_BUTTON", unpack_color(COLORS[color]), 0, ImVec2(40,40));
-        ImGui::Text("Stickiness");
-        ImGui::RadioButton("NonStick##OBJECT_sticky", &sticky, (int)Sticky::None);
-        ImGui::RadioButton("Weakly Sticky##OBJECT_sticky", &sticky, (int)Sticky::Weak);
-        ImGui::RadioButton("Strongly Sticky##OBJECT_sticky", &sticky, (int)Sticky::Strong);
+        {
+            ImGui::Text("PushBlock");
+            PushBlock* pb = obj ? static_cast<PushBlock*>(obj) : &model_pb;
+            ImGui::Checkbox("Pushable?##PB_modify_push", &pb->pushable_);
+            ImGui::Checkbox("Gravitable?##PB_modify_grav", &pb->gravitable_);
+            ImGui::InputInt("color##PB_modify_COLOR", &pb->color_);
+            ImGui::ColorButton("##COLOR_BUTTON", unpack_color(COLORS[pb->color_]), 0, ImVec2(40,40));
+            ImGui::Text("Stickiness");
+            ImGui::RadioButton("NonStick##PB_modify_sticky", &pb->sticky_, Sticky::None);
+            ImGui::RadioButton("Weakly Sticky##PB_modify_sticky", &pb->sticky_, Sticky::Weak);
+            ImGui::RadioButton("Strongly Sticky##PB_modify_sticky", &pb->sticky_, Sticky::Strong);
+        }
         break;
     case ObjCode::SnakeBlock:
-        ImGui::Checkbox("Pushable?##OBJECT_push", &block_push);
-        ImGui::Checkbox("Gravitable?##OBJECT_grav", &block_grav);
-        ImGui::InputInt("color##OBJECT_COLOR", &color);
-        ImGui::ColorButton("##OBJECT_COLOR_BUTTON", unpack_color(COLORS[color]), 0, ImVec2(40,40));
-        ImGui::Text("Number of Ends");
-        ImGui::RadioButton("One Ended##OBJECT_snake_ends", &sb_ends, 1);
-        ImGui::RadioButton("Two Ended##OBJECT_snake_ends", &sb_ends, 2);
+        {
+            ImGui::Text("SnakeBlock");
+            SnakeBlock* sb = obj ? static_cast<SnakeBlock*>(obj) : &model_sb;
+            ImGui::Checkbox("Pushable?##SB_modify_push", &sb->pushable_);
+            ImGui::Checkbox("Gravitable?##SB_modify_grav", &sb->gravitable_);
+            ImGui::InputInt("color##SB_modify_COLOR", &sb->color_);
+            ImGui::ColorButton("##COLOR_BUTTON", unpack_color(COLORS[sb->color_]), 0, ImVec2(40,40));
+            ImGui::Text("Number of Ends");
+            ImGui::RadioButton("One Ended##SB_modify_snake_ends", &sb->ends_, 1);
+            ImGui::RadioButton("Two Ended##SB_modify_snake_ends", &sb->ends_, 2);
+        }
+        break;
+    case ObjCode::GateBody:
+        {
+            ImGui::Text("GateBody");
+            Point3 b_pos = static_cast<GateBody*>(obj)->base_->pos();
+            ImGui::Text("See parent Gate at (%d,%d,%d)", b_pos.x, b_pos.y, b_pos.z);
+        }
+    case ObjCode::Wall: // No parameters for Wall
+    default:
         break;
     }
-    ImGui::EndChild();//*/
 }
 
 void ObjectTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
     RoomMap* room_map = eroom->room->room_map();
-    if (!room_map->valid(pos) || room_map->view(pos)) {
+    if (!room_map->valid(pos)) {
+        selected_obj = nullptr;
+        return;
+    // Even in create mode, let the user select an already-created object
+    } else if (inspect_mode || room_map->view(pos)) {
+        selected_obj = room_map->view(pos);
         return;
     }
-    int x = pos.x;
-    int y = pos.y;
     std::unique_ptr<GameObject> obj;
     switch (obj_code) {
-    case (int)ObjCode::Wall :
-        obj = std::make_unique<Wall>();
+    case ObjCode::Wall :
+        room_map->create_wall(pos);
+        return;
+    case ObjCode::PushBlock :
+        obj = std::make_unique<PushBlock>(model_pb);
         break;
-    case (int)ObjCode::PushBlock :
-        obj = std::make_unique<PushBlock>(pos, color, block_push, block_grav, static_cast<Sticky>(sticky));
+    case ObjCode::SnakeBlock :
+        obj = std::make_unique<SnakeBlock>(model_sb);
         break;
-    case (int)ObjCode::SnakeBlock :
-        obj = std::make_unique<SnakeBlock>(pos, color, block_push, block_grav, sb_ends);
-        break;
-    /*
-    case (int)ObjCode::StickyBlock :
-        obj = std::make_unique<StickyBlock>(pos, color_cycle, is_car);
-        break;
-    case (int)ObjCode::SnakeBlock :
-        obj = std::make_unique<SnakeBlock>(pos, color_cycle, is_car, sb_ends);
-        break;
-    case (int)ObjCode::Door :
-        obj = std::make_unique<Door>(pos, switchable_state);
-        break;
-    case (int)ObjCode::PressSwitch :
-        obj = std::make_unique<PressSwitch>(pos, color, persistent, false);
-        break;
-    case (int)ObjCode::Gate :
-        obj = std::make_unique<Gate>(pos, switchable_state);
-        break;
-    */
     default:
         return;
     }
+    obj->pos_ = pos;
+    selected_obj = obj.get();
     room_map->create(std::move(obj));
 }
 
 void ObjectTab::handle_right_click(EditorRoom* eroom, Point3 pos) {
+    // Don't allow deletion in inspect mode
+    if (inspect_mode) {
+        return;
+    }
     RoomMap* room_map = eroom->room->room_map();
     GameObject* obj = room_map->view(pos);
     if (obj) {
         if (obj->obj_code() == ObjCode::Player) {
             return;
         }
+        selected_obj = nullptr;
         room_map->remove_from_signalers(obj->modifier());
-        room_map->take(obj);
+        // When we "destroy" a wall, it doesn't actually destroy the unique Wall object
+        room_map->destroy(obj);
     }
 }

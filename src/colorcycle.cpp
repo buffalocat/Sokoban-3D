@@ -1,9 +1,8 @@
 #include "colorcycle.h"
-#include <iostream>
 
 ColorCycle::ColorCycle(): color_ {0}, size_ {1}, index_ {0} {}
 
-ColorCycle::ColorCycle(unsigned char color): color_ {color}, size_ {1}, index_ {0} {}
+ColorCycle::ColorCycle(int color): color_ {color}, size_ {1}, index_ {0} {}
 
 ColorCycle::ColorCycle(unsigned char* b): color_ {}, size_ {b[0]}, index_ {b[1]} {
     for (int i = 0; i < size_; ++i) {
@@ -13,11 +12,11 @@ ColorCycle::ColorCycle(unsigned char* b): color_ {}, size_ {b[0]}, index_ {b[1]}
 
 ColorCycle::~ColorCycle() {}
 
-unsigned char ColorCycle::color() {
+int ColorCycle::color() {
     return color_[index_];
 }
 
-void ColorCycle::insert_color(unsigned char color) {
+void ColorCycle::insert_color(int color) {
     color_[size_] = color;
     ++size_;
 }

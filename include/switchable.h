@@ -23,10 +23,10 @@ public:
 
 protected:
     bool default_;
-
-private:
     bool active_; // Opposite of default behavior
     bool waiting_; // Toggle active as soon as possible
+
+    friend class ModifierTab;
 };
 
 

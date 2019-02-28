@@ -1,28 +1,29 @@
 #ifndef COLORCYCLE_H
 #define COLORCYCLE_H
 
-class MapFileO;
+#include "common.h"
 
 class ColorCycle {
 public:
     ColorCycle();
-    ColorCycle(unsigned char color);
+    ColorCycle(int color);
     ColorCycle(unsigned char* b);
     ~ColorCycle();
 
-    unsigned char color();
-    void insert_color(unsigned char color);
+    int color();
+    void insert_color(int color);
     // Returns whether the cycle had an effect (i.e., whether size_ > 1)
     bool cycle(bool undo);
 
 private:
-    // 5 is the maximum number of colors a block will have (probably)
+    // The limit on number of colors is somewhat arbitrary
     // This limit won't be stored in .maps, so it can be changed
-    unsigned char color_[5];
-    unsigned char size_;
-    unsigned char index_;
+    int index_;
+    int size_;
+    int color_[MAX_COLOR_CYCLE];
 
-    friend MapFileO;
+    friend class MapFileO;
+    friend class ModifierTab;
 };
 
 #endif // COLORCYCLE_H

@@ -9,8 +9,8 @@ class GraphicsManager;
 struct FallTrail {
     Point3 base;
     int height;
-    unsigned char opacity;
-    unsigned char color;
+    int opacity;
+    int color;
 };
 
 class Effects {

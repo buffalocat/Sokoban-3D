@@ -26,4 +26,6 @@ protected:
     GraphicsManager* gfx_;
 };
 
+ImVec4 unpack_color(glm::vec4 v);
+
 #endif // EDITORTAB_H

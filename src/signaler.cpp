@@ -7,8 +7,8 @@
 #include "delta.h"
 #include "mapfile.h"
 
-Signaler::Signaler(unsigned char threshold, bool persistent, bool active):
-count_ {0}, threshold_ {threshold},
+Signaler::Signaler(int count, int threshold, bool persistent, bool active):
+count_ {count}, threshold_ {threshold},
 active_ {active}, persistent_ {persistent},
 switches_ {}, switchables_ {} {}
 
@@ -49,7 +49,7 @@ void Signaler::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame, Mov
 
 void Signaler::serialize(MapFileO& file) {
     file << MapCode::Signaler;
-    file << threshold_ << persistent_ << active_;
+    file << count_ << threshold_ << persistent_ << active_;
     file << switches_.size();
     file << switchables_.size();
     for (auto& obj : switches_) {

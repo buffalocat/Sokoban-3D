@@ -82,6 +82,12 @@ void RoomMap::serialize(MapFileO& file) const {
             file << obj->obj_code();
             file << it->pos();
             obj->serialize(file);
+            if (ObjectModifier* mod = obj->modifier()) {
+                file << mod->mod_code();
+                mod->serialize(file);
+            } else {
+                file << ModCode::NONE;
+            }
             if (obj->relation_check()) {
                 rel_check.push_back(obj);
             }
@@ -119,16 +125,24 @@ GameObject* RoomMap::view(Point3 pos) {
     }
 }
 
+void RoomMap::just_take(GameObject* obj) {
+    at(obj->pos_) -= obj->id_;
+}
+
+void RoomMap::just_put(GameObject* obj) {
+    at(obj->pos_) += obj->id_;
+}
+
 void RoomMap::take(GameObject* obj) {
-    activate_listeners(obj->pos_);
+    activate_listeners_at(obj->pos_);
     obj->cleanup_on_take(this);
     at(obj->pos_) -= obj->id_;
 }
 
 void RoomMap::put(GameObject* obj) {
-    activate_listeners(obj->pos_);
-    obj->setup_on_put(this);
     at(obj->pos_) += obj->id_;
+    obj->setup_on_put(this);
+    activate_listeners_at(obj->pos_);
 }
 
 void RoomMap::shift(GameObject* obj, Point3 dpos, DeltaFrame* delta_frame) {
@@ -158,8 +172,6 @@ void RoomMap::batch_shift(std::vector<GameObject*> objs, Point3 dpos, DeltaFrame
     }
 }
 
-#include <iostream>
-
 void RoomMap::create(std::unique_ptr<GameObject> obj) {
     GameObject* raw = obj.get();
     obj_array_.push_object(std::move(obj));
@@ -173,19 +185,25 @@ void RoomMap::create(std::unique_ptr<GameObject> obj, DeltaFrame* delta_frame) {
     delta_frame->push(std::make_unique<CreationDelta>(raw, this));
 }
 
+void RoomMap::create_wall(Point3 pos) {
+    at(pos) = GLOBAL_WALL_ID;
+}
+
 void RoomMap::uncreate(GameObject* obj) {
+    just_take(obj);
     obj->cleanup_on_destruction(this);
-    take(obj);
     obj_array_.destroy(obj);
 }
 
 void RoomMap::destroy(GameObject* obj) {
     obj->cleanup_on_destruction(this);
+    obj->alive_ = false;
     take(obj);
 }
 
 void RoomMap::destroy(GameObject* obj, DeltaFrame* delta_frame) {
     obj->cleanup_on_destruction(this);
+    obj->alive_ = false;
     take(obj);
     if (delta_frame) {
         delta_frame->push(std::make_unique<DeletionDelta>(obj, this));
@@ -193,7 +211,8 @@ void RoomMap::destroy(GameObject* obj, DeltaFrame* delta_frame) {
 }
 
 void RoomMap::undestroy(GameObject* obj) {
-    put(obj);
+    just_put(obj);
+    obj->alive_ = true;
     obj->setup_on_undestruction(this);
 }
 
@@ -214,7 +233,7 @@ void RoomMap::activate_listener_of(ObjectModifier* obj) {
     activated_listeners_.insert(obj);
 }
 
-void RoomMap::activate_listeners(Point3 pos) {
+void RoomMap::activate_listeners_at(Point3 pos) {
     if (listeners_.count(pos)) {
         auto& cur_lis = listeners_[pos];
         activated_listeners_.insert(cur_lis.begin(), cur_lis.end());
@@ -232,7 +251,7 @@ void RoomMap::draw(GraphicsManager* gfx, float angle) {
         for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
             int id = it->id();
             if (id > GLOBAL_WALL_ID) {
-                obj_array_[id]->draw(gfx, it->pos());
+                obj_array_[id]->draw(gfx);
             }
         }
     }
@@ -245,8 +264,8 @@ void RoomMap::draw_layer(GraphicsManager* gfx, int z) {
     MapLayer* layer = layers_[z].get();
     for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
         int id = it->id();
-        if (id) {
-            obj_array_[id]->draw(gfx, it->pos());
+        if (id > GLOBAL_WALL_ID) {
+            obj_array_[id]->draw(gfx);
         }
     }
 }

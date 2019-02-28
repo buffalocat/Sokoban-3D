@@ -16,7 +16,6 @@ public:
     virtual void main_loop() = 0;
     void check_for_quit();
 
-protected:
     GraphicsManager* gfx_;
     GLFWwindow* window_;
 

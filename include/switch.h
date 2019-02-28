@@ -22,5 +22,7 @@ protected:
     bool persistent_;
     bool active_;
     std::vector<Signaler*> signalers_;
+
+    friend class ModifierTab;
 };
 #endif // SWITCH_H

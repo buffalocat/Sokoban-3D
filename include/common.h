@@ -78,6 +78,8 @@ enum class CameraCode {
     Null = 4,
 };
 
+const int MAX_COLOR_CYCLE = 5;
+
 // TODO: make this better and safer
 enum {
     GREEN = 0,

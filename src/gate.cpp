@@ -9,7 +9,7 @@
 #include "graphicsmanager.h"
 
 // Gates should be initialized down in case they are "covered" at load time
-Gate::Gate(GameObject* parent, GateBody* body, bool def): Switchable(parent, def, false), body_ {body} {}
+Gate::Gate(GameObject* parent, GateBody* body, bool def, bool active): Switchable(parent, def, active), body_ {body} {}
 
 Gate::~Gate() {}
 
@@ -18,20 +18,21 @@ ModCode Gate::mod_code() {
 }
 
 void Gate::serialize(MapFileO& file) {
-    file << default_;
+    file << default_ << active_;
 }
 
-/*GameObject* Gate::deserialize(MapFileI& file) {
-    Point3 pos {file.read_point3()};
-    unsigned char b[1];
-    file.read(b, 1);
-    return new Gate(pos, b[0]);
-}*/
+void Gate::deserialize(MapFileI& file, GameObject* parent) {
+    unsigned char b[2];
+    file.read(b, 2);
+    // TODO: handle body creation here if necessary!
+    // If the body already exists in the world, use its relation check to link it to this
+    parent->set_modifier(std::make_unique<Gate>(parent, nullptr, b[0], b[1]));
+}
 
 bool Gate::can_set_state(bool state, RoomMap* room_map) {
     // You can always set state to false, but setting it to true requires there be
     // nothing above the gate
-    return !state || (room_map->view(pos() + Point3{0,0,1}) == nullptr);
+    return !state || (room_map->view(pos_above()) == nullptr);
 }
 
 void Gate::apply_state_change(RoomMap* room_map, std::vector<GameObject*>& fall_check) {
@@ -51,12 +52,12 @@ void Gate::apply_state_change(RoomMap* room_map, std::vector<GameObject*>& fall_
 
 // TODO: Fix the listener system!!
 void Gate::setup_on_put(RoomMap* room_map) {
-    //room_map->add_listener(this, &Gate::check_waiting, pos() + Point3{0,0,1});
-    //room_map->activate_listener(this);
+    room_map->add_listener(this, pos_above());
+    room_map->activate_listener_of(this);
 }
 
 void Gate::cleanup_on_take(RoomMap* room_map) {
-    //room_map->remove_listener(this, pos_ + {0,0,1});
+    room_map->remove_listener(this, pos_above());
 }
 
 void Gate::draw(GraphicsManager* gfx) {

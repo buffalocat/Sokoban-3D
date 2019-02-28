@@ -12,12 +12,18 @@
 #include "moveprocessor.h"
 
 // id_ begins in an "inconsistent" state - it *must* be set by the GameObjectArray
-GameObject::GameObject(Point3 pos, unsigned char color, bool pushable, bool gravitable):
+GameObject::GameObject(Point3 pos, int color, bool pushable, bool gravitable):
     modifier_ {}, animation_ {}, comp_ {},
     pos_ {pos}, id_ {-1},
     color_ {color}, pushable_ {pushable}, gravitable_ {gravitable} {}
 
 GameObject::~GameObject() {}
+
+// Copy Constructor creates trivial unique_ptr members
+GameObject::GameObject(const GameObject& obj):
+    modifier_ {}, animation_ {}, comp_ {},
+    pos_ {obj.pos_}, id_ {-1},
+    color_ {obj.color_}, pushable_ {obj.pushable_}, gravitable_ {obj.gravitable_} {}
 
 bool GameObject::relation_check() {
     return false;
@@ -29,13 +35,29 @@ Point3 GameObject::shifted_pos(Point3 d) {
     return pos_ + d;
 }
 
-void GameObject::setup_on_put(RoomMap*) {}
+void GameObject::setup_on_put(RoomMap* room_map) {
+    if (modifier_) {
+        modifier_->setup_on_put(room_map);
+    }
+}
 
-void GameObject::cleanup_on_take(RoomMap*) {}
+void GameObject::cleanup_on_take(RoomMap* room_map) {
+    if (modifier_) {
+        modifier_->cleanup_on_take(room_map);
+    }
+}
 
-void GameObject::cleanup_on_destruction(RoomMap*) {}
+void GameObject::cleanup_on_destruction(RoomMap* room_map) {
+    if (modifier_) {
+        modifier_->cleanup_on_destruction(room_map);
+    }
+}
 
-void GameObject::setup_on_undestruction(RoomMap*) {}
+void GameObject::setup_on_undestruction(RoomMap* room_map) {
+    if (modifier_) {
+        modifier_->setup_on_undestruction(room_map);
+    }
+}
 
 void GameObject::set_modifier(std::unique_ptr<ObjectModifier> mod) {
     modifier_ = std::move(mod);

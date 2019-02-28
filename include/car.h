@@ -13,12 +13,13 @@ public:
 
     ModCode mod_code();
     void serialize(MapFileO& file);
-    static std::unique_ptr<ObjectModifier> deserialize(GameObject*, MapFileI& file);
+    static void deserialize(MapFileI& file, GameObject*);
 
-    void insert_color(unsigned char color);
+    void collect_sticky_links(RoomMap*, Sticky, std::vector<GameObject*>&);
+
+    void insert_color(int color);
     bool cycle_color(bool undo);
 
-private:
     ColorCycle color_cycle_;
 };
 

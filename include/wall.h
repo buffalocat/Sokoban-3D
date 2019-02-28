@@ -9,7 +9,7 @@ public:
     ~Wall();
     ObjCode obj_code();
 
-    void draw(GraphicsManager*, Point3 p={0,0,0});
+    void draw(GraphicsManager*);
 };
 
 #endif // WALL_H

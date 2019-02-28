@@ -8,7 +8,10 @@
 
 #include "pushblock.h"
 #include "snakeblock.h"
+#include "car.h"
 #include "door.h"
+#include "gate.h"
+#include "pressswitch.h"
 #include "switch.h"
 #include "switchable.h"
 #include "signaler.h"
@@ -166,14 +169,22 @@ void Room::load_from_file(GameObjectArray& objs, MapFileI& file, Point3* start_p
 
 // TODO: fix (de)serialization in general!!!!!
 
+
 #define CASE_OBJCODE(CLASS)\
 case ObjCode::CLASS:\
-    map_->create(std::move(CLASS::deserialize(file)));\
+    obj = CLASS::deserialize(file);\
+    break;
+
+#define CASE_MODCODE(CLASS)\
+case ModCode::CLASS:\
+    CLASS::deserialize(file, obj.get());\
     break;
 
 void Room::read_objects(MapFileI& file) {
     unsigned char b;
+    std::unique_ptr<GameObject> obj {};
     while (true) {
+        obj = nullptr;
         file.read(&b, 1);
         switch (static_cast<ObjCode>(b)) {
         CASE_OBJCODE(PushBlock)
@@ -187,14 +198,29 @@ void Room::read_objects(MapFileI& file) {
             break;
         case ObjCode::NONE:
             return;
-        default :
+        default:
             throw std::runtime_error("Unknown Object code encountered in .map file (it's probably corrupt/an old version)");
             break;
         }
+        file.read(&b, 1);
+        switch (static_cast<ModCode>(b)) {
+        CASE_MODCODE(Car)
+        CASE_MODCODE(Door)
+        CASE_MODCODE(Gate)
+        CASE_MODCODE(PressSwitch)
+        case ModCode::NONE:
+            break;
+        default:
+            throw std::runtime_error("Unknown Modifier code encountered in .map file (it's probably corrupt/an old version)");
+            break;
+        }
+        map_->create(std::move(obj));
     }
 }
 
 #undef CASE_OBJCODE
+
+#undef CASE_MODCODE
 
 #define CASE_CAMCODE(CLASS)\
 case CameraCode::CLASS:\
@@ -244,13 +270,13 @@ void Room::read_door_dest(MapFileI& file) {
 }
 
 void Room::read_signaler(MapFileI& file) {
-    unsigned char b[5];
-    file.read(b, 5);
-    auto signaler = std::make_unique<Signaler>(b[0], b[1], b[2]);
-    for (int i = 0; i < b[3]; ++i) {
+    unsigned char b[6];
+    file.read(b, 6);
+    auto signaler = std::make_unique<Signaler>(b[0], b[1], b[2], b[3]);
+    for (int i = 0; i < b[4]; ++i) {
         signaler->push_switch(static_cast<Switch*>(map_->view(file.read_point3())->modifier()));
     }
-    for (int i = 0; i < b[4]; ++i) {
+    for (int i = 0; i < b[5]; ++i) {
         signaler->push_switchable(static_cast<Switchable*>(map_->view(file.read_point3())->modifier()));
     }
     map_->push_signaler(std::move(signaler));

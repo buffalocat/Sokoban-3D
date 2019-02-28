@@ -9,7 +9,7 @@
 
 #include <algorithm>
 
-SnakeBlock::SnakeBlock(Point3 pos, unsigned char color, bool pushable, bool gravitable, unsigned char ends):
+SnakeBlock::SnakeBlock(Point3 pos, int color, bool pushable, bool gravitable, int ends):
 GameObject(pos, color, pushable, gravitable), links_ {}, target_ {}, distance_ {0}, ends_ {ends}  {}
 
 SnakeBlock::~SnakeBlock() {}
@@ -34,7 +34,7 @@ bool SnakeBlock::relation_check() {
 }
 
 void SnakeBlock::relation_serialize(MapFileO& file) {
-    unsigned char link_encode = 0;
+    int link_encode = 0;
     for (auto& link : links_) {
         Point3 q = link->pos_;
         // Snake links are always adjacent, and we only bother to
@@ -88,7 +88,7 @@ bool SnakeBlock::pushed_and_moving() {
 }
 
 
-void SnakeBlock::draw(GraphicsManager* gfx, Point3) {
+void SnakeBlock::draw(GraphicsManager* gfx) {
     FPoint3 p {real_pos()};
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y));
     model = glm::scale(model, glm::vec3(0.7071f, 1, 0.7071f));
@@ -113,6 +113,9 @@ void SnakeBlock::draw(GraphicsManager* gfx, Point3) {
         gfx->set_model(model);
         gfx->draw_cube();
     }
+    if (modifier_) {
+        modifier()->draw(gfx, p);
+    }
 }
 
 
@@ -121,9 +124,6 @@ bool SnakeBlock::in_links(SnakeBlock* sb) {
 }
 
 void SnakeBlock::add_link(SnakeBlock* sb, DeltaFrame* delta_frame) {
-    if (ends_ == 1) {
-        std::cout << "Adding link between " << pos_ << " and " << sb->pos_ << std::endl;
-    }
     links_.push_back(sb);
     sb->links_.push_back(this);
     if (delta_frame) {
@@ -132,9 +132,6 @@ void SnakeBlock::add_link(SnakeBlock* sb, DeltaFrame* delta_frame) {
 }
 
 void SnakeBlock::remove_link(SnakeBlock* sb, DeltaFrame* delta_frame) {
-    if (ends_ == 1) {
-        std::cout << "Removing link between " << pos_ << " and " << sb->pos_ << std::endl;
-    }
     links_.erase(std::find(links_.begin(), links_.end(), sb));
     sb->links_.erase(std::find(sb->links_.begin(), sb->links_.end(), this));
     if (delta_frame) {
@@ -200,21 +197,11 @@ bool SnakeBlock::confused(RoomMap* room_map) {
     return available_count > ends_;
 }
 
-void SnakeBlock::cleanup_on_destruction(RoomMap*) {
+void SnakeBlock::cleanup_on_destruction(RoomMap* room_map) {
     reset_distance_and_target();
-/*
-    for (SnakeBlock* link : links_) {
-        link->links_.erase(std::find(link->links_.begin(), link->links_.end(), this));
+    if (modifier_) {
+        modifier_->cleanup_on_destruction(room_map);
     }
-*/
-}
-
-void SnakeBlock::setup_on_undestruction(RoomMap*) {
-/*
-    for (SnakeBlock* link : links_) {
-        link->links_.push_back(this);
-    }
-*/
 }
 
 std::unique_ptr<SnakeBlock> SnakeBlock::make_split_copy() {

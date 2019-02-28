@@ -77,10 +77,10 @@ MapFileI& operator>>(MapFileI& f, FPoint3& v) {
 }
 
 MapFileI& operator>>(MapFileI& f, ColorCycle& v) {
-    unsigned char b[8];
+    unsigned char b[2 + MAX_COLOR_CYCLE];
     f.read(b, 2);
-    f.read((b+2), b[0]);
-    v = {b};
+    f.read(b+2, b[0]);
+    v = ColorCycle{b};
     return f;
 }
 
@@ -154,12 +154,19 @@ MapFileO& MapFileO::operator<<(std::string str) {
     return *this;
 }
 
+// TODO: consider replacing these with a template!
+
 MapFileO& MapFileO::operator<<(MapCode code) {
     file_ << (unsigned char) code;
     return *this;
 }
 
 MapFileO& MapFileO::operator<<(ObjCode code) {
+    file_ << (unsigned char) code;
+    return *this;
+}
+
+MapFileO& MapFileO::operator<<(ModCode code) {
     file_ << (unsigned char) code;
     return *this;
 }
@@ -180,10 +187,10 @@ MapFileO& MapFileO::operator<<(RidingState state) {
 }
 
 MapFileO& MapFileO::operator<<(ColorCycle& color) {
-    file_ << color.size_;
-    file_ << color.index_;
+    file_ << (unsigned char) color.size_;
+    file_ << (unsigned char) color.index_;
     for (int i = 0; i < color.size_; ++i) {
-        file_ << color.color_[i];
+        file_ << (unsigned char) color.color_[i];
     }
     return *this;
 }

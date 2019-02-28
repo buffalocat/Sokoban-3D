@@ -6,9 +6,11 @@
 
 MapLocation::MapLocation(Point3 p, std::string room_name): pos {p}, name {room_name} {}
 
-Door::Door(GameObject* parent, bool def): Switchable(parent, def, def), dest_ {} {}
+Door::Door(GameObject* parent, bool def, bool active): Switchable(parent, def, active), dest_ {} {}
 
 Door::~Door() {}
+
+Door::Door(const Door& d): Switchable(d.parent_, d.default_, d.active_), dest_ {} {}
 
 ModCode Door::mod_code() {
     return ModCode::Door;
@@ -23,17 +25,14 @@ MapLocation* Door::dest() {
 }
 
 void Door::serialize(MapFileO& file) {
-    file << default_;
+    file << default_ << active_;
 }
 
-/*
-GameObject* Door::deserialize(MapFileI& file) {
-    Point3 pos {file.read_point3()};
-    unsigned char b[1];
-    file.read(b,1);
-    return new Door(pos, b[0]);
+void Door::deserialize(MapFileI& file, GameObject* parent) {
+    unsigned char b[2];
+    file.read(b, 2);
+    parent->set_modifier(std::make_unique<Door>(parent, b[0], b[1]));
 }
-*/
 
 bool Door::relation_check() {
     return dest_ != nullptr;

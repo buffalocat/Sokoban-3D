@@ -1,11 +1,12 @@
 #include "pressswitch.h"
 
+#include "gameobject.h"
 #include "mapfile.h"
 #include "roommap.h"
 #include "delta.h"
 #include "graphicsmanager.h"
 
-PressSwitch::PressSwitch(GameObject* parent, unsigned char color, bool persistent, bool active):
+PressSwitch::PressSwitch(GameObject* parent, int color, bool persistent, bool active):
 Switch(parent, persistent, active), color_ {color} {}
 
 PressSwitch::~PressSwitch() {}
@@ -15,18 +16,14 @@ ModCode PressSwitch::mod_code() {
 }
 
 void PressSwitch::serialize(MapFileO& file) {
-    file << color_;
-    file << (persistent_ | (active_ << 1));
+    file << color_ << persistent_ << active_;
 }
 
-/*
-GameObject* PressSwitch::deserialize(MapFileI& file) {
-    Point3 pos {file.read_point3()};
-    unsigned char b[2];
-    file.read(b, 2);
-    return new PressSwitch(pos, b[0], b[1] & 1, b[1] & 2);
+void PressSwitch::deserialize(MapFileI& file, GameObject* parent) {
+    unsigned char b[3];
+    file.read(b, 3);
+    parent->set_modifier(std::make_unique<PressSwitch>(parent, b[0], b[1], b[2]));
 }
-*/
 
 void PressSwitch::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame) {
     if (active_ && persistent_) {
@@ -44,7 +41,7 @@ bool PressSwitch::should_toggle(RoomMap* room_map) {
     return active_ ^ (room_map->view(pos_above()) != nullptr);
 }
 
-void PressSwitch::map_callback(RoomMap* room_map, DeltaFrame* delta_frame) {
+void PressSwitch::map_callback(RoomMap* room_map, DeltaFrame* delta_frame, MoveProcessor* mp) {
     check_send_signal(room_map, delta_frame);
 }
 
@@ -57,8 +54,7 @@ void PressSwitch::cleanup_on_take(RoomMap* room_map) {
     room_map->remove_listener(this, pos_above());
 }
 
-void PressSwitch::draw(GraphicsManager* gfx) {
-    Point3 p = pos();
+void PressSwitch::draw(GraphicsManager* gfx, FPoint3 p) {
     gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
     gfx->set_color(COLORS[GREY]);
     gfx->draw_cube();

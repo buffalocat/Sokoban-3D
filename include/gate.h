@@ -13,12 +13,12 @@ class MapFileO;
 
 class Gate: public Switchable {
 public:
-    Gate(GameObject* parent, GateBody* body, bool def);
+    Gate(GameObject* parent, GateBody* body, bool def, bool active);
     virtual ~Gate();
 
     ModCode mod_code();
     void serialize(MapFileO& file);
-    static std::unique_ptr<ObjectModifier> deserialize(GameObject*, MapFileI& file);
+    static void deserialize(MapFileI& file, GameObject*);
 
     bool can_set_state(bool state, RoomMap*);
     void apply_state_change(RoomMap*, std::vector<GameObject*>&);

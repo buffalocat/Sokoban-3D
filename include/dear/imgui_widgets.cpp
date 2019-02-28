@@ -990,14 +990,6 @@ bool ImGui::RadioButton(const char* label, bool active)
     return pressed;
 }
 
-bool ImGui::RadioButton(const char* label, int* v, int v_button)
-{
-    const bool pressed = RadioButton(label, *v == v_button);
-    if (pressed)
-        *v = v_button;
-    return pressed;
-}
-
 // size_arg (for each axis) < 0.0f: align to end, 0.0f: auto, > 0.0f: specified size
 void ImGui::ProgressBar(float fraction, const ImVec2& size_arg, const char* overlay)
 {

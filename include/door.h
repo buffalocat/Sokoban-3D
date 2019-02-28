@@ -22,12 +22,13 @@ struct MapLocation {
 
 class Door: public Switchable {
 public:
-    Door(GameObject* parent, bool def);
+    Door(GameObject* parent, bool def, bool active);
     ~Door();
+    Door(const Door&);
 
     ModCode mod_code();
     void serialize(MapFileO& file);
-    static ObjectModifier* deserialize(MapFileI& file);
+    static void deserialize(MapFileI& file, GameObject*);
 
     bool relation_check();
     void relation_serialize(MapFileO& file);

@@ -13,7 +13,7 @@ class ObjectModifier;
 
 class Signaler {
 public:
-    Signaler(unsigned char threshold, bool persistent, bool active);
+    Signaler(int count, int threshold, bool persistent, bool active);
     ~Signaler();
 
     void serialize(MapFileO& file);
@@ -26,8 +26,8 @@ public:
     bool remove_object(ObjectModifier*);
 
 private:
-    unsigned char count_;
-    unsigned char threshold_;
+    int count_;
+    int threshold_;
     bool active_;
     bool persistent_;
     std::vector<Switch*> switches_;

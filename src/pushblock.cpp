@@ -1,10 +1,11 @@
 #include "pushblock.h"
 
+#include "objectmodifier.h"
 #include "roommap.h"
 #include "mapfile.h"
 #include "graphicsmanager.h"
 
-PushBlock::PushBlock(Point3 pos, unsigned char color, bool pushable, bool gravitable, Sticky sticky):
+PushBlock::PushBlock(Point3 pos, int color, bool pushable, bool gravitable, Sticky sticky):
     GameObject(pos, color, pushable, gravitable), sticky_ {sticky} {}
 
 PushBlock::~PushBlock() {}
@@ -41,7 +42,7 @@ Sticky PushBlock::sticky() {
 }
 
 
-void PushBlock::draw(GraphicsManager* gfx, Point3) {
+void PushBlock::draw(GraphicsManager* gfx) {
     FPoint3 p {real_pos()};
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y));
     gfx->set_model(model);
@@ -58,4 +59,7 @@ void PushBlock::draw(GraphicsManager* gfx, Point3) {
         break;
     }
     gfx->draw_cube();
+    if (modifier_) {
+        modifier()->draw(gfx, p);
+    }
 }

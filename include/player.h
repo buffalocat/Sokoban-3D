@@ -11,9 +11,8 @@ public:
     Player(Point3 pos, RidingState state);
     ~Player();
     ObjCode obj_code();
-
     bool skip_serialization();
-    void set_riding(RidingState);
+
     RidingState state();
     void toggle_riding(RoomMap* room_map, DeltaFrame*);
     Car* get_car(RoomMap* room_map, bool strict);
@@ -22,7 +21,6 @@ public:
 
     void draw(GraphicsManager*);
 
-private:
     RidingState state_;
 };
 

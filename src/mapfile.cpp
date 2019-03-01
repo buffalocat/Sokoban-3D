@@ -56,11 +56,12 @@ MapFileI& operator>>(MapFileI& f, Point2& v) {
     return f;
 }
 
-MapFileI& operator>>(MapFileI& f, Point2_S16& v) {
-    unsigned char b[4];
-    f.read(b, 4);
+MapFileI& operator>>(MapFileI& f, Point3_S16& v) {
+    unsigned char b[6];
+    f.read(b, 6);
     v.x = b[0] + (b[1] << 8) - (1 << 15);
     v.y = b[2] + (b[3] << 8) - (1 << 15);
+    v.z = b[4] + (b[5] << 8) - (1 << 15);
     return f;
 }
 
@@ -125,11 +126,13 @@ MapFileO& MapFileO::operator<<(Point2 pos) {
     return *this;
 }
 
-MapFileO& MapFileO::operator<<(Point2_S16 pos) {
+MapFileO& MapFileO::operator<<(Point3_S16 pos) {
     file_ << (unsigned char) pos.x;
     file_ << (unsigned char) ((pos.x + (1 << 15)) >> 8);
     file_ << (unsigned char) pos.y;
     file_ << (unsigned char) ((pos.y + (1 << 15)) >> 8);
+    file_ << (unsigned char) pos.z;
+    file_ << (unsigned char) ((pos.z + (1 << 15)) >> 8);
     return *this;
 }
 

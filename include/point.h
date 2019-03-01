@@ -9,9 +9,10 @@ struct Point2 {
     int y;
 };
 
-struct Point2_S16 {
+struct Point3_S16 {
     int x;
     int y;
+    int z;
 };
 
 struct Point3 {

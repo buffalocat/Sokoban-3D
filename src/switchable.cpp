@@ -4,10 +4,10 @@
 #include "moveprocessor.h"
 #include "signaler.h"
 
-Switchable::Switchable(GameObject* parent, bool default_state, bool initial_state): ObjectModifier(parent),
-default_ {default_state},
-active_ {(bool)(default_state ^ initial_state)},
-waiting_ {(bool)(default_state ^ initial_state)},
+Switchable::Switchable(GameObject* parent, bool def, bool active, bool waiting): ObjectModifier(parent),
+default_ {def},
+active_ {active},
+waiting_ {waiting},
 signalers_ {} {}
 
 Switchable::~Switchable() {}

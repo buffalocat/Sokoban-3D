@@ -20,7 +20,7 @@ frames_ {0}, state_ {MoveStepType::Horizontal} {}
 MoveProcessor::~MoveProcessor() {}
 
 bool MoveProcessor::try_move(Player* player, Point3 dir) {
-    if (player->state() == RidingState::Bound) {
+    if (player->state_ == RidingState::Bound) {
         move_bound(player, dir);
     } else {
         move_general(player, dir);
@@ -103,6 +103,7 @@ void MoveProcessor::begin_fall_cycle() {
 
 void MoveProcessor::perform_switch_checks() {
     map_->alert_activated_listeners(delta_frame_, this);
+    map_->reset_local_state();
     map_->check_signalers(delta_frame_, this);
 }
 

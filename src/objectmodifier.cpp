@@ -6,6 +6,12 @@ ObjectModifier::ObjectModifier(GameObject* parent): parent_ {parent} {}
 
 ObjectModifier::~ObjectModifier() {}
 
+bool ObjectModifier::relation_check() {
+    return false;
+}
+
+void ObjectModifier::relation_serialize(MapFileO&) {}
+
 Point3 ObjectModifier::pos() {
     return parent_->pos_;
 }

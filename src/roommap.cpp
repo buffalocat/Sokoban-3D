@@ -67,7 +67,8 @@ void RoomMap::serialize(MapFileO& file) const {
         file << layer->type();
     }
 
-    std::vector<GameObject*> rel_check {};
+    std::vector<GameObject*> rel_check_objs {};
+    std::vector<ObjectModifier*> rel_check_mods {};
     std::vector<Point3> wall_pos {};
     // Serialize raw object data
     file << MapCode::Objects;
@@ -87,11 +88,14 @@ void RoomMap::serialize(MapFileO& file) const {
             if (ObjectModifier* mod = obj->modifier()) {
                 file << mod->mod_code();
                 mod->serialize(file);
+                if (mod->relation_check()) {
+                    rel_check_mods.push_back(mod);
+                }
             } else {
                 file << ModCode::NONE;
             }
             if (obj->relation_check()) {
-                rel_check.push_back(obj);
+                rel_check_objs.push_back(obj);
             }
         }
     }
@@ -104,8 +108,11 @@ void RoomMap::serialize(MapFileO& file) const {
         file << pos;
     }
     // Serialize relational data
-    for (auto& object : rel_check) {
-        object->relation_serialize(file);
+    for (auto obj : rel_check_objs) {
+        obj->relation_serialize(file);
+    }
+    for (auto mod : rel_check_mods) {
+        mod->relation_serialize(file);
     }
     // Serialize Signalers
     for (auto& signaler : signalers_) {
@@ -320,7 +327,6 @@ void RoomMap::push_signaler(std::unique_ptr<Signaler> signaler) {
 
 // NOTE: this function breaks the "locality" rule, but it's probably not a big deal.
 void RoomMap::check_signalers(DeltaFrame* delta_frame, MoveProcessor* mp) {
-    //std::cout << "Checking Signalers!" << std::endl;
     for (auto& signaler : signalers_) {
         signaler->check_send_signal(this, delta_frame, mp);
     }
@@ -331,16 +337,6 @@ void RoomMap::remove_signaler(Signaler* rem) {
         [rem](std::unique_ptr<Signaler>& sig) {return sig.get() == rem;}), signalers_.end());
 }
 
-/*
-void RoomMap::remove_obj_from_signalers(ObjectModifier* obj) {
-    if (!obj) {
-        return;
-    }
-    for (auto& sig : signalers_) {
-        sig->remove_object(obj);
-    }
-}
-*/
 
 void RoomMap::make_fall_trail(GameObject* block, int height, int drop) {
     effects_->push_trail(block, height, drop);

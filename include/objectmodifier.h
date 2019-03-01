@@ -22,6 +22,8 @@ public:
 
     virtual ModCode mod_code() = 0;
     virtual void serialize(MapFileO& file) = 0;
+    virtual bool relation_check();
+    virtual void relation_serialize(MapFileO& file);
 
     GameObject* parent_;
 

@@ -6,11 +6,11 @@
 
 MapLocation::MapLocation(Point3 p, std::string room_name): pos {p}, name {room_name} {}
 
-Door::Door(GameObject* parent, bool def, bool active): Switchable(parent, def, active), dest_ {} {}
+Door::Door(GameObject* parent, bool def, bool active): Switchable(parent, def, active, false), dest_ {} {}
 
 Door::~Door() {}
 
-Door::Door(const Door& d): Switchable(d.parent_, d.default_, d.active_), dest_ {} {}
+Door::Door(const Door& d): Switchable(d.parent_, d.default_, d.active_, d.waiting_), dest_ {} {}
 
 ModCode Door::mod_code() {
     return ModCode::Door;

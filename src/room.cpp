@@ -1,5 +1,7 @@
 #include "room.h"
 
+#include <iostream>
+
 #include "roommap.h"
 #include "camera.h"
 
@@ -145,7 +147,7 @@ void Room::load_from_file(GameObjectArray& objs, MapFileI& file, Point3* start_p
         case MapCode::SnakeLink:
             read_snake_link(file);
             break;
-        case MapCode::DoorDest :
+        case MapCode::DoorDest:
             read_door_dest(file);
             break;
         case MapCode::Signaler:

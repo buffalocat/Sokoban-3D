@@ -118,6 +118,7 @@ void FallStepProcessor::check_land_sticky(FallComponent* comp) {
     }
 }
 
+// TODO: Check snake links post-fall!!
 void FallStepProcessor::handle_fallen_blocks(FallComponent* comp) {
     comp->settled_ = true;
     std::vector<GameObject*> live_blocks {};

@@ -10,7 +10,7 @@
 #include "graphicsmanager.h"
 
 // Gates should be initialized down in case they are "covered" at load time
-Gate::Gate(GameObject* parent, GateBody* body, int color, bool def, bool initial): Switchable(parent, def, initial), color_ {color}, body_ {body} {}
+Gate::Gate(GameObject* parent, GateBody* body, int color, bool def, bool active, bool waiting): Switchable(parent, def, active, waiting), color_ {color}, body_ {body} {}
 
 Gate::~Gate() {}
 
@@ -19,13 +19,13 @@ ModCode Gate::mod_code() {
 }
 
 void Gate::serialize(MapFileO& file) {
-    file << color_ << default_ << state();
+    file << color_ << default_ << active_ << waiting_;
 }
 
 void Gate::deserialize(MapFileI& file, RoomMap* room_map, GameObject* parent) {
-    unsigned char b[3];
-    file.read(b, 3);
-    auto gate = std::make_unique<Gate>(parent, nullptr, b[0], b[1], b[2]);
+    unsigned char b[4];
+    file.read(b, 4);
+    auto gate = std::make_unique<Gate>(parent, nullptr, b[0], b[1], b[2], b[3]);
     auto gate_body_unique = std::make_unique<GateBody>(gate.get());
     gate->body_ = gate_body_unique.get();
     room_map->create_abstract(std::move(gate_body_unique));
@@ -49,7 +49,6 @@ void Gate::apply_state_change(RoomMap* room_map, MoveProcessor* mp) {
         room_map->put(body_);
     } else {
         room_map->take(body_);
-        // TODO: investigate/fix optionality of fall_check (original solution: use pointer, not reference)
         if (mp) {
             GameObject* above = room_map->view(pos() + Point3{0,0,2});
             if (above && above->gravitable_) {

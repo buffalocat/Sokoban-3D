@@ -25,8 +25,8 @@ static bool inspect_mode = false;
 
 // Model objects that new objects are created from
 static Car model_car {nullptr, {}};
-static Door model_door {nullptr, true, true};
-static Gate model_gate {nullptr, nullptr, 0, false, false};
+static Door model_door {nullptr, true, false};
+static Gate model_gate {nullptr, nullptr, 0, false, false, false};
 static PressSwitch model_press_switch {nullptr, 0, false, false};
 
 static ColorCycle model_color_cycle {};
@@ -90,7 +90,6 @@ void ModifierTab::mod_tab_options() {
             ImGui::Text("Door");
             Door* door = mod ? static_cast<Door*>(mod) : &model_door;
             ImGui::Checkbox("Active by Default?##DOOR_default", &door->default_);
-            door->active_ = door->default_;
         }
         break;
     case ModCode::Gate:
@@ -99,6 +98,7 @@ void ModifierTab::mod_tab_options() {
             Gate* gate = mod ? static_cast<Gate*>(mod) : &model_gate;
             ImGui::Checkbox("Active by Default?##GATE_default", &gate->default_);
             gate->active_ = gate->default_;
+            gate->waiting_ = gate->default_;
             ImGui::InputInt("color##PRESS_SWITCH_modify_COLOR", &gate->color_);
             ImGui::ColorButton("##COLOR_BUTTON", unpack_color(COLORS[gate->color_]), 0, ImVec2(40,40));
         }

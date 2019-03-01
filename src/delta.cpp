@@ -174,7 +174,7 @@ player_ {player}, state_ {state} {}
 RidingStateDelta::~RidingStateDelta() {}
 
 void RidingStateDelta::revert() {
-    player_->set_riding(state_);
+    player_->state_ = state_;
 }
 
 

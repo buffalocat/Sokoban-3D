@@ -54,6 +54,8 @@ void PlayingState::main_loop() {
     }
 }
 
+#include <iostream>
+
 void PlayingState::handle_input() {
     static int input_cooldown = 0;
     static int undo_combo = 0;
@@ -120,13 +122,20 @@ void PlayingState::handle_input() {
                 return;
             }
             input_cooldown = MAX_COOLDOWN;
-            // TODO: Make this be triggered by a listener instead!
-            /*
-            Door* door = dynamic_cast<Door*>(room_map->view(player_->shifted_pos({0,0,-1})));
-            if (door && door->dest() && door->state()) {
-                use_door(door->dest());
+            // TODO: Consider whether Doors should use listeners
+            Point3 pos_below;
+            if (player_->state_ == RidingState::Riding) {
+                pos_below = player_->shifted_pos({0,0,-2});
+            } else {
+                pos_below = player_->shifted_pos({0,0,-1});
             }
-            */
+            if (GameObject* door_obj = room_map->view(pos_below)) {
+                if (Door* door = dynamic_cast<Door*>(door_obj->modifier())) {
+                    if (door->dest() && door->state()) {
+                        use_door(door->dest());
+                    }
+                }
+            }
             return;
         }
     }
@@ -172,29 +181,37 @@ bool PlayingState::load_room(std::string name) {
     return true;
 }
 
+#include <iostream>
+
 // IMPORTANT TODO: Fix door movement
 void PlayingState::use_door(MapLocation* dest) {
-    /*
     if (!loaded_rooms_.count(dest->name)) {
         load_room(dest->name);
     }
     Room* dest_room = loaded_rooms_[dest->name].get();
     RoomMap* cur_map = room_->room_map();
     RoomMap* dest_map = dest_room->room_map();
-    if (dest_map->view(dest->pos)) {
+    if (dest_map->view(dest->pos + Point3{0,0,1})) {
+        return;
+    } else if (player_->state_ == RidingState::Riding && dest_map->view(dest->pos + Point3{0,0,2})) {
         return;
     }
     delta_frame_->push(std::make_unique<DoorMoveDelta>(this, room_, player_->pos_));
     room_ = dest_room;
     cur_map->take(player_);
-    if (Car* car = player_->get_car(cur_map, true)) {
-        cur_map->take(car);
-        car->pos_ = dest->pos + Point3{0,0,1};
-        dest_map->put(car);
+    if (player_->state_ == RidingState::Riding) {
+        Car* car = player_->get_car(cur_map, true);
+        cur_map->take(car->parent_);
+        car->parent_->pos_ = dest->pos + Point3{0,0,1};
+        dest_map->put(car->parent_);
         player_->pos_ = dest->pos + Point3{0,0,2};
     } else {
         player_->pos_ = dest->pos + Point3{0,0,1};
+        if (player_->state_ == RidingState::Bound) {
+            if (!dest_map->view(player_->shifted_pos({0,0,-1}))) {
+                player_->state_ = RidingState::Free;
+            }
+        }
     }
     dest_map->put(player_);
-    */
 }

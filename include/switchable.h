@@ -13,7 +13,7 @@ class Signaler;
 
 class Switchable: public ObjectModifier {
 public:
-    Switchable(GameObject* parent, bool default_state, bool initial_state);
+    Switchable(GameObject* parent, bool default_state, bool active, bool waiting);
     virtual ~Switchable();
 
     void push_signaler(Signaler*);

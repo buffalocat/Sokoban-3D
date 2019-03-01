@@ -14,14 +14,6 @@ ObjCode Player::obj_code() {
     return ObjCode::Player;
 }
 
-void Player::set_riding(RidingState state) {
-    state_ = state;
-}
-
-RidingState Player::state() {
-    return state_;
-}
-
 bool Player::skip_serialization() {
     return true;
 }

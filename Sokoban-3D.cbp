@@ -5,7 +5,7 @@
 		<Option title="Sokoban-3D" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="ObjectModifiers\;GameObjects\;GameStates\;GameStates\EditorTabs\;" />
+		<Option virtualFolders="MoveProcessing\;ObjectModifiers\;GameObjects\;GameStates\;GameStates\EditorTabs\;" />
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/Debug/Sokoban-3D" prefix_auto="1" extension_auto="1" />
@@ -98,9 +98,11 @@
 		<Unit filename="include/gate.h" />
 		<Unit filename="include/gatebody.h" />
 		<Unit filename="include/graphicsmanager.h" />
+		<Unit filename="include/horizontalstepprocessor.h" />
 		<Unit filename="include/mainmenustate.h" />
 		<Unit filename="include/mapfile.h" />
 		<Unit filename="include/maplayer.h" />
+		<Unit filename="include/modifiertab.h" />
 		<Unit filename="include/moveprocessor.h" />
 		<Unit filename="include/objectmodifier.h" />
 		<Unit filename="include/objecttab.h" />
@@ -130,7 +132,9 @@
 		</Unit>
 		<Unit filename="src/colorcycle.cpp" />
 		<Unit filename="src/common.cpp" />
-		<Unit filename="src/component.cpp" />
+		<Unit filename="src/component.cpp">
+			<Option virtualFolder="MoveProcessing/" />
+		</Unit>
 		<Unit filename="src/delta.cpp" />
 		<Unit filename="src/door.cpp">
 			<Option virtualFolder="ObjectModifiers/" />
@@ -151,6 +155,9 @@
 			<Option virtualFolder="GameStates/EditorTabs/" />
 		</Unit>
 		<Unit filename="src/effects.cpp" />
+		<Unit filename="src/fallstepprocessor.cpp">
+			<Option virtualFolder="MoveProcessing/" />
+		</Unit>
 		<Unit filename="src/gameobject.cpp">
 			<Option virtualFolder="GameObjects/" />
 		</Unit>
@@ -165,12 +172,20 @@
 			<Option virtualFolder="GameObjects/" />
 		</Unit>
 		<Unit filename="src/graphicsmanager.cpp" />
+		<Unit filename="src/horizontalstepprocessor.cpp">
+			<Option virtualFolder="MoveProcessing/" />
+		</Unit>
 		<Unit filename="src/mainmenustate.cpp">
 			<Option virtualFolder="GameStates/" />
 		</Unit>
 		<Unit filename="src/mapfile.cpp" />
 		<Unit filename="src/maplayer.cpp" />
-		<Unit filename="src/moveprocessor.cpp" />
+		<Unit filename="src/modifiertab.cpp">
+			<Option virtualFolder="GameStates/EditorTabs/" />
+		</Unit>
+		<Unit filename="src/moveprocessor.cpp">
+			<Option virtualFolder="MoveProcessing/" />
+		</Unit>
 		<Unit filename="src/objectmodifier.cpp">
 			<Option virtualFolder="ObjectModifiers/" />
 		</Unit>

@@ -59,7 +59,8 @@ public:
 
     void push_signaler(std::unique_ptr<Signaler>);
     void check_signalers(DeltaFrame*, MoveProcessor*);
-    void remove_from_signalers(ObjectModifier*);
+    void remove_signaler(Signaler*);
+    void remove_obj_from_signalers(ObjectModifier*);
 
     void add_listener(ObjectModifier*, Point3);
     void remove_listener(ObjectModifier*, Point3);
@@ -85,6 +86,9 @@ private:
 
     // TODO: find more appropriate place for this
     std::unique_ptr<Effects> effects_;
+
+    // For providing direct signaler access
+    friend class SwitchTab;
 };
 
 #endif // ROOMMAP_H

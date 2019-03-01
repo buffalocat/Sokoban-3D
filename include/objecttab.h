@@ -7,6 +7,8 @@ class ObjectTab: public EditorTab {
 public:
     ObjectTab(EditorState*, GraphicsManager*);
     virtual ~ObjectTab();
+
+    void init();
     void main_loop(EditorRoom*);
     void handle_left_click(EditorRoom*, Point3);
     void handle_right_click(EditorRoom*, Point3);

@@ -28,13 +28,22 @@ static SnakeBlock model_sb {Point3{0,0,0}, 0, true, true, 2};
 // Object Inspection
 static GameObject* selected_obj = nullptr;
 
+void ObjectTab::init() {
+    selected_obj = nullptr;
+}
+
 void object_tab_options();
 
 void ObjectTab::main_loop(EditorRoom* eroom) {
     ImGui::Text("The Object Tab");
     ImGui::Separator();
+    if (!eroom) {
+        ImGui::Text("No room loaded.");
+        return;
+    }
 
     ImGui::Checkbox("Inspect Mode##OBJECT_inspect", &inspect_mode);
+    ImGui::Separator();
 
     object_tab_options();
 }
@@ -102,7 +111,7 @@ void object_tab_options() {
 }
 
 void ObjectTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
-    RoomMap* room_map = eroom->room->room_map();
+    RoomMap* room_map = eroom->map();
     if (!room_map->valid(pos)) {
         selected_obj = nullptr;
         return;
@@ -135,14 +144,13 @@ void ObjectTab::handle_right_click(EditorRoom* eroom, Point3 pos) {
     if (inspect_mode) {
         return;
     }
-    RoomMap* room_map = eroom->room->room_map();
+    RoomMap* room_map = eroom->map();
     GameObject* obj = room_map->view(pos);
     if (obj) {
         if (obj->obj_code() == ObjCode::Player) {
             return;
         }
         selected_obj = nullptr;
-        room_map->remove_from_signalers(obj->modifier());
         // When we "destroy" a wall, it doesn't actually destroy the unique Wall object
         room_map->destroy(obj);
     }

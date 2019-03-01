@@ -2,6 +2,7 @@
 #define SIGNALER_H
 
 #include <vector>
+#include <string>
 
 class Switchable;
 class Switch;
@@ -13,7 +14,7 @@ class ObjectModifier;
 
 class Signaler {
 public:
-    Signaler(int count, int threshold, bool persistent, bool active);
+    Signaler(std::string label, int count, int threshold, bool persistent, bool active);
     ~Signaler();
 
     void serialize(MapFileO& file);
@@ -25,16 +26,19 @@ public:
     void receive_signal(bool signal);
     void toggle();
     void check_send_signal(RoomMap*, DeltaFrame*, MoveProcessor*);
-    bool remove_object(ObjectModifier*);
 
-    std::vector<Switch*> switches_;
-    std::vector<Switchable*> switchables_;
+    void remove_object(ObjectModifier*);
 
 private:
+    std::vector<Switch*> switches_;
+    std::vector<Switchable*> switchables_;
+    std::string label_;
     int count_;
     int threshold_;
     bool active_;
     bool persistent_;
+
+    friend class SwitchTab;
 };
 
 #endif // SIGNALER_H

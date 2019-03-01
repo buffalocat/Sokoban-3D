@@ -29,6 +29,14 @@ room {std::move(arg_room)},
 start_pos {pos}, cam_pos {pos},
 changed {true} {}
 
+RoomMap* EditorRoom::map() {
+    return room->room_map();
+}
+
+std::string EditorRoom::name() {
+    return room->name();
+}
+
 EditorState::EditorState(GraphicsManager* gfx): EditorBaseState(),
 rooms_ {}, active_room_ {},
 tabs_ {}, active_tab_ {},
@@ -48,7 +56,7 @@ EditorState::~EditorState() {}
 
 void EditorState::main_loop() {
     bool p_open = true;
-    if (!ImGui::Begin("Editor Window##ROOT", &p_open, ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (!ImGui::Begin("Editor Window##ROOT", &p_open)) {
         ImGui::End();
         return;
     }
@@ -77,7 +85,7 @@ void EditorState::main_loop() {
     ImGui::Text(""); //This consumes the stray SameLine from the loop
 
     // Draw the rest of the editor GUI
-    ImGui::BeginChild("Active Tab Pane##ROOT", ImVec2(500, 700), true);
+    ImGui::BeginChild("Active Tab Pane##ROOT", ImVec2(0, 0), true);
     active_tab_->main_loop(active_room_);
     ImGui::EndChildFrame();
     ImGui::End();
@@ -143,9 +151,9 @@ bool EditorState::load_room(std::string name) {
 void EditorState::save_room(EditorRoom* eroom, bool commit) {
     std::string path;
     if (commit) {
-        path = MAPS_MAIN + eroom->room->name() + ".map";
+        path = MAPS_MAIN + eroom->name() + ".map";
     } else {
-        path = MAPS_TEMP + eroom->room->name() + ".map";
+        path = MAPS_TEMP + eroom->name() + ".map";
     }
     MapFileO file{path};
     eroom->room->write_to_file(file, eroom->start_pos);

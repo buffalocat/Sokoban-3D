@@ -10,7 +10,7 @@
 #include "graphicsmanager.h"
 
 // Gates should be initialized down in case they are "covered" at load time
-Gate::Gate(GameObject* parent, GateBody* body, int color, bool def, bool active): Switchable(parent, def, active), color_ {color}, body_ {body} {}
+Gate::Gate(GameObject* parent, GateBody* body, int color, bool def, bool initial): Switchable(parent, def, initial), color_ {color}, body_ {body} {}
 
 Gate::~Gate() {}
 
@@ -19,7 +19,7 @@ ModCode Gate::mod_code() {
 }
 
 void Gate::serialize(MapFileO& file) {
-    file << color_ << default_ << active_;
+    file << color_ << default_ << state();
 }
 
 void Gate::deserialize(MapFileI& file, RoomMap* room_map, GameObject* parent) {

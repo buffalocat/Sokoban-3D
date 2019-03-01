@@ -271,8 +271,14 @@ void Room::read_door_dest(MapFileI& file) {
 
 void Room::read_signaler(MapFileI& file) {
     unsigned char b[6];
+    std::string label = file.read_str();
+    // All signalers should have some sort of mnemonic
+    // This forces the user of the editor to come up with names
+    if (label.empty()) {
+        label = "UNNAMED";
+    }
     file.read(b, 6);
-    auto signaler = std::make_unique<Signaler>(b[0], b[1], b[2], b[3]);
+    auto signaler = std::make_unique<Signaler>(label, b[0], b[1], b[2], b[3]);
     for (int i = 0; i < b[4]; ++i) {
         signaler->push_switch_mutual(static_cast<Switch*>(map_->view(file.read_point3())->modifier()));
     }

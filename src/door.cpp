@@ -50,8 +50,8 @@ bool Door::can_set_state(bool state, RoomMap* room_map) {
 }
 
 void Door::draw(GraphicsManager* gfx, FPoint3 p) {
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y));
-    model = glm::scale(model, glm::vec3(1, 0.1, 1));
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z + 0.5f, p.y));
+    model = glm::scale(model, glm::vec3(1, 0.1f, 1));
     gfx->set_model(model);
     if (dest_ && state()) {
         gfx->set_color(COLORS[BLUE]);

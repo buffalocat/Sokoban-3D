@@ -7,8 +7,9 @@
 #include "delta.h"
 #include "mapfile.h"
 
-Signaler::Signaler(int count, int threshold, bool persistent, bool active):
+Signaler::Signaler(std::string label, int count, int threshold, bool persistent, bool active):
 switches_ {}, switchables_ {},
+label_ {label},
 count_ {count}, threshold_ {threshold},
 active_ {active}, persistent_ {persistent} {}
 
@@ -58,6 +59,7 @@ void Signaler::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame, Mov
 
 void Signaler::serialize(MapFileO& file) {
     file << MapCode::Signaler;
+    file << label_;
     file << count_ << threshold_ << persistent_ << active_;
     file << switches_.size();
     file << switchables_.size();
@@ -69,8 +71,7 @@ void Signaler::serialize(MapFileO& file) {
     }
 }
 
-bool Signaler::remove_object(ObjectModifier* obj) {
+void Signaler::remove_object(ObjectModifier* obj) {
     switchables_.erase(std::remove(switchables_.begin(), switchables_.end(), dynamic_cast<Switchable*>(obj)), switchables_.end());
     switches_.erase(std::remove(switches_.begin(), switches_.end(), dynamic_cast<Switch*>(obj)), switches_.end());
-    return switchables_.empty() || switches_.empty();
 }

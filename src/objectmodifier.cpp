@@ -18,10 +18,6 @@ Point3 ObjectModifier::pos_above() {
     return parent_->pos_ + Point3{0,0,1};
 }
 
-int ObjectModifier::color() {
-    return parent_->color_;
-}
-
 bool ObjectModifier::pushable() {
     return parent_->pushable_;
 }

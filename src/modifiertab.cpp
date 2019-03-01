@@ -34,12 +34,20 @@ static ColorCycle model_color_cycle {};
 // Object Inspection
 static GameObject* selected_obj = nullptr;
 
+void ModifierTab::init() {
+    selected_obj = nullptr;
+}
+
 void mod_tab_options();
 void select_color_cycle(ColorCycle&);
 
 void ModifierTab::main_loop(EditorRoom* eroom) {
     ImGui::Text("The Modifier Tab");
     ImGui::Separator();
+    if (!eroom) {
+        ImGui::Text("No room loaded.");
+        return;
+    }
 
     ImGui::Checkbox("Inspect Mode##MOD_inspect", &inspect_mode);
 
@@ -128,7 +136,7 @@ void ModifierTab::select_color_cycle(ColorCycle& cycle) {
 
 
 void ModifierTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
-    RoomMap* room_map = eroom->room->room_map();
+    RoomMap* room_map = eroom->map();
     selected_obj = nullptr;
     if (!room_map->valid(pos)) {
         return;
@@ -169,7 +177,7 @@ void ModifierTab::handle_right_click(EditorRoom* eroom, Point3 pos) {
     if (inspect_mode) {
         return;
     }
-    RoomMap* room_map = eroom->room->room_map();
+    RoomMap* room_map = eroom->map();
     if (GameObject* obj = room_map->view(pos)) {
         if (ObjectModifier* mod = obj->modifier()) {
             mod->cleanup_on_destruction(room_map);

@@ -24,19 +24,27 @@ void SaveLoadTab::main_loop(EditorRoom* eroom) {
         }
     }
 
+    ImGui::Separator();
+
     static int width = 17;
     static int height = 13;
+    static int depth = 16;
     ImGui::InputInt("Room Width##SAVELOAD", &width);
     ImGui::InputInt("Room Height##SAVELOAD", &height);
+    ImGui::InputInt("Room Depth##SAVELOAD", &depth);
+
     clamp(&width, 1, MAX_ROOM_DIMS);
     clamp(&height, 1, MAX_ROOM_DIMS);
+    clamp(&depth, 1, MAX_ROOM_DIMS);
 
     if (ImGui::Button("Create New Map##SAVELOAD")) {
         editor_->new_room(map_name_input, width, height);
     }
 
+    ImGui::Separator();
+
     static int current = 0;
-    const char* room_names[256];
+    const char* room_names[1024];
     int len = editor_->get_room_names(room_names);
     if (ImGui::ListBox("Loaded Maps##SAVELOAD", &current, room_names, len, len)) {
         editor_->set_active_room(std::string(room_names[current]));
@@ -50,6 +58,8 @@ void SaveLoadTab::main_loop(EditorRoom* eroom) {
         editor_->commit_current_room();
     }
 
+    ImGui::Separator();
+
     if (ImGui::Button("Save All Maps##SAVELOAD")) {
         editor_->commit_all();
     }
@@ -60,7 +70,7 @@ void SaveLoadTab::main_loop(EditorRoom* eroom) {
 }
 
 void SaveLoadTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
-    RoomMap* room_map = eroom->room->room_map();
+    RoomMap* room_map = eroom->map();
     if (!room_map->view(pos)) {
         auto player = room_map->view(eroom->start_pos);
         room_map->take(player);

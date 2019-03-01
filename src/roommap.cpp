@@ -326,13 +326,21 @@ void RoomMap::check_signalers(DeltaFrame* delta_frame, MoveProcessor* mp) {
     }
 }
 
-void RoomMap::remove_from_signalers(ObjectModifier* obj) {
+void RoomMap::remove_signaler(Signaler* rem) {
+    signalers_.erase(std::remove_if(signalers_.begin(), signalers_.end(),
+        [rem](std::unique_ptr<Signaler>& sig) {return sig.get() == rem;}), signalers_.end());
+}
+
+/*
+void RoomMap::remove_obj_from_signalers(ObjectModifier* obj) {
     if (!obj) {
         return;
     }
-    signalers_.erase(std::remove_if(signalers_.begin(), signalers_.end(),
-                                    [obj](std::unique_ptr<Signaler>& sig) {return sig->remove_object(obj);}), signalers_.end());
+    for (auto& sig : signalers_) {
+        sig->remove_object(obj);
+    }
 }
+*/
 
 void RoomMap::make_fall_trail(GameObject* block, int height, int drop) {
     effects_->push_trail(block, height, drop);

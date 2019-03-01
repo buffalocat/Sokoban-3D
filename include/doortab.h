@@ -10,6 +10,7 @@ class DoorTab: public EditorTab {
 public:
     DoorTab(EditorState*, GraphicsManager*);
     virtual ~DoorTab();
+
     void init();
     void main_loop(EditorRoom*);
     void handle_left_click(EditorRoom*, Point3);

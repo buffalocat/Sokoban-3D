@@ -21,6 +21,11 @@ void DoorTab::init() {
 
 void DoorTab::main_loop(EditorRoom* eroom) {
     ImGui::Text("The Door Tab");
+    ImGui::Separator();
+    if (!eroom) {
+        ImGui::Text("No room loaded.");
+        return;
+    }
 
     ImGui::Text("Click on a door to select it.");
     if (!entrance_) {
@@ -71,7 +76,7 @@ void DoorTab::main_loop(EditorRoom* eroom) {
         ImGui::Text("The exit position is also a door.");
         if (ImGui::Button("Link Both Ways#DOOR")) {
             entrance_->set_dest(exit_pos_, exit_name_);
-            exit_->set_dest(entrance_->pos(), eroom->room->name());
+            exit_->set_dest(entrance_->pos(), eroom->name());
             // We changed something remotely!
             editor_->get_room(exit_name_)->changed = true;
         }
@@ -82,7 +87,7 @@ void DoorTab::main_loop(EditorRoom* eroom) {
 }
 
 void DoorTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
-    Door* door = dynamic_cast<Door*>(eroom->room->room_map()->view(pos)->modifier());
+    Door* door = dynamic_cast<Door*>(eroom->map()->view(pos)->modifier());
     if (door) {
         entrance_ = door;
     }

@@ -47,9 +47,7 @@ void Signaler::toggle() {
 
 void Signaler::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame, MoveProcessor* mp) {
     if (!(active_ && persistent_) && ((count_ >= threshold_) != active_)) {
-        if (delta_frame) {
-            delta_frame->push(std::make_unique<SignalerToggleDelta>(this));
-        }
+        delta_frame->push(std::make_unique<SignalerToggleDelta>(this));
         active_ = !active_;
         for (Switchable* obj : switchables_) {
             obj->receive_signal(active_, room_map, delta_frame, mp);

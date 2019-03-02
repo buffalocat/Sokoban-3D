@@ -81,6 +81,32 @@ private:
 };
 
 
+class PutDelta: public Delta {
+public:
+    PutDelta(GameObject* obj, Point3 pos, RoomMap* room_map);
+    ~PutDelta();
+    void revert();
+
+private:
+    GameObject* obj_;
+    Point3 pos_;
+    RoomMap* map_;
+};
+
+
+class TakeDelta: public Delta {
+public:
+    TakeDelta(GameObject* obj, Point3 pos, RoomMap* room_map);
+    ~TakeDelta();
+    void revert();
+
+private:
+    GameObject* obj_;
+    Point3 pos_;
+    RoomMap* map_;
+};
+
+
 class MotionDelta: public Delta {
 public:
     MotionDelta(GameObject* obj, Point3 dpos, RoomMap* room_map);
@@ -146,13 +172,12 @@ private:
 
 class SwitchableDelta: public Delta {
 public:
-    SwitchableDelta(Switchable* obj, bool active, bool waiting, RoomMap* room_map);
+    SwitchableDelta(Switchable* obj, bool active, bool waiting);
     ~SwitchableDelta();
     void revert();
 
 private:
     Switchable* obj_;
-    RoomMap* map_;
     bool active_;
     bool waiting_;
 };
@@ -175,7 +200,7 @@ public:
     void revert();
 
 private:
-    Signaler* obj_;
+    Signaler* sig_;
 };
 
 

@@ -34,6 +34,7 @@ public:
 
     // TODO: make this pure virtual, with no Point arg
     virtual void draw(GraphicsManager*) = 0;
+    void draw_force_indicators(GraphicsManager*, glm::mat4& model);
 
     virtual void setup_on_put(RoomMap*);
     virtual void cleanup_on_take(RoomMap*);

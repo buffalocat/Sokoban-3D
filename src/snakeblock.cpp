@@ -103,6 +103,7 @@ void SnakeBlock::draw(GraphicsManager* gfx) {
         gfx->set_tex(Texture::Blank);
         gfx->draw_cube();
     }
+    draw_force_indicators(gfx, model);
     for (auto link : links_) {
         FPoint3 q = link->real_pos();
         FPoint3 d {q.x - p.x, q.y - p.y, 0};
@@ -124,19 +125,23 @@ bool SnakeBlock::in_links(SnakeBlock* sb) {
 }
 
 void SnakeBlock::add_link(SnakeBlock* sb, DeltaFrame* delta_frame) {
+    add_link_quiet(sb);
+    delta_frame->push(std::make_unique<AddLinkDelta>(this, sb));
+}
+
+void SnakeBlock::add_link_quiet(SnakeBlock* sb) {
     links_.push_back(sb);
     sb->links_.push_back(this);
-    if (delta_frame) {
-        delta_frame->push(std::make_unique<AddLinkDelta>(this, sb));
-    }
 }
 
 void SnakeBlock::remove_link(SnakeBlock* sb, DeltaFrame* delta_frame) {
+    remove_link_quiet(sb);
+    delta_frame->push(std::make_unique<RemoveLinkDelta>(this, sb));
+}
+
+void SnakeBlock::remove_link_quiet(SnakeBlock* sb) {
     links_.erase(std::find(links_.begin(), links_.end(), sb));
     sb->links_.erase(std::find(sb->links_.begin(), sb->links_.end(), this));
-    if (delta_frame) {
-        delta_frame->push(std::make_unique<RemoveLinkDelta>(this, sb));
-    }
 }
 
 void SnakeBlock::check_add_local_links(RoomMap* room_map, DeltaFrame* delta_frame) {

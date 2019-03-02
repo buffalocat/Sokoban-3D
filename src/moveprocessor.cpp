@@ -20,6 +20,9 @@ frames_ {0}, state_ {MoveStepType::Horizontal} {}
 MoveProcessor::~MoveProcessor() {}
 
 bool MoveProcessor::try_move(Player* player, Point3 dir) {
+    if (!delta_frame_) {
+        throw NullDeltaFrameException {};
+    }
     if (player->state_ == RidingState::Bound) {
         move_bound(player, dir);
     } else {
@@ -44,9 +47,7 @@ void MoveProcessor::move_bound(Player* player, Point3 dir) {
     if (adj && car->color_ == adj->color_) {
         map_->take(player);
         player->set_linear_animation(dir);
-        if (delta_frame_) {
-            delta_frame_->push(std::make_unique<MotionDelta>(player, dir, map_));
-        }
+        delta_frame_->push(std::make_unique<MotionDelta>(player, dir, map_));
         moving_blocks_.push_back(player);
         player->shift_pos_from_animation();
         map_->put(player);
@@ -76,13 +77,14 @@ void MoveProcessor::abort() {
 }
 
 void MoveProcessor::color_change(Player* player) {
+    if (!delta_frame_) {
+        throw NullDeltaFrameException {};
+    }
     Car* car = player->get_car(map_, false);
     if (!(car && car->cycle_color(false))) {
         return;
     }
-    if (delta_frame_) {
-        delta_frame_->push(std::make_unique<ColorChangeDelta>(car));
-    }
+    delta_frame_->push(std::make_unique<ColorChangeDelta>(car));
     fall_check_.push_back(car->parent_);
     for (Point3 d : DIRECTIONS) {
         if (GameObject* block = map_->view(car->shifted_pos(d))) {
@@ -93,6 +95,9 @@ void MoveProcessor::color_change(Player* player) {
 }
 
 void MoveProcessor::begin_fall_cycle() {
+    if (!delta_frame_) {
+        throw NullDeltaFrameException {};
+    }
     // TODO: "split" this loop to allow for animation in between fall steps!
     while (!fall_check_.empty()) {
         FallStepProcessor(map_, delta_frame_, std::move(fall_check_)).run();
@@ -102,6 +107,9 @@ void MoveProcessor::begin_fall_cycle() {
 }
 
 void MoveProcessor::perform_switch_checks() {
+    if (!delta_frame_) {
+        throw NullDeltaFrameException {};
+    }
     map_->alert_activated_listeners(delta_frame_, this);
     map_->reset_local_state();
     map_->check_signalers(delta_frame_, this);

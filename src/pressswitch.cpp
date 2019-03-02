@@ -30,9 +30,7 @@ void PressSwitch::check_send_signal(RoomMap* room_map, DeltaFrame* delta_frame) 
         return;
     }
     if (should_toggle(room_map)) {
-        if (delta_frame) {
-            delta_frame->push(std::make_unique<SwitchToggleDelta>(this));
-        }
+        delta_frame->push(std::make_unique<SwitchToggleDelta>(this));
         toggle();
     }
 }
@@ -55,9 +53,6 @@ void PressSwitch::cleanup_on_take(RoomMap* room_map) {
 }
 
 void PressSwitch::draw(GraphicsManager* gfx, FPoint3 p) {
-    gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
-    gfx->set_color(COLORS[GREY]);
-    gfx->draw_cube();
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z + 0.5, p.y));
     model = glm::scale(model, glm::vec3(0.9f, 0.1f, 0.9f));
     gfx->set_model(model);

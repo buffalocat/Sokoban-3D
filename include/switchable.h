@@ -18,11 +18,10 @@ public:
 
     void push_signaler(Signaler*);
     void connect_to_signalers();
-    void set_aw(bool active, bool waiting, RoomMap*);
     bool state();
     virtual bool can_set_state(bool state, RoomMap*) = 0;
     void receive_signal(bool signal, RoomMap*, DeltaFrame*, MoveProcessor*);
-    virtual void apply_state_change(RoomMap*, MoveProcessor*);
+    virtual void apply_state_change(RoomMap*, DeltaFrame*, MoveProcessor*);
     void check_waiting(RoomMap*, DeltaFrame*, MoveProcessor*);
 
     virtual void cleanup_on_destruction(RoomMap* room_map);
@@ -36,6 +35,7 @@ protected:
     std::vector<Signaler*> signalers_;
 
     friend class ModifierTab;
+    friend class SwitchableDelta;
 };
 
 

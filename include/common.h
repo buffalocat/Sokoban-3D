@@ -95,6 +95,7 @@ enum {
     YELLOW = 10,
     GREY = 11,
     DARK_GREY = 12,
+    WHITE = 13,
 };
 
 // NOTE: the order matters here, for serialization reasons!

@@ -72,9 +72,9 @@ void PlayingState::handle_input() {
             if (move_processor_) {
                 move_processor_->abort();
                 move_processor_.reset(nullptr);
-                room_->room_map()->reset_local_state();
                 delta_frame_->revert();
                 delta_frame_ = std::make_unique<DeltaFrame>();
+                room_->room_map()->reset_local_state();
                 if (player_) {
                     room_->set_cam_pos(player_->pos_);
                 }

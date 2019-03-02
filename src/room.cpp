@@ -21,7 +21,7 @@
 #include "mapfile.h"
 
 Room::Room(std::string name): name_ {name},
-map_ {}, camera_ {}, offset_pos_ {0,0} {}
+map_ {}, camera_ {}, offset_pos_ {0,0,0} {}
 
 Room::~Room() {}
 
@@ -193,10 +193,10 @@ void Room::read_objects(MapFileI& file) {
         switch (static_cast<ObjCode>(b)) {
         CASE_OBJCODE(PushBlock)
         CASE_OBJCODE(SnakeBlock)
+        CASE_OBJCODE(GateBody)
         // Some Object types should never actually be serialized (as "Objects")
         case ObjCode::Wall:
         case ObjCode::Player:
-        case ObjCode::GateBody:
             break;
         case ObjCode::NONE:
             return;
@@ -256,11 +256,11 @@ void Room::read_snake_link(MapFileI& file) {
     SnakeBlock* sb = static_cast<SnakeBlock*>(map_->view({b[0], b[1], b[2]}));
     // Linked right
     if (b[3] & 1) {
-        sb->add_link(static_cast<SnakeBlock*>(map_->view({b[0]+1, b[1], b[2]})), nullptr);
+        sb->add_link_quiet(static_cast<SnakeBlock*>(map_->view({b[0]+1, b[1], b[2]})));
     }
     // Linked down
     if (b[3] & 2) {
-        sb->add_link(static_cast<SnakeBlock*>(map_->view({b[0], b[1]+1, b[2]})), nullptr);
+        sb->add_link_quiet(static_cast<SnakeBlock*>(map_->view({b[0], b[1]+1, b[2]})));
     }
 }
 

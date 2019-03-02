@@ -62,6 +62,16 @@ void UndoStack::reset() {
     size_ = 0;
 }
 
+
+CreationDelta::CreationDelta(GameObject* obj, RoomMap* room_map): obj_ {obj}, map_ {room_map} {}
+
+CreationDelta::~CreationDelta() {}
+
+void CreationDelta::revert() {
+    map_->uncreate(obj_);
+}
+
+
 //TODO: make sure DeletionDelta is right
 DeletionDelta::DeletionDelta(GameObject* obj, RoomMap* room_map):
 obj_ {obj}, map_ {room_map} {}
@@ -73,12 +83,28 @@ void DeletionDelta::revert() {
 }
 
 
-CreationDelta::CreationDelta(GameObject* obj, RoomMap* room_map): obj_ {obj}, map_ {room_map} {}
+PutDelta::PutDelta(GameObject* obj, Point3 pos, RoomMap* room_map):
+obj_ {obj}, pos_ {pos}, map_ {room_map} {}
 
-CreationDelta::~CreationDelta() {}
+PutDelta::~PutDelta() {}
 
-void CreationDelta::revert() {
-    map_->uncreate(obj_);
+void PutDelta::revert() {
+    map_->just_take(obj_);
+    obj_->pos_ = pos_;
+}
+
+
+// NOTE: A Taken (intangible) object won't have its position updated
+// until it has been Put back into the map, so there's no need
+// to record its old position in the delta.
+TakeDelta::TakeDelta(GameObject* obj, Point3 pos, RoomMap* room_map):
+obj_ {obj}, pos_ {pos}, map_ {room_map} {}
+
+TakeDelta::~TakeDelta() {}
+
+void TakeDelta::revert() {
+    obj_->pos_ = pos_;
+    map_->just_put(obj_);
 }
 
 
@@ -88,7 +114,7 @@ obj_ {obj}, dpos_ {dpos}, map_ {room_map} {}
 MotionDelta::~MotionDelta() {}
 
 void MotionDelta::revert() {
-    map_->shift(obj_, -dpos_, nullptr);
+    map_->just_shift(obj_, -dpos_);
 }
 
 
@@ -98,23 +124,25 @@ objs_ {objs}, dpos_ {dpos}, map_ {room_map} {}
 BatchMotionDelta::~BatchMotionDelta() {}
 
 void BatchMotionDelta::revert() {
-    map_->batch_shift(objs_, -dpos_, nullptr);
+    map_->just_batch_shift(objs_, -dpos_);
 }
+
 
 AddLinkDelta::AddLinkDelta(SnakeBlock* a, SnakeBlock* b): a_ {a}, b_ {b} {}
 
 AddLinkDelta::~AddLinkDelta() {}
 
 void AddLinkDelta::revert() {
-    a_->remove_link(b_, nullptr);
+    a_->remove_link_quiet(b_);
 }
+
 
 RemoveLinkDelta::RemoveLinkDelta(SnakeBlock* a, SnakeBlock* b): a_ {a}, b_ {b} {}
 
 RemoveLinkDelta::~RemoveLinkDelta() {}
 
 void RemoveLinkDelta::revert() {
-    a_->add_link(b_, nullptr);
+    a_->add_link_quiet(b_);
 }
 
 
@@ -140,13 +168,14 @@ void DoorMoveDelta::revert() {
 }
 
 
-SwitchableDelta::SwitchableDelta(Switchable* obj, bool active, bool waiting, RoomMap* room_map):
-obj_ {obj}, map_ {room_map}, active_ {active}, waiting_ {waiting} {}
+SwitchableDelta::SwitchableDelta(Switchable* obj, bool active, bool waiting):
+obj_ {obj}, active_ {active}, waiting_ {waiting} {}
 
 SwitchableDelta::~SwitchableDelta() {}
 
 void SwitchableDelta::revert() {
-    obj_->set_aw(active_, waiting_, map_);
+    obj_->active_ = active_;
+    obj_->waiting_ = waiting_;
 }
 
 
@@ -159,12 +188,12 @@ void SwitchToggleDelta::revert() {
 }
 
 
-SignalerToggleDelta::SignalerToggleDelta(Signaler* obj): obj_ {obj} {}
+SignalerToggleDelta::SignalerToggleDelta(Signaler* sig): sig_ {sig} {}
 
 SignalerToggleDelta::~SignalerToggleDelta() {}
 
 void SignalerToggleDelta::revert() {
-    obj_->toggle();
+    sig_->toggle();
 }
 
 

@@ -4,6 +4,9 @@
 #include "gameobject.h"
 #include "graphicsmanager.h"
 
+#include "roommap.h"
+#include "moveprocessor.h"
+
 MapLocation::MapLocation(Point3 p, std::string room_name): pos {p}, name {room_name} {}
 
 Door::Door(GameObject* parent, bool def, bool active): Switchable(parent, def, active, false), dest_ {} {}
@@ -47,6 +50,19 @@ void Door::relation_serialize(MapFileO& file) {
 
 bool Door::can_set_state(bool state, RoomMap* room_map) {
     return true;
+}
+
+void Door::map_callback(RoomMap* room_map, DeltaFrame* delta_frame, MoveProcessor* mp) {
+    // TODO: Tell the mp to try door
+}
+
+void Door::setup_on_put(RoomMap* room_map) {
+    room_map->add_listener(this, pos_above());
+    room_map->activate_listener_of(this);
+}
+
+void Door::cleanup_on_take(RoomMap* room_map) {
+    room_map->remove_listener(this, pos_above());
 }
 
 void Door::draw(GraphicsManager* gfx, FPoint3 p) {

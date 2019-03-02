@@ -155,30 +155,47 @@ void RoomMap::put(GameObject* obj) {
     activate_listeners_at(obj->pos_);
 }
 
+void RoomMap::take_loud(GameObject* obj, DeltaFrame* delta_frame) {
+    delta_frame->push(std::make_unique<TakeDelta>(obj, obj->pos_, this));
+    take(obj);
+}
+
+void RoomMap::put_loud(GameObject* obj, DeltaFrame* delta_frame) {
+    // TODO: check whether pos_ is necessary
+    delta_frame->push(std::make_unique<PutDelta>(obj, obj->pos_, this));
+    put(obj);
+}
+
 void RoomMap::shift(GameObject* obj, Point3 dpos, DeltaFrame* delta_frame) {
     take(obj);
     obj->pos_ += dpos;
     put(obj);
-    // NOTE: putting animation here is a bit of a hack, but it works!
-    // Animation only gets set if we're not undoing!
-    if (delta_frame) {
-        obj->set_linear_animation(dpos);
-        delta_frame->push(std::make_unique<MotionDelta>(obj, dpos, this));
-    }
+    obj->set_linear_animation(dpos);
+    delta_frame->push(std::make_unique<MotionDelta>(obj, dpos, this));
 }
 
 void RoomMap::batch_shift(std::vector<GameObject*> objs, Point3 dpos, DeltaFrame* delta_frame) {
     for (auto obj : objs) {
-
-        if (delta_frame) {
-            obj->set_linear_animation(dpos);
-        }
+        obj->set_linear_animation(dpos);
         take(obj);
         obj->pos_ += dpos;
         put(obj);
     }
-    if (delta_frame) {
-        delta_frame->push(std::make_unique<BatchMotionDelta>(std::move(objs), dpos, this));
+    delta_frame->push(std::make_unique<BatchMotionDelta>(std::move(objs), dpos, this));
+}
+
+// "just" means "don't do any checks, animations, deltas"
+void RoomMap::just_shift(GameObject* obj, Point3 dpos) {
+    just_take(obj);
+    obj->pos_ += dpos;
+    just_put(obj);
+}
+
+void RoomMap::just_batch_shift(std::vector<GameObject*> objs, Point3 dpos) {
+    for (auto obj : objs) {
+        just_take(obj);
+        obj->pos_ += dpos;
+        just_put(obj);
     }
 }
 
@@ -249,18 +266,14 @@ void RoomMap::activate_listener_of(ObjectModifier* obj) {
 
 
 void RoomMap::activate_listeners_at(Point3 pos) {
-    //std::cout << "Activating Listeners at " << pos << "!" << std::endl;
     if (listeners_.count(pos)) {
         auto& cur_lis = listeners_[pos];
-        //std::cout << "There were " << cur_lis.size() << std::endl;
         activated_listeners_.insert(cur_lis.begin(), cur_lis.end());
     }
 }
 
 void RoomMap::alert_activated_listeners(DeltaFrame* delta_frame, MoveProcessor* mp) {
-    //std::cout << "Alerting Listeners!" << std::endl;
     for (ObjectModifier* obj : activated_listeners_) {
-        //std::cout << "One got alerted!!" << std::endl;
         obj->map_callback(this, delta_frame, mp);
     }
 }
@@ -290,7 +303,10 @@ void RoomMap::draw_layer(GraphicsManager* gfx, int z) {
 }
 
 void RoomMap::set_initial_state(bool editor_mode) {
-    MoveProcessor mp = MoveProcessor(this, nullptr);
+    // Using a "fake" DeltaFrame just this once means we
+    // don't have to do a bunch of redundant checks during play
+    DeltaFrame dummy_df {};
+    MoveProcessor mp = MoveProcessor(this, &dummy_df);
     for (auto& layer : layers_) {
         for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
             GameObject* obj = obj_array_[it->id()];
@@ -301,7 +317,7 @@ void RoomMap::set_initial_state(bool editor_mode) {
                 mp.add_to_fall_check(obj);
             }
             if (SnakeBlock* sb = dynamic_cast<SnakeBlock*>(obj)) {
-                sb->check_add_local_links(this, nullptr);
+                sb->check_add_local_links(this, &dummy_df);
             }
             if (ObjectModifier* mod = obj->modifier()) {
                 activate_listener_of(mod);

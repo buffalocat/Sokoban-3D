@@ -36,6 +36,8 @@ public:
     void just_put(GameObject*);
     void take(GameObject*);
     void put(GameObject*);
+    void take_loud(GameObject*, DeltaFrame*);
+    void put_loud(GameObject*, DeltaFrame*);
 
     void create(std::unique_ptr<GameObject>);
     void create(std::unique_ptr<GameObject>, DeltaFrame*);
@@ -46,6 +48,8 @@ public:
     void destroy(GameObject*, DeltaFrame*);
     void undestroy(GameObject*);
 
+    void just_shift(GameObject*, Point3);
+    void just_batch_shift(std::vector<GameObject*>, Point3);
     void shift(GameObject*, Point3, DeltaFrame*);
     void batch_shift(std::vector<GameObject*>, Point3, DeltaFrame*);
 

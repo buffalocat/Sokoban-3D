@@ -93,8 +93,8 @@ void GameObject::collect_sticky_component(RoomMap* room_map, Sticky sticky_level
         comp->blocks_.push_back(cur);
         cur->collect_sticky_links(room_map, sticky_level, to_check);
         cur->collect_special_links(room_map, sticky_level, to_check);
-        if (modifier_) {
-            modifier_->collect_sticky_links(room_map, sticky_level, to_check);
+        if (ObjectModifier* mod = cur->modifier()) {
+            mod->collect_sticky_links(room_map, sticky_level, to_check);
         }
     }
 }
@@ -137,5 +137,27 @@ FPoint3 GameObject::real_pos() {
         return pos_ + animation_->dpos();
     } else {
         return pos_;
+    }
+}
+
+void GameObject::draw_force_indicators(GraphicsManager* gfx, glm::mat4& model) {
+    gfx->set_tex(Texture::Blank);
+    if (!pushable_) {
+        gfx->set_color(COLORS[BLACK]);
+        gfx->set_model(glm::scale(model, glm::vec3(1.02, 0.6, 0.6)));
+        gfx->draw_cube();
+        gfx->set_model(glm::scale(model, glm::vec3(0.6, 1.02, 0.6)));
+        gfx->draw_cube();
+        gfx->set_model(glm::scale(model, glm::vec3(0.6, 0.6, 1.02)));
+        gfx->draw_cube();
+    }
+    if (!gravitable_) {
+        gfx->set_color(COLORS[WHITE]);
+        gfx->set_model(glm::scale(model, glm::vec3(1.04, 0.4, 0.4)));
+        gfx->draw_cube();
+        gfx->set_model(glm::scale(model, glm::vec3(0.4, 1.04, 0.4)));
+        gfx->draw_cube();
+        gfx->set_model(glm::scale(model, glm::vec3(0.4, 0.4, 1.04)));
+        gfx->draw_cube();
     }
 }

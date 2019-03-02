@@ -17,12 +17,11 @@ public:
     void serialize(MapFileO& file);
     static void deserialize(MapFileI&, RoomMap*, GameObject*);
 
+    void map_callback(RoomMap*, DeltaFrame*, MoveProcessor*);
     void collect_sticky_links(RoomMap*, Sticky, std::vector<GameObject*>&);
 
-    void map_callback(RoomMap*, DeltaFrame*, MoveProcessor*);
-
     bool can_set_state(bool state, RoomMap*);
-    void apply_state_change(RoomMap*, MoveProcessor*);
+    void apply_state_change(RoomMap*, DeltaFrame*, MoveProcessor*);
 
     void setup_on_put(RoomMap*);
     void cleanup_on_take(RoomMap*);
@@ -35,6 +34,7 @@ public:
 
 private:
     GateBody* body_;
+    bool alive_;
 };
 
 #endif // GATE_H

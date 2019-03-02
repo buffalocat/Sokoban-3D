@@ -23,7 +23,9 @@ public:
 
     bool in_links(SnakeBlock* sb);
     void add_link(SnakeBlock*, DeltaFrame*);
+    void add_link_quiet(SnakeBlock*);
     void remove_link(SnakeBlock*, DeltaFrame*);
+    void remove_link_quiet(SnakeBlock*);
 
     void draw(GraphicsManager*);
 

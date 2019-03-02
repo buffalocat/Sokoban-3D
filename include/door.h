@@ -37,6 +37,11 @@ public:
     void set_dest(Point3, std::string);
     MapLocation* dest();
 
+    void map_callback(RoomMap*, DeltaFrame*, MoveProcessor*);
+
+    void setup_on_put(RoomMap* );
+    void cleanup_on_take(RoomMap*);
+
     void draw(GraphicsManager*, FPoint3);
 
     std::unique_ptr<ObjectModifier> duplicate(GameObject*);

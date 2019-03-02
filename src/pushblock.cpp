@@ -6,7 +6,7 @@
 #include "graphicsmanager.h"
 
 PushBlock::PushBlock(Point3 pos, int color, bool pushable, bool gravitable, Sticky sticky):
-    GameObject(pos, color, pushable, gravitable), sticky_ {sticky} {}
+GameObject(pos, color, pushable, gravitable), sticky_ {sticky} {}
 
 PushBlock::~PushBlock() {}
 
@@ -59,6 +59,9 @@ void PushBlock::draw(GraphicsManager* gfx) {
         break;
     }
     gfx->draw_cube();
+    // TODO: once walls are a thing, make sure to turn this back on!
+    // Also, give walls a unique texture, maybe?
+    //draw_force_indicators(gfx, model);
     if (modifier_) {
         modifier()->draw(gfx, p);
     }

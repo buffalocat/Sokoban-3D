@@ -19,9 +19,9 @@ public:
     MoveProcessor(RoomMap*, DeltaFrame*);
     ~MoveProcessor();
 
+    struct NullDeltaFrameException : public std::exception {};
+
     bool try_move(Player*, Point3);
-    void move_bound(Player*, Point3);
-    void move_general(Player*, Point3);
     void color_change(Player*);
 
     void perform_switch_checks();
@@ -33,6 +33,9 @@ public:
     void abort();
 
 private:
+    void move_bound(Player*, Point3);
+    void move_general(Player*, Point3);
+
     std::vector<GameObject*> moving_blocks_;
     std::vector<GameObject*> fall_check_;
 

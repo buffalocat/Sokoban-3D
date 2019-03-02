@@ -10,10 +10,15 @@ class Gate;
 class GateBody: public PushBlock {
 public:
     GateBody(Gate* parent);
+    GateBody(Point3 pos, int color, bool pushable, bool gravitable);
     ~GateBody();
 
-    bool skip_serialization();
     ObjCode obj_code();
+    void serialize(MapFileO& file);
+    bool skip_serialization();
+    static std::unique_ptr<GameObject> deserialize(MapFileI& file);
+
+    void collect_special_links(RoomMap*, Sticky, std::vector<GameObject*>&);
 
     void draw(GraphicsManager*);
 

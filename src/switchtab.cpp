@@ -71,7 +71,7 @@ void SwitchTab::main_loop(EditorRoom* eroom) {
     for (int i = 0; i < switches->size(); ++i) {
         Switch* s = (*switches)[i];
         Point3 pos = s->pos();
-        ImGui::Text("%d at (%d,%d,%d)", (int)s->parent_->obj_code(), pos.x, pos.y, pos.z);
+        ImGui::Text("%s at (%d,%d,%d)", s->parent_->to_str().c_str(), pos.x, pos.y, pos.z);
         ImGui::SameLine();
         char buf[32];
         sprintf(buf, "Erase##SWITCH_a_%d", i);
@@ -86,7 +86,7 @@ void SwitchTab::main_loop(EditorRoom* eroom) {
     for (int i = 0; i < switchables->size(); ++i) {
         Switchable* s = (*switchables)[i];
         Point3 pos = s->pos();
-        ImGui::Text("%d at (%d,%d,%d)", (int)s->parent_->obj_code(), pos.x, pos.y, pos.z);
+        ImGui::Text("%s at (%d,%d,%d)", s->parent_->to_str().c_str(), pos.x, pos.y, pos.z);
         ImGui::SameLine();
         char buf[32];
         sprintf(buf, "Erase##SWITCH_b_%d", i);

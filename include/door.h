@@ -26,6 +26,7 @@ public:
     ~Door();
     Door(const Door&);
 
+    std::string name();
     ModCode mod_code();
     void serialize(MapFileO& file);
     static void deserialize(MapFileI&, RoomMap*, GameObject*);

@@ -13,6 +13,7 @@ public:
     SnakeBlock(Point3 pos, int color, bool pushable, bool gravitable, int ends);
     virtual ~SnakeBlock();
 
+    virtual std::string name();
     virtual ObjCode obj_code();
     void serialize(MapFileO& file);
     static std::unique_ptr<GameObject> deserialize(MapFileI& file);

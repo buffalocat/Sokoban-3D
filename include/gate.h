@@ -13,6 +13,7 @@ public:
     Gate(GameObject* parent, GateBody* body, int color, bool def, bool active, bool waiting);
     virtual ~Gate();
 
+    std::string name();
     ModCode mod_code();
     void serialize(MapFileO& file);
     static void deserialize(MapFileI&, RoomMap*, GameObject*);

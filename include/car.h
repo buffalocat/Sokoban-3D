@@ -11,6 +11,7 @@ public:
     Car(GameObject* parent, ColorCycle color_cycle);
     virtual ~Car();
 
+    std::string name();
     ModCode mod_code();
     void serialize(MapFileO& file);
     static void deserialize(MapFileI&, RoomMap*, GameObject*);

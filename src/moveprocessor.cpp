@@ -15,7 +15,7 @@
 MoveProcessor::MoveProcessor(RoomMap* room_map, DeltaFrame* delta_frame):
 fall_check_ {}, moving_blocks_ {},
 map_ {room_map}, delta_frame_ {delta_frame},
-frames_ {0}, state_ {MoveStepType::Horizontal} {}
+frames_ {0}, state_ {} {}
 
 MoveProcessor::~MoveProcessor() {}
 
@@ -23,6 +23,7 @@ bool MoveProcessor::try_move(Player* player, Point3 dir) {
     if (!delta_frame_) {
         throw NullDeltaFrameException {};
     }
+    state_ = MoveStep::Horizontal;
     if (player->state_ == RidingState::Bound) {
         move_bound(player, dir);
     } else {
@@ -98,6 +99,7 @@ void MoveProcessor::begin_fall_cycle() {
     if (!delta_frame_) {
         throw NullDeltaFrameException {};
     }
+    state_ = MoveStep::Fall;
     // TODO: "split" this loop to allow for animation in between fall steps!
     while (!fall_check_.empty()) {
         FallStepProcessor(map_, delta_frame_, std::move(fall_check_)).run();

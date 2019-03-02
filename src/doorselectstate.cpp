@@ -7,8 +7,8 @@
 
 // TODO: make sure the validity checks make sense
 
-DoorSelectState::DoorSelectState(Room* room, Point3 cam_pos, Point3* door_pos, Door** door, bool* valid):
-EditorBaseState(), room_ {room}, cam_pos_ {cam_pos}, door_pos_ {door_pos}, door_ {door}, valid_ {valid} {}
+DoorSelectState::DoorSelectState(Room* room, Point3 cam_pos, Point3* exit_pos):
+EditorBaseState(), room_ {room}, cam_pos_ {cam_pos}, exit_pos_ {exit_pos} {}
 
 DoorSelectState::~DoorSelectState() {}
 
@@ -23,10 +23,30 @@ void DoorSelectState::main_loop() {
     handle_keyboard_input(cam_pos_, room_);
     room_->draw(gfx_, cam_pos_, true, one_layer_);
 
-    if (!*valid_) {
+    Point3 mouse_pos = get_pos_from_mouse(cam_pos_);
+
+    if (mouse_pos.x == -1) {
+        ImGui::Text("Hover Pos: Out of Bounds");\
+    } else {
+        ImGui::Text("Hover Pos: (%d,%d,%d)", mouse_pos.x, mouse_pos.y, mouse_pos.z);
+        if (GameObject* obj = room_->map()->view(mouse_pos)) {
+            ImGui::Text(obj->to_str().c_str());
+        } else {
+            ImGui::Text("Empty");
+        }
+    }
+
+    ImGui::Separator();
+
+    if (exit_pos_->x == -1) {
         ImGui::Text("Destination not selected.");
     } else {
-        ImGui::Text("Destination Position: (%d,%d,%d)", door_pos_->x, door_pos_->y, door_pos_->z);
+        ImGui::Text("Destination Pos: (%d,%d,%d)", exit_pos_->x, exit_pos_->y, exit_pos_->z);
+        if (GameObject* obj = room_->map()->view(*exit_pos_)) {
+            ImGui::Text(obj->to_str().c_str());
+        } else {
+            ImGui::Text("Empty");
+        }
     }
     ImGui::Text("Press escape to return.");
 
@@ -34,11 +54,10 @@ void DoorSelectState::main_loop() {
 }
 
 void DoorSelectState::handle_left_click(Point3 pos) {
-    *door_pos_ = pos;
-    *valid_ = true;
-    if (GameObject* obj = room_->room_map()->view(*door_pos_)) {
-        *door_ = dynamic_cast<Door*>(obj->modifier());
+    if (pos.x == -1) {
+        return;
     }
+    *exit_pos_ = pos;
 }
 
 void DoorSelectState::handle_right_click(Point3 pos) {}

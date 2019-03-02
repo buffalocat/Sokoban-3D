@@ -14,6 +14,10 @@ PushBlock(pos, color, pushable, gravitable, Sticky::None), parent_ {} {}
 
 GateBody::~GateBody() {}
 
+std::string GateBody::name() {
+    return "GateBody";
+}
+
 ObjCode GateBody::obj_code() {
     return ObjCode::GateBody;
 }

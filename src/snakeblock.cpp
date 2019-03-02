@@ -14,6 +14,10 @@ GameObject(pos, color, pushable, gravitable), links_ {}, target_ {}, distance_ {
 
 SnakeBlock::~SnakeBlock() {}
 
+std::string SnakeBlock::name() {
+    return "SnakeBlock";
+}
+
 ObjCode SnakeBlock::obj_code() {
     return ObjCode::SnakeBlock;
 }

@@ -20,7 +20,7 @@ PlayingState::PlayingState(std::string name, Point3 pos, bool testing):
     testing_ {testing} {
     activate_room(name);
     init_player(pos);
-    room_->room_map()->set_initial_state(false);
+    room_->map()->set_initial_state(false);
 }
 
 PlayingState::~PlayingState() {}
@@ -28,7 +28,7 @@ PlayingState::~PlayingState() {}
 void PlayingState::init_player(Point3 pos) {
     RidingState rs;
     // TODO: fix this hack
-    GameObject* below = room_->room_map()->view({pos.x, pos.y, pos.z - 1});
+    GameObject* below = room_->map()->view({pos.x, pos.y, pos.z - 1});
     if (below) {
         if (dynamic_cast<Car*>(below->modifier())) {
             rs = RidingState::Riding;
@@ -40,7 +40,7 @@ void PlayingState::init_player(Point3 pos) {
     }
     auto player = std::make_unique<Player>(pos, rs);
     player_ = player.get();
-    room_->room_map()->create(std::move(player), nullptr);
+    room_->map()->create(std::move(player), nullptr);
 }
 
 void PlayingState::main_loop() {
@@ -74,7 +74,7 @@ void PlayingState::handle_input() {
                 move_processor_.reset(nullptr);
                 delta_frame_->revert();
                 delta_frame_ = std::make_unique<DeltaFrame>();
-                room_->room_map()->reset_local_state();
+                room_->map()->reset_local_state();
                 if (player_) {
                     room_->set_cam_pos(player_->pos_);
                 }
@@ -107,7 +107,7 @@ void PlayingState::handle_input() {
     if (ignore_input) {
         return;
     }
-    RoomMap* room_map = room_->room_map();
+    RoomMap* room_map = room_->map();
     // TODO: Make a real "death" flag/state
     // Don't allow other input if player is "dead"
     if (!dynamic_cast<Player*>(room_map->view(player_->pos_))) {
@@ -176,7 +176,7 @@ bool PlayingState::load_room(std::string name) {
     auto room = std::make_unique<Room>(name);
     room->load_from_file(*objs_, file);
     // Load dynamic component!
-    room->room_map()->set_initial_state(false);
+    room->map()->set_initial_state(false);
     loaded_rooms_[name] = std::move(room);
     return true;
 }
@@ -189,8 +189,8 @@ void PlayingState::use_door(MapLocation* dest) {
         load_room(dest->name);
     }
     Room* dest_room = loaded_rooms_[dest->name].get();
-    RoomMap* cur_map = room_->room_map();
-    RoomMap* dest_map = dest_room->room_map();
+    RoomMap* cur_map = room_->map();
+    RoomMap* dest_map = dest_room->map();
     if (dest_map->view(dest->pos + Point3{0,0,1})) {
         return;
     } else if (player_->state_ == RidingState::Riding && dest_map->view(dest->pos + Point3{0,0,2})) {

@@ -9,9 +9,11 @@ class RoomMap;
 class DeltaFrame;
 class SnakeBlock;
 
-enum class MoveStepType {
+enum class MoveStep {
     Horizontal = 1,
     Fall = 2,
+    DoorInt = 3,
+    DoorExt = 4,
 };
 
 class MoveProcessor {
@@ -43,7 +45,7 @@ private:
     DeltaFrame* delta_frame_;
 
     unsigned int frames_;
-    MoveStepType state_;
+    MoveStep state_;
 };
 
 #endif // MOVEPROCESSOR_H

@@ -7,6 +7,8 @@ class Wall: public PushBlock {
 public:
     Wall();
     ~Wall();
+
+    std::string name();
     ObjCode obj_code();
 
     bool skip_serialization();

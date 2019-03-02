@@ -8,6 +8,10 @@ Car::Car(GameObject* parent, ColorCycle color_cycle): ObjectModifier(parent), co
 
 Car::~Car() {}
 
+std::string Car::name() {
+    return "Car";
+}
+
 ModCode Car::mod_code() {
     return ModCode::Car;
 }

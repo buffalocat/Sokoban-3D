@@ -5,7 +5,7 @@
 		<Option title="Sokoban-3D" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="MoveProcessing\;ObjectModifiers\;GameObjects\;GameStates\;GameStates\EditorTabs\;" />
+		<Option virtualFolders="EditorTabs\;MoveProcessing\;ObjectModifiers\;GameObjects\;GameStates\;" />
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/Debug/Sokoban-3D" prefix_auto="1" extension_auto="1" />
@@ -143,7 +143,7 @@
 			<Option virtualFolder="GameStates/" />
 		</Unit>
 		<Unit filename="src/doortab.cpp">
-			<Option virtualFolder="GameStates/EditorTabs/" />
+			<Option virtualFolder="EditorTabs/" />
 		</Unit>
 		<Unit filename="src/editorbasestate.cpp">
 			<Option virtualFolder="GameStates/" />
@@ -152,7 +152,7 @@
 			<Option virtualFolder="GameStates/" />
 		</Unit>
 		<Unit filename="src/editortab.cpp">
-			<Option virtualFolder="GameStates/EditorTabs/" />
+			<Option virtualFolder="EditorTabs/" />
 		</Unit>
 		<Unit filename="src/effects.cpp" />
 		<Unit filename="src/fallstepprocessor.cpp">
@@ -181,7 +181,7 @@
 		<Unit filename="src/mapfile.cpp" />
 		<Unit filename="src/maplayer.cpp" />
 		<Unit filename="src/modifiertab.cpp">
-			<Option virtualFolder="GameStates/EditorTabs/" />
+			<Option virtualFolder="EditorTabs/" />
 		</Unit>
 		<Unit filename="src/moveprocessor.cpp">
 			<Option virtualFolder="MoveProcessing/" />
@@ -190,7 +190,7 @@
 			<Option virtualFolder="ObjectModifiers/" />
 		</Unit>
 		<Unit filename="src/objecttab.cpp">
-			<Option virtualFolder="GameStates/EditorTabs/" />
+			<Option virtualFolder="EditorTabs/" />
 		</Unit>
 		<Unit filename="src/player.cpp">
 			<Option virtualFolder="GameObjects/" />
@@ -208,7 +208,7 @@
 		<Unit filename="src/room.cpp" />
 		<Unit filename="src/roommap.cpp" />
 		<Unit filename="src/saveloadtab.cpp">
-			<Option virtualFolder="GameStates/EditorTabs/" />
+			<Option virtualFolder="EditorTabs/" />
 		</Unit>
 		<Unit filename="src/shader.cpp" />
 		<Unit filename="src/signaler.cpp">
@@ -224,7 +224,7 @@
 			<Option virtualFolder="ObjectModifiers/" />
 		</Unit>
 		<Unit filename="src/switchtab.cpp">
-			<Option virtualFolder="GameStates/EditorTabs/" />
+			<Option virtualFolder="EditorTabs/" />
 		</Unit>
 		<Unit filename="src/wall.cpp">
 			<Option virtualFolder="GameObjects/" />

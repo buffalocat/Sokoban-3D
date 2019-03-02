@@ -25,6 +25,18 @@ GameObject::GameObject(const GameObject& obj):
     pos_ {obj.pos_}, id_ {-1},
     color_ {obj.color_}, pushable_ {obj.pushable_}, gravitable_ {obj.gravitable_} {}
 
+std::string GameObject::to_str() {
+    std::string mod_str {""};
+    if (modifier_) {
+        mod_str = "-" + modifier_->name();
+    }
+    char buf[64] = "";
+    // TODO: Make this less ugly
+    // This is only used to make the editor more user friendly, so it's not a huge deal.
+    sprintf(buf, "%s:%s:%s%s", pushable_ ? "P" : "NP", gravitable_ ? "G" : "NG", name().c_str(), mod_str.c_str());
+    return std::string{buf};
+}
+
 bool GameObject::relation_check() {
     return false;
 }

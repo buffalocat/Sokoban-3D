@@ -42,7 +42,7 @@ bool Room::valid(Point3 pos) {
     return (map_ && map_->valid(pos));
 }
 
-RoomMap* Room::room_map() {
+RoomMap* Room::map() {
     return map_.get();
 }
 

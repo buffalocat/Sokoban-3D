@@ -10,6 +10,10 @@ Player::Player(Point3 pos, RidingState state): PushBlock(pos, PINK, true, true, 
 
 Player::~Player() {}
 
+std::string Player::name() {
+    return "Player";
+}
+
 ObjCode Player::obj_code() {
     return ObjCode::Player;
 }

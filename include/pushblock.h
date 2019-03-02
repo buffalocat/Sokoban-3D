@@ -9,6 +9,7 @@ public:
     PushBlock(Point3 pos, int color, bool pushable, bool gravitable, Sticky sticky);
     virtual ~PushBlock();
 
+    virtual std::string name();
     virtual ObjCode obj_code();
     virtual void serialize(MapFileO& file);
     static std::unique_ptr<GameObject> deserialize(MapFileI& file);

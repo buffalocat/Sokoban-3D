@@ -54,7 +54,7 @@ int main(void) {
 
     // It's convenient to keep the demo code in here,
     // for when we want to explore ImGui features
-    bool show_demo_window = false;
+    bool show_demo_window = true;
 
     glfwSwapInterval(0);
 

@@ -15,6 +15,10 @@ Door::~Door() {}
 
 Door::Door(const Door& d): Switchable(d.parent_, d.default_, d.active_, d.waiting_), dest_ {} {}
 
+std::string Door::name() {
+    return "Door";
+}
+
 ModCode Door::mod_code() {
     return ModCode::Door;
 }

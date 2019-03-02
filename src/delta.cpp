@@ -159,8 +159,8 @@ state_ {state}, room_ {room}, pos_ {pos} {}
 DoorMoveDelta::~DoorMoveDelta() {}
 
 void DoorMoveDelta::revert() {
-    RoomMap* cur_map = state_->room_->room_map();
-    RoomMap* dest_map = room_->room_map();
+    RoomMap* cur_map = state_->room_->map();
+    RoomMap* dest_map = room_->map();
     Player* player = state_->player_;
     state_->room_ = room_;
     cur_map->take(player);

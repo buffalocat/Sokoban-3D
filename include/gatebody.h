@@ -13,6 +13,7 @@ public:
     GateBody(Point3 pos, int color, bool pushable, bool gravitable);
     ~GateBody();
 
+    std::string name();
     ObjCode obj_code();
     void serialize(MapFileO& file);
     bool skip_serialization();

@@ -10,6 +10,10 @@ GameObject(pos, color, pushable, gravitable), sticky_ {sticky} {}
 
 PushBlock::~PushBlock() {}
 
+std::string PushBlock::name() {
+    return "PushBlock";
+}
+
 ObjCode PushBlock::obj_code() {
     return ObjCode::PushBlock;
 }

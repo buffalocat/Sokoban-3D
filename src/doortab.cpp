@@ -8,16 +8,14 @@
 #include "doorselectstate.h"
 
 DoorTab::DoorTab(EditorState* editor, GraphicsManager* gfx): EditorTab(editor, gfx),
-entrance_ {}, exit_name_ {""}, exit_pos_ {0, 0, 0}, exit_ {}, valid_exit_pos_ {false} {}
+entrance_ {}, exit_name_ {""}, exit_pos_ {-1,-1,-1} {}
 
 DoorTab::~DoorTab() {}
 
 void DoorTab::init() {
     entrance_ = nullptr;
     exit_name_ = "";
-    exit_pos_ = {0, 0, 0};
-    exit_ = nullptr;
-    valid_exit_pos_ = false;
+    exit_pos_ = {-1,-1,-1};
 }
 
 void DoorTab::main_loop(EditorRoom* eroom) {
@@ -49,10 +47,8 @@ void DoorTab::main_loop(EditorRoom* eroom) {
     int len = editor_->get_room_names(room_names);
     if (ImGui::ListBox("Loaded Maps##DOOR", &current, room_names, len, len)) {
         if (exit_name_.compare(room_names[current])) {
-            exit_ = nullptr;
             exit_name_ = std::string(room_names[current]);
-            exit_pos_ = {0, 0, 0};
-            valid_exit_pos_ = false;
+            exit_pos_ = {-1,-1,-1};
         }
     }
 
@@ -65,26 +61,31 @@ void DoorTab::main_loop(EditorRoom* eroom) {
 
     if (ImGui::Button("Select Destination Position##DOOR")) {
         EditorRoom* dest_room = editor_->get_room(exit_name_);
-        auto select_state = std::make_unique<DoorSelectState>(dest_room->room.get(), dest_room->start_pos, &exit_pos_, &exit_, &valid_exit_pos_);
+        auto select_state = std::make_unique<DoorSelectState>(dest_room->room.get(), dest_room->start_pos, &exit_pos_);
         editor_->create_child(std::move(select_state));
     }
 
-    if (!valid_exit_pos_) {
+    if (exit_pos_.x == -1) {
         ImGui::Text("No destination selected");
         return;
     }
 
     ImGui::Text("Destination Position: (%d,%d,%d)", exit_pos_.x, exit_pos_.y, exit_pos_.z);
-
-    if (exit_) {
-        ImGui::Text("The exit position is also a door.");
-        if (ImGui::Button("Link Both Ways##DOOR")) {
-            entrance_->set_dest(exit_pos_, exit_name_);
-            exit_->set_dest(entrance_->pos(), eroom->name());
-            // We changed something remotely!
-            editor_->get_room(exit_name_)->changed = true;
+    if (GameObject* obj = eroom->map()->view(exit_pos_)) {
+        ImGui::Text(obj->to_str().c_str());
+        if (Door* exit_door = dynamic_cast<Door*>(obj->modifier())) {
+            ImGui::Text("The exit position is also a door.");
+            if (ImGui::Button("Link Both Ways##DOOR")) {
+                entrance_->set_dest(exit_pos_, exit_name_);
+                exit_door->set_dest(entrance_->pos(), eroom->name());
+                // We changed something remotely!
+                editor_->get_room(exit_name_)->changed = true;
+            }
         }
+    } else {
+        ImGui::Text("Empty");
     }
+
     if (ImGui::Button("Link One Way##DOOR")) {
         entrance_->set_dest(exit_pos_, exit_name_);
     }

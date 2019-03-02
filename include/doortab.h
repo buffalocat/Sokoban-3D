@@ -20,7 +20,6 @@ private:
     std::string exit_name_;
     Point3 exit_pos_;
     Door* exit_;
-    bool valid_exit_pos_;
 };
 
 #endif // DOORTAB_H

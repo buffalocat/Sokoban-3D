@@ -6,6 +6,10 @@ Wall::Wall(): PushBlock({0,0,0}, 0, false, false, Sticky::None) {}
 
 Wall::~Wall() {}
 
+std::string Wall::name() {
+    return "Wall";
+}
+
 ObjCode Wall::obj_code() {
     return ObjCode::Wall;
 }

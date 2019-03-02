@@ -24,6 +24,9 @@ public:
     virtual ~GameObject();
     GameObject(const GameObject&);
 
+    std::string to_str();
+    virtual std::string name() = 0;
+
     virtual ObjCode obj_code() = 0;
     virtual bool skip_serialization();
     virtual void serialize(MapFileO& file) = 0;

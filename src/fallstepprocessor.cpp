@@ -1,14 +1,17 @@
 #include "fallstepprocessor.h"
 
+#include <algorithm>
+
 #include "common.h"
 #include "component.h"
 #include "gameobject.h"
 #include "roommap.h"
 #include "delta.h"
+#include "snakeblock.h"
 
 // Move fall_check directly from MoveProcessor into FallStepProcessor
 FallStepProcessor::FallStepProcessor(RoomMap* room_map, DeltaFrame* delta_frame, std::vector<GameObject*>&& fall_check):
-fall_comps_unique_ {}, fall_check_ {fall_check},
+fall_comps_unique_ {}, fall_check_ {fall_check}, snake_check_ {},
 map_ {room_map}, delta_frame_ {delta_frame}, layers_fallen_ {} {}
 
 FallStepProcessor::~FallStepProcessor() {}
@@ -27,9 +30,20 @@ void FallStepProcessor::run() {
         }
         fall_check_ = std::move(next_fall_check);
     }
-    // Initial check for land
+    // Remove all components which have already landed
     for (auto& comp : fall_comps_unique_) {
         check_land_first(comp.get());
+    }
+    fall_comps_unique_.erase(std::remove_if(fall_comps_unique_.begin(), fall_comps_unique_.end(),
+                                            [](auto& comp) { return comp->settled_; }), fall_comps_unique_.end());
+    // Collect all falling snakes, and their adjacent maybe-confused snakes
+    for (auto& comp : fall_comps_unique_) {
+        for (GameObject* block : comp->blocks_) {
+            if (SnakeBlock* sb = dynamic_cast<SnakeBlock*>(block)) {
+                snake_check_.insert(sb);
+                sb->collect_maybe_confused_neighbors(map_, snake_check_);
+            }
+        }
     }
     for (auto& comp : fall_comps_unique_) {
         comp->take_falling(map_);
@@ -51,6 +65,9 @@ void FallStepProcessor::run() {
                 check_land_sticky(comp.get());
             }
         }
+    }
+    for (SnakeBlock* snake : snake_check_) {
+        snake->check_add_local_links(map_, delta_frame_);
     }
 }
 
@@ -134,6 +151,9 @@ void FallStepProcessor::handle_fallen_blocks(FallComponent* comp) {
             block->pos_ += {0,0,layers_fallen_};
             map_->just_put(block);
             map_->destroy(block, delta_frame_);
+            if (SnakeBlock* sb = dynamic_cast<SnakeBlock*>(block)) {
+                snake_check_.erase(sb);
+            }
         }
     }
     if (!live_blocks.empty() && delta_frame_) {

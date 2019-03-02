@@ -24,8 +24,10 @@ public:
     bool in_links(SnakeBlock* sb);
     void add_link(SnakeBlock*, DeltaFrame*);
     void add_link_quiet(SnakeBlock*);
+    void add_link_one_way(SnakeBlock*);
     void remove_link(SnakeBlock*, DeltaFrame*);
     void remove_link_quiet(SnakeBlock*);
+    void remove_link_one_way(SnakeBlock*);
 
     void draw(GraphicsManager*);
 
@@ -46,6 +48,7 @@ public:
     bool pushed_and_moving();
 
     virtual void cleanup_on_destruction(RoomMap*);
+    virtual void setup_on_undestruction(RoomMap*);
 
     std::unique_ptr<SnakeBlock> make_split_copy();
 

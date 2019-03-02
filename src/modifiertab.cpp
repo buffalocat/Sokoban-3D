@@ -11,6 +11,7 @@
 #include "car.h"
 #include "door.h"
 #include "gate.h"
+#include "gatebody.h"
 #include "pressswitch.h"
 
 #include "colorcycle.h"
@@ -156,9 +157,14 @@ void ModifierTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
     case ModCode::Door:
         mod = std::make_unique<Door>(model_door);
         break;
-    case ModCode::Gate:
-        // TODO: handle gate body creation! somewhere!!!
-        mod = std::make_unique<Gate>(model_gate);
+    case ModCode::Gate: {
+            auto gate = std::make_unique<Gate>(model_gate);
+            // Create the GateBody too, so that serialization occurs properly!
+            auto gate_body = std::make_unique<GateBody>(gate.get());
+            gate->body_ = gate_body.get();
+            room_map->create_abstract(std::move(gate_body));
+            mod = std::move(gate);
+        }
         break;
     case ModCode::PressSwitch:
         mod = std::make_unique<PressSwitch>(model_press_switch);

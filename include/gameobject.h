@@ -31,8 +31,8 @@ public:
     virtual void relation_serialize(MapFileO& file);
 
     Point3 shifted_pos(Point3 d);
+    void abstract_shift_to(Point3 pos, DeltaFrame*);
 
-    // TODO: make this pure virtual, with no Point arg
     virtual void draw(GraphicsManager*) = 0;
     void draw_force_indicators(GraphicsManager*, glm::mat4& model);
 
@@ -54,7 +54,6 @@ public:
     void set_modifier(std::unique_ptr<ObjectModifier> mod);
     ObjectModifier* modifier();
 
-    //TODO: fix
     void reset_animation();
     void set_linear_animation(Point3);
     void update_animation();

@@ -156,13 +156,12 @@ void RoomMap::put(GameObject* obj) {
 }
 
 void RoomMap::take_loud(GameObject* obj, DeltaFrame* delta_frame) {
-    delta_frame->push(std::make_unique<TakeDelta>(obj, obj->pos_, this));
+    delta_frame->push(std::make_unique<TakeDelta>(obj, this));
     take(obj);
 }
 
 void RoomMap::put_loud(GameObject* obj, DeltaFrame* delta_frame) {
-    // TODO: check whether pos_ is necessary
-    delta_frame->push(std::make_unique<PutDelta>(obj, obj->pos_, this));
+    delta_frame->push(std::make_unique<PutDelta>(obj, this));
     put(obj);
 }
 
@@ -199,21 +198,18 @@ void RoomMap::just_batch_shift(std::vector<GameObject*> objs, Point3 dpos) {
     }
 }
 
-void RoomMap::create(std::unique_ptr<GameObject> obj) {
-    GameObject* raw = obj.get();
-    obj_array_.push_object(std::move(obj));
-    put(raw);
-}
-
 void RoomMap::create_abstract(std::unique_ptr<GameObject> obj) {
     obj_array_.push_object(std::move(obj));
 }
 
 void RoomMap::create(std::unique_ptr<GameObject> obj, DeltaFrame* delta_frame) {
     GameObject* raw = obj.get();
+    // Need to push it into the GameObjectArray first to give it an ID
     obj_array_.push_object(std::move(obj));
     put(raw);
-    delta_frame->push(std::make_unique<CreationDelta>(raw, this));
+    if (delta_frame) {
+        delta_frame->push(std::make_unique<CreationDelta>(raw, this));
+    }
 }
 
 void RoomMap::create_wall(Point3 pos) {
@@ -224,12 +220,6 @@ void RoomMap::uncreate(GameObject* obj) {
     just_take(obj);
     obj->cleanup_on_destruction(this);
     obj_array_.destroy(obj);
-}
-
-void RoomMap::destroy(GameObject* obj) {
-    obj->cleanup_on_destruction(this);
-    obj->alive_ = false;
-    take(obj);
 }
 
 void RoomMap::destroy(GameObject* obj, DeltaFrame* delta_frame) {
@@ -247,7 +237,6 @@ void RoomMap::undestroy(GameObject* obj) {
     obj->setup_on_undestruction(this);
 }
 
-// TODO (maybe): Consider allowing for a general callback function here
 void RoomMap::add_listener(ObjectModifier* obj, Point3 pos) {
     listeners_[pos].push_back(obj);
 }

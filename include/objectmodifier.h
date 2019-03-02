@@ -27,7 +27,6 @@ public:
 
     GameObject* parent_;
 
-    // TODO: make this pure virtual?
     virtual void draw(GraphicsManager*, FPoint3) {}
 
     Point3 pos();

@@ -71,8 +71,7 @@ void object_tab_options() {
     }
     ImGui::Separator();
     switch (obj ? obj->obj_code() : obj_code) {
-    case ObjCode::PushBlock:
-        {
+    case ObjCode::PushBlock: {
             ImGui::Text("PushBlock");
             PushBlock* pb = obj ? static_cast<PushBlock*>(obj) : &model_pb;
             ImGui::Checkbox("Pushable?##PB_modify_push", &pb->pushable_);
@@ -85,8 +84,7 @@ void object_tab_options() {
             ImGui::RadioButton("Strongly Sticky##PB_modify_sticky", &pb->sticky_, Sticky::Strong);
         }
         break;
-    case ObjCode::SnakeBlock:
-        {
+    case ObjCode::SnakeBlock: {
             ImGui::Text("SnakeBlock");
             SnakeBlock* sb = obj ? static_cast<SnakeBlock*>(obj) : &model_sb;
             ImGui::Checkbox("Pushable?##SB_modify_push", &sb->pushable_);
@@ -136,7 +134,7 @@ void ObjectTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
     }
     obj->pos_ = pos;
     selected_obj = obj.get();
-    room_map->create(std::move(obj));
+    room_map->create(std::move(obj), nullptr);
 }
 
 void ObjectTab::handle_right_click(EditorRoom* eroom, Point3 pos) {
@@ -152,6 +150,6 @@ void ObjectTab::handle_right_click(EditorRoom* eroom, Point3 pos) {
         }
         selected_obj = nullptr;
         // When we "destroy" a wall, it doesn't actually destroy the unique Wall object
-        room_map->destroy(obj);
+        room_map->destroy(obj, nullptr);
     }
 }

@@ -83,26 +83,24 @@ private:
 
 class PutDelta: public Delta {
 public:
-    PutDelta(GameObject* obj, Point3 pos, RoomMap* room_map);
+    PutDelta(GameObject* obj, RoomMap* room_map);
     ~PutDelta();
     void revert();
 
 private:
     GameObject* obj_;
-    Point3 pos_;
     RoomMap* map_;
 };
 
 
 class TakeDelta: public Delta {
 public:
-    TakeDelta(GameObject* obj, Point3 pos, RoomMap* room_map);
+    TakeDelta(GameObject* obj, RoomMap* room_map);
     ~TakeDelta();
     void revert();
 
 private:
     GameObject* obj_;
-    Point3 pos_;
     RoomMap* map_;
 };
 
@@ -130,6 +128,18 @@ private:
     std::vector<GameObject*> objs_;
     Point3 dpos_;
     RoomMap* map_;
+};
+
+// Object motion outside of the map
+class AbstractMotionDelta: public Delta {
+public:
+    AbstractMotionDelta(GameObject* obj, Point3 dpos);
+    ~AbstractMotionDelta();
+    void revert();
+
+private:
+    GameObject* obj_;
+    Point3 dpos_;
 };
 
 

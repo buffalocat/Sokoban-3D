@@ -39,12 +39,10 @@ public:
     void take_loud(GameObject*, DeltaFrame*);
     void put_loud(GameObject*, DeltaFrame*);
 
-    void create(std::unique_ptr<GameObject>);
     void create(std::unique_ptr<GameObject>, DeltaFrame*);
     void create_abstract(std::unique_ptr<GameObject>);
     void create_wall(Point3);
     void uncreate(GameObject*);
-    void destroy(GameObject*);
     void destroy(GameObject*, DeltaFrame*);
     void undestroy(GameObject*);
 

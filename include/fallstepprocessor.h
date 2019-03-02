@@ -2,12 +2,13 @@
 #define FALLSTEPPROCESSOR_H
 
 #include <memory>
+#include <unordered_set>
 
 #include "component.h"
 
 class RoomMap;
 class DeltaFrame;
-
+class SnakeBlock;
 
 class FallStepProcessor {
 public:
@@ -25,6 +26,7 @@ public:
 private:
     std::vector<std::unique_ptr<FallComponent>> fall_comps_unique_;
     std::vector<GameObject*> fall_check_;
+    std::unordered_set<SnakeBlock*> snake_check_;
     RoomMap* map_;
     DeltaFrame* delta_frame_;
     int layers_fallen_;

@@ -39,6 +39,12 @@ Point3 GameObject::shifted_pos(Point3 d) {
     return pos_ + d;
 }
 
+void GameObject::abstract_shift_to(Point3 new_pos, DeltaFrame* delta_frame) {
+    Point3 dpos = new_pos - pos_;
+    pos_ = new_pos;
+    delta_frame->push(std::make_unique<AbstractMotionDelta>(this, dpos));
+}
+
 void GameObject::setup_on_put(RoomMap* room_map) {
     if (modifier_) {
         modifier_->setup_on_put(room_map);

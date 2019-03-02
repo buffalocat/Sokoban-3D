@@ -72,7 +72,6 @@ void CreationDelta::revert() {
 }
 
 
-//TODO: make sure DeletionDelta is right
 DeletionDelta::DeletionDelta(GameObject* obj, RoomMap* room_map):
 obj_ {obj}, map_ {room_map} {}
 
@@ -83,27 +82,25 @@ void DeletionDelta::revert() {
 }
 
 
-PutDelta::PutDelta(GameObject* obj, Point3 pos, RoomMap* room_map):
-obj_ {obj}, pos_ {pos}, map_ {room_map} {}
+PutDelta::PutDelta(GameObject* obj, RoomMap* room_map):
+obj_ {obj}, map_ {room_map} {}
 
 PutDelta::~PutDelta() {}
 
 void PutDelta::revert() {
     map_->just_take(obj_);
-    obj_->pos_ = pos_;
 }
 
 
 // NOTE: A Taken (intangible) object won't have its position updated
 // until it has been Put back into the map, so there's no need
 // to record its old position in the delta.
-TakeDelta::TakeDelta(GameObject* obj, Point3 pos, RoomMap* room_map):
-obj_ {obj}, pos_ {pos}, map_ {room_map} {}
+TakeDelta::TakeDelta(GameObject* obj, RoomMap* room_map):
+obj_ {obj}, map_ {room_map} {}
 
 TakeDelta::~TakeDelta() {}
 
 void TakeDelta::revert() {
-    obj_->pos_ = pos_;
     map_->just_put(obj_);
 }
 
@@ -125,6 +122,16 @@ BatchMotionDelta::~BatchMotionDelta() {}
 
 void BatchMotionDelta::revert() {
     map_->just_batch_shift(objs_, -dpos_);
+}
+
+
+AbstractMotionDelta::AbstractMotionDelta(GameObject* obj, Point3 dpos):
+obj_ {obj}, dpos_ {dpos} {}
+
+AbstractMotionDelta::~AbstractMotionDelta() {}
+
+void AbstractMotionDelta::revert() {
+    obj_->pos_ -= dpos_;
 }
 
 

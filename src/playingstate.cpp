@@ -40,7 +40,7 @@ void PlayingState::init_player(Point3 pos) {
     }
     auto player = std::make_unique<Player>(pos, rs);
     player_ = player.get();
-    room_->room_map()->create(std::move(player));
+    room_->room_map()->create(std::move(player), nullptr);
 }
 
 void PlayingState::main_loop() {

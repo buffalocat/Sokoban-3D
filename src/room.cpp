@@ -216,7 +216,7 @@ void Room::read_objects(MapFileI& file) {
             throw std::runtime_error("Unknown Modifier code encountered in .map file (it's probably corrupt/an old version)");
             break;
         }
-        map_->create(std::move(obj));
+        map_->create(std::move(obj), nullptr);
     }
 }
 

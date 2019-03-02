@@ -138,8 +138,8 @@ const float DEFAULT_CAM_ROTATION = 0.0;
 
 const int FAST_MAP_MOVE = 10;
 
-const std::string MAPS_MAIN = "maps\\main\\";
-const std::string MAPS_TEMP = "maps\\temp\\";
+const std::string MAPS_MAIN = "maps/main/";
+const std::string MAPS_TEMP = "maps/temp/";
 
 enum class MapCode {
     Dimensions = 1, // The dimensions of the room as 1 byte integers

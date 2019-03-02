@@ -16,11 +16,5 @@ bool Wall::skip_serialization() {
     return true;
 }
 
-// TODO: make this empty, replace with a batch drawing mechanism!
-void Wall::draw(GraphicsManager* gfx) {
-/*
-    gfx->set_model(glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y)));
-    gfx->set_color(GREYS[p.z % NUM_GREYS]);
-    gfx->draw_cube();
-*/
-}
+// TODO: Replace with a batch drawing mechanism!
+void Wall::draw(GraphicsManager* gfx) {}

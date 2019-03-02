@@ -35,6 +35,8 @@ public:
 private:
     GateBody* body_;
     bool alive_;
+
+    friend class ModifierTab;
 };
 
 #endif // GATE_H

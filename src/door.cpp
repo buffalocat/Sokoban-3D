@@ -53,7 +53,8 @@ bool Door::can_set_state(bool state, RoomMap* room_map) {
 }
 
 void Door::map_callback(RoomMap* room_map, DeltaFrame* delta_frame, MoveProcessor* mp) {
-    // TODO: Tell the mp to try door
+    //TODO: implement try_door_move
+    //mp->try_door_move(this);
 }
 
 void Door::setup_on_put(RoomMap* room_map) {

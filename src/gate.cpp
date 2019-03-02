@@ -29,8 +29,7 @@ void Gate::deserialize(MapFileI& file, RoomMap* room_map, GameObject* parent) {
     file.read(b, 5);
     auto gate = std::make_unique<Gate>(parent, nullptr, b[0], b[1], b[2], b[3]);
     // Is the body alive?
-    // TODO: replace with b[4], FIX
-    if (true) {
+    if (b[4]) {
         auto gate_body_unique = std::make_unique<GateBody>(gate.get());
         gate->body_ = gate_body_unique.get();
         room_map->create_abstract(std::move(gate_body_unique));
@@ -52,7 +51,6 @@ bool Gate::can_set_state(bool state, RoomMap* room_map) {
 
 void Gate::apply_state_change(RoomMap* room_map, DeltaFrame* delta_frame, MoveProcessor* mp) {
     if (state()) {
-        body_->pos_ = pos_above();
         room_map->put_loud(body_, delta_frame);
     } else {
         room_map->take_loud(body_, delta_frame);
@@ -64,7 +62,14 @@ void Gate::apply_state_change(RoomMap* room_map, DeltaFrame* delta_frame, MovePr
 }
 
 void Gate::map_callback(RoomMap* room_map, DeltaFrame* delta_frame, MoveProcessor* mp) {
+    // NOTE: A bit of a hack, but it should work. Every time the Gate moves,
+    // it will trigger its own listener, and this code will ensure that the
+    // GateBody has an up-to-date virtual position.
+    if (body_ && !state()) {
+        body_->abstract_shift_to(pos_above(), delta_frame);
+    }
     check_waiting(room_map, delta_frame, mp);
+
 }
 
 void Gate::setup_on_put(RoomMap* room_map) {

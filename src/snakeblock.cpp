@@ -134,6 +134,10 @@ void SnakeBlock::add_link_quiet(SnakeBlock* sb) {
     sb->links_.push_back(this);
 }
 
+void SnakeBlock::add_link_one_way(SnakeBlock* sb) {
+    links_.push_back(sb);
+}
+
 void SnakeBlock::remove_link(SnakeBlock* sb, DeltaFrame* delta_frame) {
     remove_link_quiet(sb);
     delta_frame->push(std::make_unique<RemoveLinkDelta>(this, sb));
@@ -142,6 +146,10 @@ void SnakeBlock::remove_link(SnakeBlock* sb, DeltaFrame* delta_frame) {
 void SnakeBlock::remove_link_quiet(SnakeBlock* sb) {
     links_.erase(std::find(links_.begin(), links_.end(), sb));
     sb->links_.erase(std::find(sb->links_.begin(), sb->links_.end(), this));
+}
+
+void SnakeBlock::remove_link_one_way(SnakeBlock* sb) {
+    links_.erase(std::find(links_.begin(), links_.end(), sb));
 }
 
 void SnakeBlock::check_add_local_links(RoomMap* room_map, DeltaFrame* delta_frame) {
@@ -204,8 +212,20 @@ bool SnakeBlock::confused(RoomMap* room_map) {
 
 void SnakeBlock::cleanup_on_destruction(RoomMap* room_map) {
     reset_distance_and_target();
+    for (SnakeBlock* link : links_) {
+        link->remove_link_one_way(this);
+    }
     if (modifier_) {
         modifier_->cleanup_on_destruction(room_map);
+    }
+}
+
+void SnakeBlock::setup_on_undestruction(RoomMap* room_map) {
+    for (SnakeBlock* link : links_) {
+        link->add_link_one_way(this);
+    }
+    if (modifier_) {
+        modifier_->setup_on_undestruction(room_map);
     }
 }
 

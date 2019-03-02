@@ -30,6 +30,8 @@ public:
     void remove_link_quiet(SnakeBlock*);
     void remove_link_one_way(SnakeBlock*);
 
+    bool can_link(SnakeBlock*);
+
     void draw(GraphicsManager*);
 
     bool available();

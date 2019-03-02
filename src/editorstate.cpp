@@ -16,6 +16,7 @@
 #include "doortab.h"
 #include "switchtab.h"
 #include "modifiertab.h"
+#include "snaketab.h"
 
 #include "room.h"
 #include "roommap.h"
@@ -38,14 +39,15 @@ std::string EditorRoom::name() {
 }
 
 EditorState::EditorState(GraphicsManager* gfx): EditorBaseState(),
-rooms_ {}, active_room_ {},
-tabs_ {}, active_tab_ {},
+active_room_ {}, active_tab_ {},
+rooms_ {}, tabs_ {},
 objs_ {std::make_unique<GameObjectArray>()} {
     INIT_TAB(SaveLoad);
     INIT_TAB(Object);
     INIT_TAB(Door);
     INIT_TAB(Switch);
     INIT_TAB(Modifier);
+    INIT_TAB(Snake);
     active_tab_ = tabs_["SaveLoad"].get();
 }
 

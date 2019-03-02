@@ -23,18 +23,7 @@ void DoorSelectState::main_loop() {
     handle_keyboard_input(cam_pos_, room_);
     room_->draw(gfx_, cam_pos_, true, one_layer_);
 
-    Point3 mouse_pos = get_pos_from_mouse(cam_pos_);
-
-    if (mouse_pos.x == -1) {
-        ImGui::Text("Hover Pos: Out of Bounds");\
-    } else {
-        ImGui::Text("Hover Pos: (%d,%d,%d)", mouse_pos.x, mouse_pos.y, mouse_pos.z);
-        if (GameObject* obj = room_->map()->view(mouse_pos)) {
-            ImGui::Text(obj->to_str().c_str());
-        } else {
-            ImGui::Text("Empty");
-        }
-    }
+    display_hover_pos_object(cam_pos_, room_->map());
 
     ImGui::Separator();
 

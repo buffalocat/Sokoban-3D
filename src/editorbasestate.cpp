@@ -2,6 +2,7 @@
 
 #include "room.h"
 #include "roommap.h"
+#include "gameobject.h"
 
 EditorBaseState::EditorBaseState(): GameState(),
 ortho_cam_ {true}, one_layer_ {false}, keyboard_cooldown_ {0} {}
@@ -25,6 +26,21 @@ Point3 EditorBaseState::get_pos_from_mouse(Point3 cam_pos) {
         return {x, y, cam_pos.z};
     }
     return {-1,-1,-1};
+}
+
+void EditorBaseState::display_hover_pos_object(Point3 cam_pos, RoomMap* room_map) {
+    Point3 mouse_pos = get_pos_from_mouse(cam_pos);
+
+    if (mouse_pos.x == -1) {
+        ImGui::Text("Hover Pos: Out of Bounds");\
+    } else {
+        ImGui::Text("Hover Pos: (%d,%d,%d)", mouse_pos.x, mouse_pos.y, mouse_pos.z);
+        if (GameObject* obj = room_map->view(mouse_pos)) {
+            ImGui::Text(obj->to_str().c_str());
+        } else {
+            ImGui::Text("Empty");
+        }
+    }
 }
 
 void EditorBaseState::clamp_to_room(Point3& pos, Room* room) {

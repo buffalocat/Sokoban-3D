@@ -156,6 +156,13 @@ void SnakeBlock::remove_link_one_way(SnakeBlock* sb) {
     links_.erase(std::find(links_.begin(), links_.end(), sb));
 }
 
+bool SnakeBlock::can_link(SnakeBlock* snake) {
+    return available() && snake->available() &&
+        (color_ == snake->color_) && (pos_.z == snake->pos_.z) &&
+        (abs(pos_.x - snake->pos_.x) + abs(pos_.y - snake->pos_.y) == 1) &&
+        !in_links(snake);
+}
+
 void SnakeBlock::check_add_local_links(RoomMap* room_map, DeltaFrame* delta_frame) {
     if (!available() || confused(room_map)) {
         return;

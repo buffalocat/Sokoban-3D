@@ -59,6 +59,8 @@ public:
     void set_initial_state(bool editor_mode);
     void reset_local_state();
 
+    void initialize_automatic_snake_links();
+
     void push_signaler(std::unique_ptr<Signaler>);
     void check_signalers(DeltaFrame*, MoveProcessor*);
     void remove_signaler(Signaler*);

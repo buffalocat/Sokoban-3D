@@ -50,8 +50,10 @@ void SaveLoadTab::main_loop(EditorRoom* eroom) {
         editor_->set_active_room(std::string(room_names[current]));
     }
 
-    if (ImGui::Button("Save Current Map##SAVELOAD")) {
-        editor_->commit_current_room();
+    if (eroom) {
+        if (ImGui::Button("Save Current Map##SAVELOAD")) {
+            editor_->commit_current_room();
+        }
     }
 
     ImGui::Separator();

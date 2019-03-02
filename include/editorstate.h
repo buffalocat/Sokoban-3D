@@ -62,12 +62,12 @@ public:
 
     void begin_test();
 
+    EditorRoom* active_room_;
+    EditorTab* active_tab_;
+
 private:
     std::map<std::string, std::unique_ptr<EditorRoom>> rooms_;
-    EditorRoom* active_room_;
-
     std::map<std::string, std::unique_ptr<EditorTab>> tabs_;
-    EditorTab* active_tab_;
 
     std::unique_ptr<GameObjectArray> objs_;
 

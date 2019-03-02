@@ -321,6 +321,19 @@ void RoomMap::set_initial_state(bool editor_mode) {
     mp.begin_fall_cycle();
 }
 
+// This function does just one of the things that set_initial_state does
+// But it's useful for making the SnakeTab convenient!
+void RoomMap::initialize_automatic_snake_links() {
+    DeltaFrame dummy_df {};
+    for (auto& layer : layers_) {
+        for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
+            if (SnakeBlock* sb = dynamic_cast<SnakeBlock*>(obj_array_[it->id()])) {
+                sb->check_add_local_links(this, &dummy_df);
+            }
+        }
+    }
+}
+
 // The room keeps track of some things which must be forgotten after a move or undo
 void RoomMap::reset_local_state() {
     activated_listeners_ = {};

@@ -10,11 +10,14 @@
 #pragma GCC diagnostic pop
 
 class Room;
+class RoomMap;
 
 class EditorBaseState: public GameState {
 public:
     EditorBaseState();
     virtual ~EditorBaseState();
+
+    void display_hover_pos_object(Point3 cam_pos, RoomMap* room_map);
 
 protected:
     bool ortho_cam_;

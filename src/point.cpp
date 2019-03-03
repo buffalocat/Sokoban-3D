@@ -1,5 +1,8 @@
 #include "point.h"
 
+Point3_S16::Point3_S16(const Point3& p): x {p.x}, y {p.y}, z {p.z} {}
+
+Point3::Point3(const Point3_S16& p): x {p.x}, y {p.y}, z {p.z} {}
 
 Point3& Point3::operator+=(const Point3& p) {
     return *this = *this + p;

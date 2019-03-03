@@ -15,7 +15,8 @@
 GameObject::GameObject(Point3 pos, int color, bool pushable, bool gravitable):
     modifier_ {}, animation_ {}, comp_ {},
     pos_ {pos}, id_ {-1},
-    color_ {color}, pushable_ {pushable}, gravitable_ {gravitable} {}
+    color_ {color}, pushable_ {pushable}, gravitable_ {gravitable},
+    tangible_ {false} {}
 
 GameObject::~GameObject() {}
 

@@ -2,7 +2,9 @@
 
 #include "graphicsmanager.h"
 
-Wall::Wall(): PushBlock({0,0,0}, 0, false, false, Sticky::None) {}
+Wall::Wall(): PushBlock({0,0,0}, 0, false, false, Sticky::None) {
+    tangible_ = true;
+}
 
 Wall::~Wall() {}
 

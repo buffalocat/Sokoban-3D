@@ -175,6 +175,7 @@ void ModifierTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
         break;
     case ModCode::AutoBlock:
         mod = std::make_unique<AutoBlock>(obj, eroom->map());
+        break;
     default:
         return;
     }

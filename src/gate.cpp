@@ -27,10 +27,9 @@ void Gate::serialize(MapFileO& file) {
     bool body_alive = (body_ != nullptr);
     file << color_ << default_ << active_ << waiting_ << body_alive;
     if (body_alive) {
-        file << body_->pos_;
+        file << Point3_S16{body_->pos_};
     }
 }
-
 
 void Gate::deserialize(MapFileI& file, RoomMap* room_map, GameObject* parent) {
     unsigned char b[5];
@@ -38,7 +37,9 @@ void Gate::deserialize(MapFileI& file, RoomMap* room_map, GameObject* parent) {
     auto gate = std::make_unique<Gate>(parent, nullptr, b[0], b[1], b[2], b[3]);
     // Is the body alive?
     if (b[4]) {
-        auto gate_body_unique = std::make_unique<GateBody>(gate.get(), file.read_point3());
+        Point3_S16 body_pos {};
+        file >> body_pos;
+        auto gate_body_unique = std::make_unique<GateBody>(gate.get(), Point3{body_pos});
         gate->body_ = gate_body_unique.get();
         room_map->create_abstract(std::move(gate_body_unique), nullptr);
     }
@@ -52,7 +53,7 @@ void Gate::collect_sticky_links(RoomMap*, Sticky, std::vector<GameObject*>& to_c
 }
 
 bool Gate::can_set_state(bool state, RoomMap* room_map) {
-    return body_ && (!state || (room_map->view(pos_above()) == nullptr));
+    return body_ && (!state || (room_map->view(body_->pos_) == nullptr));
 }
 
 void Gate::apply_state_change(RoomMap* room_map, DeltaFrame* delta_frame, MoveProcessor* mp) {
@@ -79,13 +80,18 @@ void Gate::map_callback(RoomMap* room_map, DeltaFrame* delta_frame, MoveProcesso
     check_waiting(room_map, delta_frame, mp);
 }
 
+// TODO: make sure Gate listeners are handled correctly in all cases!!
 void Gate::setup_on_put(RoomMap* room_map) {
-    room_map->add_listener(this, pos_above());
-    room_map->activate_listener_of(this);
+    if (body_) {
+        room_map->add_listener(this, body_->pos_);
+        room_map->activate_listener_of(this);
+    }
 }
 
 void Gate::cleanup_on_take(RoomMap* room_map) {
-    room_map->remove_listener(this, pos_above());
+    if (body_) {
+        room_map->remove_listener(this, body_->pos_);
+    }
 }
 
 void Gate::draw(GraphicsManager* gfx, FPoint3 p) {

@@ -310,21 +310,38 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
         if (cur->distance_ > 0 &&  cur->distance_ <= d) {
             // The chain was odd length; split the middle block!
             if (d == cur->distance_) {
-                // TODO: make sure this "does the right thing" (resplit!)
-                // when cur is an active gate!!
-                std::vector<SnakeBlock*> links = cur->links_;
-                map_->destroy(cur, delta_frame_);
-                for (SnakeBlock* link : links) {
-                    auto split_copy_unique = cur->make_split_copy(map_, delta_frame_);
-                    SnakeBlock* split_copy = split_copy_unique.get();
-                    map_->create(std::move(split_copy_unique), delta_frame_);
-                    split_copy->add_link(link, delta_frame_);
-                    split_copy->target_ = link;
-                    snakes_to_pull_.push_back(split_copy);
+                // TODO: Make sure this is *really* the condition we want
+                // For now, a snake which is linked to anything else
+                //(at level Sticky::AllStick) will not be split.
+                std::vector<GameObject*> sticky_comp {};
+                cur->collect_special_links(map_, Sticky::AllStick, sticky_comp);
+                if (ObjectModifier* mod = cur->modifier()) {
+                    mod->collect_sticky_links(map_, Sticky::AllStick, sticky_comp);
                 }
-            }
+                if (sticky_comp.empty()) {
+                    std::vector<SnakeBlock*> links = cur->links_;
+                    map_->destroy(cur, delta_frame_);
+                    for (SnakeBlock* link : links) {
+                        auto split_copy_unique = cur->make_split_copy(map_, delta_frame_);
+                        SnakeBlock* split_copy = split_copy_unique.get();
+                        map_->create(std::move(split_copy_unique), delta_frame_);
+                        split_copy->add_link(link, delta_frame_);
+                        split_copy->target_ = link;
+                        snakes_to_pull_.push_back(split_copy);
+                    }
+                // The middle block couldn't be split; split around instead
+                } else {
+                    std::vector<SnakeBlock*> links = cur->links_;
+                    cur->reset_distance_and_target();
+                    link_add_check_.insert(cur);
+                    for (SnakeBlock* link : links) {
+                        cur->remove_link(link, delta_frame_);
+                        link_add_check_.insert(link);
+                        snakes_to_pull_.push_back(link);
+                    }
+                }
             // The chain was even length; cut!
-            else {
+            } else {
                 link_add_check_.insert(cur);
                 link_add_check_.insert(prev);
                 cur->remove_link(prev, delta_frame_);

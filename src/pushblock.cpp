@@ -53,7 +53,7 @@ void PushBlock::draw(GraphicsManager* gfx) {
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y));
     gfx->set_model(model);
     gfx->set_color(COLORS[color_]);
-    Texture tex;
+    Texture tex {Texture::Blank};
     switch (sticky_) {
     case Sticky::None:
         tex = Texture::Edges;

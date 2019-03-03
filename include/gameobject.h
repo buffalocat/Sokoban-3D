@@ -77,9 +77,7 @@ public:
     bool pushable_;
     bool gravitable_;
 
-    // This is to prevent writing "dead" objects back to map files
-    // Signalers (and other such structures) will update their lists before saves
-    bool alive_;
+    bool tangible_;
 };
 
 #endif // GAMEOBJECT_H

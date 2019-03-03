@@ -49,13 +49,11 @@ void Switchable::check_waiting(RoomMap* room_map, DeltaFrame* delta_frame, MoveP
     }
 }
 
-#include <iostream>
 
 void Switchable::cleanup_on_destruction(RoomMap* room_map) {
     for (Signaler* s : signalers_) {
         s->remove_object(this);
     }
-    std::cout << "Cleaning up a Switchable" << std::endl;
 }
 
 void Switchable::setup_on_undestruction(RoomMap* room_map) {

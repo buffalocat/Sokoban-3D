@@ -83,6 +83,8 @@ public:
     int height_;
     int depth_;
 
+    std::vector<GameObject*> agents_;
+
 private:
     GameObjectArray& obj_array_;
     std::vector<std::unique_ptr<MapLayer>> layers_;

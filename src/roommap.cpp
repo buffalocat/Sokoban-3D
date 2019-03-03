@@ -21,7 +21,8 @@
 #include "moveprocessor.h"
 
 RoomMap::RoomMap(GameObjectArray& obj_array, int width, int height, int depth):
-obj_array_ {obj_array}, width_ {width}, height_ {height}, depth_ {},
+agents_ {}, obj_array_ {obj_array},
+width_ {width}, height_ {height}, depth_ {},
 layers_ {}, listeners_ {}, signalers_ {},
 effects_ {std::make_unique<Effects>()} {
     // TODO: Eventually, fix the way that maplayers are chosen
@@ -147,12 +148,14 @@ GameObject* RoomMap::view(Point3 pos) {
 
 void RoomMap::just_take(GameObject* obj) {
     obj->cleanup_on_take(this);
+    obj->tangible_ = false;
     at(obj->pos_) -= obj->id_;
 }
 
 void RoomMap::just_put(GameObject* obj) {
     at(obj->pos_) += obj->id_;
     obj->setup_on_put(this);
+    obj->tangible_ = true;
 }
 
 void RoomMap::take(GameObject* obj) {
@@ -242,7 +245,6 @@ void RoomMap::uncreate_abstract(GameObject* obj) {
 
 void RoomMap::destroy(GameObject* obj, DeltaFrame* delta_frame) {
     obj->cleanup_on_destruction(this);
-    obj->alive_ = false;
     take(obj);
     if (delta_frame) {
         delta_frame->push(std::make_unique<DeletionDelta>(obj, this));
@@ -251,7 +253,6 @@ void RoomMap::destroy(GameObject* obj, DeltaFrame* delta_frame) {
 
 void RoomMap::undestroy(GameObject* obj) {
     just_put(obj);
-    obj->alive_ = true;
     obj->setup_on_undestruction(this);
 }
 

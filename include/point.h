@@ -9,10 +9,16 @@ struct Point2 {
     int y;
 };
 
+struct Point3;
+
+//Point3_S16 serializes its components as signed 2-byte integers
 struct Point3_S16 {
     int x;
     int y;
     int z;
+    Point3_S16(): x {0}, y {0}, z {0} {}
+    Point3_S16(int ax, int ay, int az): x {ax}, y {ay}, z {az} {}
+    explicit Point3_S16(const Point3&);
 };
 
 struct Point3 {
@@ -22,6 +28,9 @@ struct Point3 {
     Point3& operator+=(const Point3& p);
     Point3& operator-=(const Point3& p);
     Point2 h() {return {x,y};}
+    Point3(): x {0}, y {0}, z {0} {}
+    Point3(int ax, int ay, int az): x {ax}, y {ay}, z {az} {}
+    explicit Point3(const Point3_S16&);
 };
 
 struct FPoint3 {

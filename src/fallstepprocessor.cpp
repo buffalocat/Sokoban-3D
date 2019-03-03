@@ -20,11 +20,7 @@ void FallStepProcessor::run() {
     while (!fall_check_.empty()) {
         std::vector<GameObject*> next_fall_check {};
         for (GameObject* block : fall_check_) {
-            if (!block->fall_comp()) {
-                // Skip intangible blocks!
-                if (map_->view(block->pos_) != block) {
-                    continue;
-                }
+            if (!block->fall_comp() && block->tangible_) {
                 auto comp_unique = std::make_unique<FallComponent>();
                 FallComponent* comp = comp_unique.get();
                 fall_comps_unique_.push_back(std::move(comp_unique));

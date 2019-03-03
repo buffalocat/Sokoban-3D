@@ -8,7 +8,7 @@
 
 #include "delta.h"
 
-GateBody::GateBody(Gate* gate): PushBlock(gate->pos() + Point3{0,0,1}, gate->color_, gate->pushable(), gate->gravitable(), Sticky::None), gate_ {}, gate_pos_ {} {
+GateBody::GateBody(Gate* gate, Point3 pos): PushBlock(pos, gate->color_, gate->pushable(), gate->gravitable(), Sticky::None), gate_ {}, gate_pos_ {} {
     set_gate(gate);
 }
 

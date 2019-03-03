@@ -164,7 +164,7 @@ void ModifierTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
             auto gate = std::make_unique<Gate>(model_gate);
             gate->parent_ = obj;
             // Create the GateBody too, so that serialization occurs properly!
-            auto gate_body = std::make_unique<GateBody>(gate.get());
+            auto gate_body = std::make_unique<GateBody>(gate.get(), gate->pos_above());
             gate->body_ = gate_body.get();
             room_map->create_abstract(std::move(gate_body), nullptr);
             mod = std::move(gate);

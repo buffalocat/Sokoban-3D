@@ -24,7 +24,11 @@ ModCode Gate::mod_code() {
 }
 
 void Gate::serialize(MapFileO& file) {
-    file << color_ << default_ << active_ << waiting_ << (bool)(body_ != nullptr);
+    bool body_alive = (body_ != nullptr);
+    file << color_ << default_ << active_ << waiting_ << body_alive;
+    if (body_alive) {
+        file << body_->pos_;
+    }
 }
 
 
@@ -33,8 +37,8 @@ void Gate::deserialize(MapFileI& file, RoomMap* room_map, GameObject* parent) {
     file.read(b, 5);
     auto gate = std::make_unique<Gate>(parent, nullptr, b[0], b[1], b[2], b[3]);
     // Is the body alive?
-    if (true) {
-        auto gate_body_unique = std::make_unique<GateBody>(gate.get());
+    if (b[4]) {
+        auto gate_body_unique = std::make_unique<GateBody>(gate.get(), file.read_point3());
         gate->body_ = gate_body_unique.get();
         room_map->create_abstract(std::move(gate_body_unique), nullptr);
     }

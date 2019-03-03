@@ -9,7 +9,7 @@ class Gate;
 // It inherits the color, pushability, and gravitability of its corresponding Gate object
 class GateBody: public PushBlock {
 public:
-    GateBody(Gate* gate);
+    GateBody(Gate* gate, Point3 pos);
     GateBody(Point3 pos, int color, bool pushable, bool gravitable);
     ~GateBody();
 

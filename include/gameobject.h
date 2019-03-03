@@ -34,7 +34,7 @@ public:
     virtual void relation_serialize(MapFileO& file);
 
     Point3 shifted_pos(Point3 d);
-    void abstract_shift_to(Point3 pos, DeltaFrame*);
+    void abstract_shift(Point3 dpos, DeltaFrame* delta_frame);
 
     virtual void draw(GraphicsManager*) = 0;
     void draw_force_indicators(GraphicsManager*, glm::mat4& model);

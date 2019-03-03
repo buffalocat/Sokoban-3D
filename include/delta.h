@@ -16,6 +16,7 @@ class Signaler;
 class Player;
 class PlayingState;
 class Car;
+class GateBody;
 
 struct Point;
 enum class Layer;
@@ -31,7 +32,7 @@ public:
 class DeltaFrame {
 public:
     DeltaFrame();
-    virtual ~DeltaFrame();
+    ~DeltaFrame();
     void revert();
     void push(std::unique_ptr<Delta>);
     bool trivial();
@@ -44,7 +45,7 @@ private:
 class UndoStack {
 public:
     UndoStack(unsigned int max_depth);
-    virtual ~UndoStack();
+    ~UndoStack();
     void push(std::unique_ptr<DeltaFrame>);
     bool non_empty();
     void pop();
@@ -73,6 +74,18 @@ class DeletionDelta: public Delta {
 public:
     DeletionDelta(GameObject* obj, RoomMap* room_map);
     ~DeletionDelta();
+    void revert();
+
+private:
+    GameObject* obj_;
+    RoomMap* map_;
+};
+
+
+class AbstractCreationDelta: public Delta {
+public:
+    AbstractCreationDelta(GameObject* obj, RoomMap* room_map);
+    ~AbstractCreationDelta();
     void revert();
 
 private:
@@ -234,6 +247,17 @@ public:
 
 private:
     Car* car_;
+};
+
+class GatePosDelta: public Delta {
+public:
+    GatePosDelta(GateBody* gate_body, Point3 dpos);
+    ~GatePosDelta();
+    void revert();
+
+private:
+    GateBody* gate_body_;
+    Point3 dpos_;
 };
 
 #endif // DELTA_H

@@ -74,7 +74,7 @@ void PressSwitch::draw(GraphicsManager* gfx, FPoint3 p) {
     gfx->set_tex(Texture::Blank);
 }
 
-std::unique_ptr<ObjectModifier> PressSwitch::duplicate(GameObject* parent) {
+std::unique_ptr<ObjectModifier> PressSwitch::duplicate(GameObject* parent, RoomMap*, DeltaFrame*) {
     auto dup = std::make_unique<PressSwitch>(*this);
     dup->parent_ = parent;
     dup->connect_to_signalers();

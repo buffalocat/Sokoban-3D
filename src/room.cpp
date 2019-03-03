@@ -11,10 +11,13 @@
 #include "pushblock.h"
 #include "snakeblock.h"
 #include "gatebody.h"
+
 #include "car.h"
 #include "door.h"
 #include "gate.h"
 #include "pressswitch.h"
+#include "autoblock.h"
+
 #include "switch.h"
 #include "switchable.h"
 #include "signaler.h"
@@ -210,6 +213,7 @@ void Room::read_objects(MapFileI& file) {
         CASE_MODCODE(Door)
         CASE_MODCODE(Gate)
         CASE_MODCODE(PressSwitch)
+        CASE_MODCODE(AutoBlock)
         case ModCode::NONE:
             break;
         default:

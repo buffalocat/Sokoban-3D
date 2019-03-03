@@ -41,7 +41,7 @@ bool Car::cycle_color(bool undo) {
     return result;
 }
 
-std::unique_ptr<ObjectModifier> Car::duplicate(GameObject* parent) {
+std::unique_ptr<ObjectModifier> Car::duplicate(GameObject* parent, RoomMap*, DeltaFrame*) {
     auto dup = std::make_unique<Car>(*this);
     dup->parent_ = parent;
     return std::move(dup);

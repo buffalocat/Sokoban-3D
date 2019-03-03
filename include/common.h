@@ -68,6 +68,7 @@ enum class ModCode {
     Car = 2,
     PressSwitch = 3,
     Gate = 4,
+    AutoBlock = 5,
 };
 
 enum class CameraCode {

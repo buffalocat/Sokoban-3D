@@ -2,7 +2,6 @@
 #define PUSHBLOCK_H
 
 #include "gameobject.h"
-#include "common.h"
 
 class PushBlock: public GameObject {
 public:

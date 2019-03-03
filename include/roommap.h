@@ -26,6 +26,9 @@ public:
     ~RoomMap();
     bool valid(Point3 pos);
 
+    //void print_snakes();
+    //void print_listeners();
+
     void push_full();
     void push_sparse();
 
@@ -40,9 +43,10 @@ public:
     void put_loud(GameObject*, DeltaFrame*);
 
     void create(std::unique_ptr<GameObject>, DeltaFrame*);
-    void create_abstract(std::unique_ptr<GameObject>);
+    void create_abstract(std::unique_ptr<GameObject>, DeltaFrame*);
     void create_wall(Point3);
     void uncreate(GameObject*);
+    void uncreate_abstract(GameObject*);
     void destroy(GameObject*, DeltaFrame*);
     void undestroy(GameObject*);
 

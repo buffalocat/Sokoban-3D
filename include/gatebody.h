@@ -9,7 +9,7 @@ class Gate;
 // It inherits the color, pushability, and gravitability of its corresponding Gate object
 class GateBody: public PushBlock {
 public:
-    GateBody(Gate* parent);
+    GateBody(Gate* gate);
     GateBody(Point3 pos, int color, bool pushable, bool gravitable);
     ~GateBody();
 
@@ -19,11 +19,19 @@ public:
     bool skip_serialization();
     static std::unique_ptr<GameObject> deserialize(MapFileI& file);
 
+    Point3 gate_pos();
+    void set_gate(Gate*);
+    Point3 update_gate_pos(DeltaFrame*);
+
     void collect_special_links(RoomMap*, Sticky, std::vector<GameObject*>&);
 
     void draw(GraphicsManager*);
 
-    Gate* parent_;
+private:
+    Gate* gate_;
+    Point3 gate_pos_;
+
+    friend class GatePosDelta;
 };
 
 #endif // GATEBODY_H

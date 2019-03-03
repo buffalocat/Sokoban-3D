@@ -29,13 +29,12 @@ public:
 
     void draw(GraphicsManager*, FPoint3);
 
-    std::unique_ptr<ObjectModifier> duplicate(GameObject*);
+    std::unique_ptr<ObjectModifier> duplicate(GameObject*, RoomMap*, DeltaFrame*);
 
     int color_;
 
 private:
     GateBody* body_;
-    bool alive_;
 
     friend class ModifierTab;
 };

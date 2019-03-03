@@ -6,11 +6,15 @@
 #include "mapfile.h"
 #include "graphicsmanager.h"
 
-GateBody::GateBody(Gate* parent): PushBlock(parent->pos() + Point3{0,0,1}, parent->color_, parent->pushable(), parent->gravitable(), Sticky::None), parent_ {parent} {}
+#include "delta.h"
+
+GateBody::GateBody(Gate* gate): PushBlock(gate->pos() + Point3{0,0,1}, gate->color_, gate->pushable(), gate->gravitable(), Sticky::None), gate_ {}, gate_pos_ {} {
+    set_gate(gate);
+}
 
 // For orphaned GateBodies
 GateBody::GateBody(Point3 pos, int color, bool pushable, bool gravitable):
-PushBlock(pos, color, pushable, gravitable, Sticky::None), parent_ {} {}
+PushBlock(pos, color, pushable, gravitable, Sticky::None), gate_ {}, gate_pos_ {} {}
 
 GateBody::~GateBody() {}
 
@@ -24,7 +28,7 @@ ObjCode GateBody::obj_code() {
 
 // Orphaned GateBodies need to be serialized!
 bool GateBody::skip_serialization() {
-    return parent_ != nullptr;
+    return gate_ != nullptr;
 }
 
 void GateBody::serialize(MapFileO& file) {
@@ -38,9 +42,27 @@ std::unique_ptr<GameObject> GateBody::deserialize(MapFileI& file) {
     return std::make_unique<GateBody>(pos, b[0], b[1], b[2]);
 }
 
+Point3 GateBody::gate_pos() {
+    return gate_pos_;
+}
+
+void GateBody::set_gate(Gate* gate) {
+    gate_ = gate;
+    gate_pos_ = gate->pos();
+}
+
+Point3 GateBody::update_gate_pos(DeltaFrame* delta_frame) {
+    Point3 dpos = gate_->pos() - gate_pos_;
+    if (!(dpos == Point3{})) {
+        delta_frame->push(std::make_unique<GatePosDelta>(this, dpos));
+        gate_pos_ = gate_->pos();
+    }
+    return dpos;
+}
+
 void GateBody::collect_special_links(RoomMap*, Sticky, std::vector<GameObject*>& to_check) {
-    if (parent_) {
-        to_check.push_back(parent_->parent_);
+    if (gate_) {
+        to_check.push_back(gate_->parent_);
     }
 }
 

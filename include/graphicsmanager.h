@@ -8,14 +8,18 @@ class GLFWwindow;
 
 // Reading off the texture atlas starting from top, left to right
 enum class Texture {
-    Blank,
-    Corners,
-    Edges,
-    UNUSED_A,
-    Cross,
-    SwitchUp,
-    SwitchDown,
+    LightEdges = 0,
+    Corners = 1,
+    BrokenEdges = 2,
+    Edges = 3,
+    Cross = 4,
+    SwitchUp = 5,
+    SwitchDown = 6,
+    Blank = 7,
+    AutoBlock = 8,
 };
+
+Texture operator |(Texture a, Texture b);
 
 class GraphicsManager {
 public:

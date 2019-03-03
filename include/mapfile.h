@@ -10,7 +10,7 @@ class ColorCycle;
 class MapFileI {
 public:
     MapFileI(std::string path);
-    virtual ~MapFileI();
+    ~MapFileI();
     void read(unsigned char* b, int n);
 
     unsigned char read_byte();
@@ -36,7 +36,7 @@ MapFileI& operator>>(MapFileI& f, ColorCycle& v);
 class MapFileO {
 public:
     MapFileO(std::string path);
-    virtual ~MapFileO();
+    ~MapFileO();
 
     MapFileO& operator<<(unsigned char);
     MapFileO& operator<<(int);

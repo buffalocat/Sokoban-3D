@@ -23,7 +23,7 @@ struct MapLocation {
 class Door: public Switchable {
 public:
     Door(GameObject* parent, bool def, bool active);
-    ~Door();
+    virtual ~Door();
     Door(const Door&);
 
     std::string name();
@@ -45,7 +45,7 @@ public:
 
     void draw(GraphicsManager*, FPoint3);
 
-    std::unique_ptr<ObjectModifier> duplicate(GameObject*);
+    std::unique_ptr<ObjectModifier> duplicate(GameObject*, RoomMap*, DeltaFrame*);
 
 private:
     std::unique_ptr<MapLocation> dest_;

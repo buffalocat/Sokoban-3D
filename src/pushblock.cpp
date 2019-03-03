@@ -1,9 +1,11 @@
 #include "pushblock.h"
 
-#include "objectmodifier.h"
 #include "roommap.h"
 #include "mapfile.h"
 #include "graphicsmanager.h"
+
+#include "objectmodifier.h"
+#include "autoblock.h"
 
 PushBlock::PushBlock(Point3 pos, int color, bool pushable, bool gravitable, Sticky sticky):
 GameObject(pos, color, pushable, gravitable), sticky_ {sticky} {}
@@ -51,17 +53,25 @@ void PushBlock::draw(GraphicsManager* gfx) {
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y));
     gfx->set_model(model);
     gfx->set_color(COLORS[color_]);
+    Texture tex;
     switch (sticky_) {
     case Sticky::None:
-        gfx->set_tex(Texture::Edges);
+        tex = Texture::Edges;
         break;
     case Sticky::Weak:
-        gfx->set_tex(Texture::Corners);
+        tex = Texture::BrokenEdges;
         break;
     case Sticky::Strong:
-        gfx->set_tex(Texture::Blank);
+        tex = Texture::LightEdges;
+        break;
+    case Sticky::AllStick:
+        tex = Texture::Corners;
         break;
     }
+    if (dynamic_cast<AutoBlock*>(modifier())) {
+        tex = tex | Texture::AutoBlock;
+    }
+    gfx->set_tex(tex);
     gfx->draw_cube();
     // TODO: once walls are a thing, make sure to turn this back on!
     // Also, give walls a unique texture, maybe?

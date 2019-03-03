@@ -6,7 +6,7 @@
 class ObjectTab: public EditorTab {
 public:
     ObjectTab(EditorState*, GraphicsManager*);
-    virtual ~ObjectTab();
+    ~ObjectTab();
 
     void init();
     void main_loop(EditorRoom*);

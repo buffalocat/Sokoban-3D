@@ -42,7 +42,7 @@ public:
     virtual void cleanup_on_destruction(RoomMap* room_map);
     virtual void setup_on_undestruction(RoomMap* room_map);
 
-    virtual std::unique_ptr<ObjectModifier> duplicate(GameObject*) = 0;
+    virtual std::unique_ptr<ObjectModifier> duplicate(GameObject*, RoomMap*, DeltaFrame*) = 0;
 
     // Every type of Modifier can have at most one callback function for map listeners
     virtual void map_callback(RoomMap*, DeltaFrame*, MoveProcessor*);

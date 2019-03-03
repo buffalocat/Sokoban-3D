@@ -72,6 +72,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="include/animation.h" />
+		<Unit filename="include/autoblock.h" />
 		<Unit filename="include/camera.h" />
 		<Unit filename="include/car.h" />
 		<Unit filename="include/color_constants.h" />
@@ -127,6 +128,9 @@
 		<Unit filename="shaders/shader.fs" />
 		<Unit filename="shaders/shader.vs" />
 		<Unit filename="src/animation.cpp" />
+		<Unit filename="src/autoblock.cpp">
+			<Option virtualFolder="ObjectModifiers/" />
+		</Unit>
 		<Unit filename="src/camera.cpp" />
 		<Unit filename="src/car.cpp">
 			<Option virtualFolder="ObjectModifiers/" />
@@ -218,7 +222,9 @@
 		<Unit filename="src/snakeblock.cpp">
 			<Option virtualFolder="GameObjects/" />
 		</Unit>
-		<Unit filename="src/snaketab.cpp" />
+		<Unit filename="src/snaketab.cpp">
+			<Option virtualFolder="EditorTabs/" />
+		</Unit>
 		<Unit filename="src/switch.cpp">
 			<Option virtualFolder="ObjectModifiers/" />
 		</Unit>

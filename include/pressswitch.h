@@ -14,7 +14,7 @@ class GraphicsManager;
 class PressSwitch: public Switch {
 public:
     PressSwitch(GameObject* parent, int color, bool persistent, bool active);
-    ~PressSwitch();
+    virtual ~PressSwitch();
 
     std::string name();
     ModCode mod_code();
@@ -31,7 +31,7 @@ public:
 
     void draw(GraphicsManager*, FPoint3);
 
-    std::unique_ptr<ObjectModifier> duplicate(GameObject*);
+    std::unique_ptr<ObjectModifier> duplicate(GameObject*, RoomMap*, DeltaFrame*);
 
 private:
     int color_;

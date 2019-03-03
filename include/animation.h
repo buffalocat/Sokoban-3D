@@ -15,7 +15,7 @@ public:
 class LinearAnimation: public Animation {
 public:
     LinearAnimation(Point3);
-    ~LinearAnimation();
+    virtual ~LinearAnimation();
     bool update();
     FPoint3 dpos();
     Point3 shift_pos(Point3);

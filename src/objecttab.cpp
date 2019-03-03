@@ -82,6 +82,7 @@ void object_tab_options() {
             ImGui::RadioButton("NonStick##PB_modify_sticky", &pb->sticky_, Sticky::None);
             ImGui::RadioButton("Weakly Sticky##PB_modify_sticky", &pb->sticky_, Sticky::Weak);
             ImGui::RadioButton("Strongly Sticky##PB_modify_sticky", &pb->sticky_, Sticky::Strong);
+            ImGui::RadioButton("Weak+Strong Sticky##PB_modify_sticky", &pb->sticky_, Sticky::AllStick);
         }
         break;
     case ObjCode::SnakeBlock: {
@@ -96,10 +97,9 @@ void object_tab_options() {
             ImGui::RadioButton("Two Ended##SB_modify_snake_ends", &sb->ends_, 2);
         }
         break;
-    case ObjCode::GateBody:
-        {
+    case ObjCode::GateBody: {
             ImGui::Text("GateBody");
-            Point3 p_pos = static_cast<GateBody*>(obj)->parent_->pos();
+            Point3 p_pos = static_cast<GateBody*>(obj)->gate_pos();
             ImGui::Text("See parent Gate at (%d,%d,%d)", p_pos.x, p_pos.y, p_pos.z);
         }
     case ObjCode::Wall: // No parameters for Wall

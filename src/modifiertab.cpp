@@ -13,6 +13,7 @@
 #include "gate.h"
 #include "gatebody.h"
 #include "pressswitch.h"
+#include "autoblock.h"
 
 #include "colorcycle.h"
 
@@ -75,6 +76,7 @@ void ModifierTab::mod_tab_options() {
         ImGui::RadioButton("Door##MOD_object", &mod_code, ModCode::Door);
         ImGui::RadioButton("Gate##MOD_object", &mod_code, ModCode::Gate);
         ImGui::RadioButton("PressSwitch##MOD_object", &mod_code, ModCode::PressSwitch);
+        ImGui::RadioButton("AutoBlock##MOD_object", &mod_code, ModCode::AutoBlock);
     }
     ImGui::Separator();
     switch (mod ? mod->mod_code() : mod_code) {
@@ -113,6 +115,7 @@ void ModifierTab::mod_tab_options() {
             ImGui::ColorButton("##COLOR_BUTTON", unpack_color(COLORS[ps->color_]), 0, ImVec2(40,40));
         }
         break;
+    case ModCode::AutoBlock: // No parameters for AutoBlock (yet)
     default:
         break;
     }
@@ -159,16 +162,19 @@ void ModifierTab::handle_left_click(EditorRoom* eroom, Point3 pos) {
         break;
     case ModCode::Gate: {
             auto gate = std::make_unique<Gate>(model_gate);
+            gate->parent_ = obj;
             // Create the GateBody too, so that serialization occurs properly!
             auto gate_body = std::make_unique<GateBody>(gate.get());
             gate->body_ = gate_body.get();
-            room_map->create_abstract(std::move(gate_body));
+            room_map->create_abstract(std::move(gate_body), nullptr);
             mod = std::move(gate);
         }
         break;
     case ModCode::PressSwitch:
         mod = std::make_unique<PressSwitch>(model_press_switch);
         break;
+    case ModCode::AutoBlock:
+        mod = std::make_unique<AutoBlock>(obj, eroom->map());
     default:
         return;
     }

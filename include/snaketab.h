@@ -6,7 +6,7 @@
 class SnakeTab: public EditorTab {
 public:
     SnakeTab(EditorState*, GraphicsManager*);
-    virtual ~SnakeTab();
+    ~SnakeTab();
 
     void init();
     void main_loop(EditorRoom*);

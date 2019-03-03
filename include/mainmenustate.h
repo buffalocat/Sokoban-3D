@@ -7,7 +7,7 @@
 class MainMenuState: public GameState {
 public:
     MainMenuState();
-    virtual ~MainMenuState();
+    ~MainMenuState();
     void main_loop();
 };
 

@@ -53,7 +53,7 @@ public:
     virtual void cleanup_on_destruction(RoomMap*);
     virtual void setup_on_undestruction(RoomMap*);
 
-    std::unique_ptr<SnakeBlock> make_split_copy();
+    std::unique_ptr<SnakeBlock> make_split_copy(RoomMap*, DeltaFrame*);
 
     Sticky sticky();
 

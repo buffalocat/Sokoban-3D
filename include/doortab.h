@@ -9,7 +9,7 @@ class Door;
 class DoorTab: public EditorTab {
 public:
     DoorTab(EditorState*, GraphicsManager*);
-    virtual ~DoorTab();
+    ~DoorTab();
 
     void init();
     void main_loop(EditorRoom*);

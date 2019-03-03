@@ -36,7 +36,7 @@ void Gate::deserialize(MapFileI& file, RoomMap* room_map, GameObject* parent) {
     if (true) {
         auto gate_body_unique = std::make_unique<GateBody>(gate.get());
         gate->body_ = gate_body_unique.get();
-        room_map->create_abstract(std::move(gate_body_unique));
+        room_map->create_abstract(std::move(gate_body_unique), nullptr);
     }
     parent->set_modifier(std::move(gate));
 }
@@ -52,26 +52,27 @@ bool Gate::can_set_state(bool state, RoomMap* room_map) {
 }
 
 void Gate::apply_state_change(RoomMap* room_map, DeltaFrame* delta_frame, MoveProcessor* mp) {
-    if (state()) {
-        room_map->put_loud(body_, delta_frame);
-    } else {
-        room_map->take_loud(body_, delta_frame);
-    }
-    GameObject* above = room_map->view(pos() + Point3{0,0,2});
-    if (above && above->gravitable_) {
-        mp->add_to_fall_check(above);
+    if (body_) {
+        if (state()) {
+            room_map->put_loud(body_, delta_frame);
+        } else {
+            room_map->take_loud(body_, delta_frame);
+        }
+        GameObject* above = room_map->view(pos() + Point3{0,0,2});
+        if (above && above->gravitable_) {
+            mp->add_to_fall_check(above);
+        }
     }
 }
 
 void Gate::map_callback(RoomMap* room_map, DeltaFrame* delta_frame, MoveProcessor* mp) {
-    // NOTE: A bit of a hack, but it should work. Every time the Gate moves,
-    // it will trigger its own listener, and this code will ensure that the
-    // GateBody has an up-to-date virtual position.
-    if (body_ && !state()) {
-        body_->abstract_shift_to(pos_above(), delta_frame);
+    if (body_) {
+        Point3 dpos = body_->update_gate_pos(delta_frame);
+        if (!state()) {
+            body_->abstract_shift(dpos, delta_frame);
+        }
     }
     check_waiting(room_map, delta_frame, mp);
-
 }
 
 void Gate::setup_on_put(RoomMap* room_map) {
@@ -92,10 +93,19 @@ void Gate::draw(GraphicsManager* gfx, FPoint3 p) {
     gfx->draw_cube();
 }
 
-std::unique_ptr<ObjectModifier> Gate::duplicate(GameObject* parent) {
-    // TODO: copy the GateBody too!!!
+std::unique_ptr<ObjectModifier> Gate::duplicate(GameObject* parent, RoomMap* room_map, DeltaFrame* delta_frame) {
     auto dup = std::make_unique<Gate>(*this);
     dup->parent_ = parent;
+    if (body_) {
+        auto body_dup = std::make_unique<GateBody>(*body_);
+        body_dup->set_gate(dup.get());
+        dup->body_ = body_dup.get();
+        if (state()) {
+            room_map->create(std::move(body_dup), delta_frame);
+        } else {
+            room_map->create_abstract(std::move(body_dup), delta_frame);
+        }
+    }
     dup->connect_to_signalers();
     return std::move(dup);
 }

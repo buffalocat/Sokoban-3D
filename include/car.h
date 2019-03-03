@@ -20,7 +20,7 @@ public:
 
     bool cycle_color(bool undo);
 
-    std::unique_ptr<ObjectModifier> duplicate(GameObject*);
+    std::unique_ptr<ObjectModifier> duplicate(GameObject*, RoomMap*, DeltaFrame*);
 
     ColorCycle color_cycle_;
 };

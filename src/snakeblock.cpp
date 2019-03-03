@@ -6,6 +6,7 @@
 #include "roommap.h"
 
 #include "objectmodifier.h"
+#include "autoblock.h"
 
 #include <algorithm>
 
@@ -99,15 +100,19 @@ void SnakeBlock::draw(GraphicsManager* gfx) {
     model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0, 1, 0));
     gfx->set_model(model);
     gfx->set_color(COLORS[color_]);
+    Texture tex;
     if (ends_ == 1) {
-        gfx->set_tex(Texture::Edges);
-        gfx->draw_cube();
-        gfx->set_tex(Texture::Blank);
+        tex = Texture::BrokenEdges;
     } else {
-        gfx->set_tex(Texture::Blank);
-        gfx->draw_cube();
+        tex = Texture::LightEdges;
     }
+    if (dynamic_cast<AutoBlock*>(modifier())) {
+        tex = tex | Texture::AutoBlock;
+    }
+    gfx->set_tex(tex);
+    gfx->draw_cube();
     draw_force_indicators(gfx, model);
+    gfx->set_tex(Texture::Blank);
     for (auto link : links_) {
         FPoint3 q = link->real_pos();
         FPoint3 d {q.x - p.x, q.y - p.y, 0};
@@ -240,10 +245,10 @@ void SnakeBlock::setup_on_undestruction(RoomMap* room_map) {
     }
 }
 
-std::unique_ptr<SnakeBlock> SnakeBlock::make_split_copy() {
+std::unique_ptr<SnakeBlock> SnakeBlock::make_split_copy(RoomMap* room_map, DeltaFrame* delta_frame) {
     auto split = std::make_unique<SnakeBlock>(pos_, color_, pushable_, gravitable_, 1);
     if (modifier_) {
-        split->set_modifier(modifier_->duplicate(split.get()));
+        split->set_modifier(modifier_->duplicate(split.get(), room_map, delta_frame));
     }
     return std::move(split);
 }
@@ -305,11 +310,12 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
         if (cur->distance_ > 0 &&  cur->distance_ <= d) {
             // The chain was odd length; split the middle block!
             if (d == cur->distance_) {
+                // TODO: make sure this "does the right thing" (resplit!)
+                // when cur is an active gate!!
                 std::vector<SnakeBlock*> links = cur->links_;
                 map_->destroy(cur, delta_frame_);
                 for (SnakeBlock* link : links) {
-                    cur->remove_link(link, delta_frame_);
-                    auto split_copy_unique = cur->make_split_copy();
+                    auto split_copy_unique = cur->make_split_copy(map_, delta_frame_);
                     SnakeBlock* split_copy = split_copy_unique.get();
                     map_->create(std::move(split_copy_unique), delta_frame_);
                     split_copy->add_link(link, delta_frame_);

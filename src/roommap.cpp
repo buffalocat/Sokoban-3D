@@ -30,9 +30,9 @@ effects_ {std::make_unique<Effects>()} {
     }
 }
 
-/*
-#include <iostream>
 
+//#include <iostream>
+/*
 void RoomMap::print_snakes() {
     for (auto& layer : layers_) {
         for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
@@ -40,6 +40,16 @@ void RoomMap::print_snakes() {
             if (obj) {
                 std::cout << "snake at " << obj->pos_ << "with d = " << obj->distance_ << std::endl;
             }
+        }
+    }
+}
+
+
+void RoomMap::print_listeners() {
+    std::cout << "\nPrinting listeners post-move!" << std::endl;
+    for (auto& p : listeners_) {
+        for (ObjectModifier* mod : p.second) {
+            std::cout << mod->name() << " at " << p.first << std::endl;
         }
     }
 }
@@ -136,22 +146,22 @@ GameObject* RoomMap::view(Point3 pos) {
 }
 
 void RoomMap::just_take(GameObject* obj) {
+    obj->cleanup_on_take(this);
     at(obj->pos_) -= obj->id_;
 }
 
 void RoomMap::just_put(GameObject* obj) {
     at(obj->pos_) += obj->id_;
+    obj->setup_on_put(this);
 }
 
 void RoomMap::take(GameObject* obj) {
     activate_listeners_at(obj->pos_);
-    obj->cleanup_on_take(this);
-    at(obj->pos_) -= obj->id_;
+    just_take(obj);
 }
 
 void RoomMap::put(GameObject* obj) {
-    at(obj->pos_) += obj->id_;
-    obj->setup_on_put(this);
+    just_put(obj);
     activate_listeners_at(obj->pos_);
 }
 
@@ -198,10 +208,6 @@ void RoomMap::just_batch_shift(std::vector<GameObject*> objs, Point3 dpos) {
     }
 }
 
-void RoomMap::create_abstract(std::unique_ptr<GameObject> obj) {
-    obj_array_.push_object(std::move(obj));
-}
-
 void RoomMap::create(std::unique_ptr<GameObject> obj, DeltaFrame* delta_frame) {
     GameObject* raw = obj.get();
     // Need to push it into the GameObjectArray first to give it an ID
@@ -212,12 +218,24 @@ void RoomMap::create(std::unique_ptr<GameObject> obj, DeltaFrame* delta_frame) {
     }
 }
 
+void RoomMap::create_abstract(std::unique_ptr<GameObject> obj, DeltaFrame* delta_frame) {
+    if (delta_frame) {
+        delta_frame->push(std::make_unique<AbstractCreationDelta>(obj.get(), this));
+    }
+    obj_array_.push_object(std::move(obj));
+}
+
 void RoomMap::create_wall(Point3 pos) {
     at(pos) = GLOBAL_WALL_ID;
 }
 
 void RoomMap::uncreate(GameObject* obj) {
     just_take(obj);
+    obj->cleanup_on_destruction(this);
+    obj_array_.destroy(obj);
+}
+
+void RoomMap::uncreate_abstract(GameObject* obj) {
     obj->cleanup_on_destruction(this);
     obj_array_.destroy(obj);
 }

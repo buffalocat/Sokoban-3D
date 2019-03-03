@@ -9,7 +9,7 @@
 class Player: public PushBlock {
 public:
     Player(Point3 pos, RidingState state);
-    ~Player();
+    virtual ~Player();
 
     std::string name();
     ObjCode obj_code();

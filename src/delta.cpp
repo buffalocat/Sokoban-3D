@@ -9,6 +9,7 @@
 #include "switchable.h"
 #include "signaler.h"
 #include "playingstate.h"
+#include "gatebody.h"
 
 Delta::~Delta() {}
 
@@ -79,6 +80,15 @@ DeletionDelta::~DeletionDelta() {}
 
 void DeletionDelta::revert() {
     map_->undestroy(obj_);
+}
+
+
+AbstractCreationDelta::AbstractCreationDelta(GameObject* obj, RoomMap* room_map): obj_ {obj}, map_ {room_map} {}
+
+AbstractCreationDelta::~AbstractCreationDelta() {}
+
+void AbstractCreationDelta::revert() {
+    map_->uncreate_abstract(obj_);
 }
 
 
@@ -220,4 +230,14 @@ ColorChangeDelta::~ColorChangeDelta() {}
 
 void ColorChangeDelta::revert() {
     car_->cycle_color(true);
+}
+
+
+GatePosDelta::GatePosDelta(GateBody* gate_body, Point3 dpos):
+gate_body_ {gate_body}, dpos_ {dpos} {}
+
+GatePosDelta::~GatePosDelta() {}
+
+void GatePosDelta::revert() {
+    gate_body_->gate_pos_ -= dpos_;
 }

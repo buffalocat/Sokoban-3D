@@ -11,7 +11,7 @@ class Signaler;
 class SwitchTab: public EditorTab {
 public:
     SwitchTab(EditorState*, GraphicsManager*);
-    virtual ~SwitchTab();
+    ~SwitchTab();
 
     void init();
     void main_loop(EditorRoom*);

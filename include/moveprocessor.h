@@ -36,7 +36,7 @@ public:
 
 private:
     void move_bound(Player*, Point3);
-    void move_general(Player*, Point3);
+    void move_general(Point3);
 
     std::vector<GameObject*> moving_blocks_;
     std::vector<GameObject*> fall_check_;

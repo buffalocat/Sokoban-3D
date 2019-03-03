@@ -27,7 +27,7 @@ bool MoveProcessor::try_move(Player* player, Point3 dir) {
     if (player->state_ == RidingState::Bound) {
         move_bound(player, dir);
     } else {
-        move_general(player, dir);
+        move_general(dir);
     }
     if (moving_blocks_.empty()) {
         return false;
@@ -37,8 +37,7 @@ bool MoveProcessor::try_move(Player* player, Point3 dir) {
 }
 
 void MoveProcessor::move_bound(Player* player, Point3 dir) {
-    // This is more complicated in 3D...
-    // For now, don't let bound player push anything
+    // When Player is Bound, no other agents move
     if (map_->view(player->shifted_pos(dir))) {
         return;
     }
@@ -55,8 +54,9 @@ void MoveProcessor::move_bound(Player* player, Point3 dir) {
     }
 }
 
-void MoveProcessor::move_general(Player* player, Point3 dir) {
-    HorizontalStepProcessor(map_, delta_frame_, dir, fall_check_, moving_blocks_).run(player);
+void MoveProcessor::move_general(Point3 dir) {
+    map_->print_snakes();
+    HorizontalStepProcessor(map_, delta_frame_, dir, fall_check_, moving_blocks_).run();
 }
 
 bool MoveProcessor::update() {

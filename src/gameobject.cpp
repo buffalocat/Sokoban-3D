@@ -48,6 +48,10 @@ bool GameObject::skip_serialization() {
 
 void GameObject::relation_serialize(MapFileO& file) {}
 
+bool GameObject::is_agent() {
+    return (modifier_ && modifier()->is_agent());
+}
+
 Point3 GameObject::shifted_pos(Point3 d) {
     return pos_ + d;
 }

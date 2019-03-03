@@ -26,7 +26,7 @@ public:
     ~RoomMap();
     bool valid(Point3 pos);
 
-    //void print_snakes();
+    void print_snakes();
     //void print_listeners();
 
     void push_full();
@@ -69,6 +69,8 @@ public:
     void check_signalers(DeltaFrame*, MoveProcessor*);
     void remove_signaler(Signaler*);
     void remove_obj_from_signalers(ObjectModifier*);
+
+    void remove_agent(GameObject* obj);
 
     void add_listener(ObjectModifier*, Point3);
     void remove_listener(ObjectModifier*, Point3);

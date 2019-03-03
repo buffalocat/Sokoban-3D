@@ -15,8 +15,11 @@ map_ {room_map}, delta_frame_ {delta_frame}, dir_ {dir} {}
 HorizontalStepProcessor::~HorizontalStepProcessor() {}
 
 
-void HorizontalStepProcessor::run(Player* player) {
-    compute_push_component_tree(player);
+void HorizontalStepProcessor::run() {
+    for (GameObject* agent : map_->agents_) {
+        compute_push_component_tree(agent);
+    }
+    // TODO: make this code more general if Puppets exist (i.e. dependent agents)
     if (!moving_blocks_.empty()) {
         perform_horizontal_step();
     }

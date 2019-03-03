@@ -66,6 +66,7 @@ private:
     unsigned int distance_;
 
     friend class SnakePuller;
+    friend class RoomMap;
 };
 
 class SnakePuller {

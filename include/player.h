@@ -15,6 +15,8 @@ public:
     ObjCode obj_code();
     bool skip_serialization();
 
+    bool is_agent();
+
     RidingState state();
     void toggle_riding(RoomMap* room_map, DeltaFrame*);
     Car* get_car(RoomMap* room_map, bool strict);

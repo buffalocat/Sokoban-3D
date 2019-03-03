@@ -22,6 +22,10 @@ bool Player::skip_serialization() {
     return true;
 }
 
+bool Player::is_agent() {
+    return true;
+}
+
 void Player::toggle_riding(RoomMap* room_map, DeltaFrame* delta_frame) {
     if (state_ == RidingState::Riding) {
         delta_frame->push(std::make_unique<RidingStateDelta>(this, state_));

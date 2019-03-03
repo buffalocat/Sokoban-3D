@@ -33,6 +33,8 @@ public:
     virtual bool relation_check();
     virtual void relation_serialize(MapFileO& file);
 
+    virtual bool is_agent();
+
     Point3 shifted_pos(Point3 d);
     void abstract_shift(Point3 dpos, DeltaFrame* delta_frame);
 

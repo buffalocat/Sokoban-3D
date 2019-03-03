@@ -32,8 +32,8 @@ effects_ {std::make_unique<Effects>()} {
 }
 
 
-//#include <iostream>
-/*
+#include <iostream>
+
 void RoomMap::print_snakes() {
     for (auto& layer : layers_) {
         for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
@@ -45,7 +45,7 @@ void RoomMap::print_snakes() {
     }
 }
 
-
+/*
 void RoomMap::print_listeners() {
     std::cout << "\nPrinting listeners post-move!" << std::endl;
     for (auto& p : listeners_) {
@@ -211,21 +211,27 @@ void RoomMap::just_batch_shift(std::vector<GameObject*> objs, Point3 dpos) {
     }
 }
 
-void RoomMap::create(std::unique_ptr<GameObject> obj, DeltaFrame* delta_frame) {
-    GameObject* raw = obj.get();
+void RoomMap::create(std::unique_ptr<GameObject> obj_unique, DeltaFrame* delta_frame) {
+    GameObject* obj = obj_unique.get();
     // Need to push it into the GameObjectArray first to give it an ID
-    obj_array_.push_object(std::move(obj));
-    put(raw);
+    obj_array_.push_object(std::move(obj_unique));
+    put(obj);
+    if (obj->is_agent()) {
+        agents_.push_back(obj);
+    }
     if (delta_frame) {
-        delta_frame->push(std::make_unique<CreationDelta>(raw, this));
+        delta_frame->push(std::make_unique<CreationDelta>(obj, this));
     }
 }
 
-void RoomMap::create_abstract(std::unique_ptr<GameObject> obj, DeltaFrame* delta_frame) {
+void RoomMap::create_abstract(std::unique_ptr<GameObject> obj_unique, DeltaFrame* delta_frame) {
     if (delta_frame) {
-        delta_frame->push(std::make_unique<AbstractCreationDelta>(obj.get(), this));
+        delta_frame->push(std::make_unique<AbstractCreationDelta>(obj_unique.get(), this));
     }
-    obj_array_.push_object(std::move(obj));
+    if (obj_unique->is_agent()) {
+        agents_.push_back(obj_unique.get());
+    }
+    obj_array_.push_object(std::move(obj_unique));
 }
 
 void RoomMap::create_wall(Point3 pos) {
@@ -233,17 +239,26 @@ void RoomMap::create_wall(Point3 pos) {
 }
 
 void RoomMap::uncreate(GameObject* obj) {
+    if (obj->is_agent()) {
+        remove_agent(obj);
+    }
     just_take(obj);
     obj->cleanup_on_destruction(this);
     obj_array_.destroy(obj);
 }
 
 void RoomMap::uncreate_abstract(GameObject* obj) {
+    if (obj->is_agent()) {
+        remove_agent(obj);
+    }
     obj->cleanup_on_destruction(this);
     obj_array_.destroy(obj);
 }
 
 void RoomMap::destroy(GameObject* obj, DeltaFrame* delta_frame) {
+    if (obj->is_agent()) {
+        remove_agent(obj);
+    }
     obj->cleanup_on_destruction(this);
     take(obj);
     if (delta_frame) {
@@ -253,7 +268,14 @@ void RoomMap::destroy(GameObject* obj, DeltaFrame* delta_frame) {
 
 void RoomMap::undestroy(GameObject* obj) {
     just_put(obj);
+    if (obj->is_agent()) {
+        agents_.push_back(obj);
+    }
     obj->setup_on_undestruction(this);
+}
+
+void RoomMap::remove_agent(GameObject* obj) {
+    agents_.erase(std::remove(agents_.begin(), agents_.end(), obj), agents_.end());
 }
 
 void RoomMap::add_listener(ObjectModifier* obj, Point3 pos) {

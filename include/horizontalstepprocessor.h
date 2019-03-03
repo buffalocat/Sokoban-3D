@@ -22,7 +22,7 @@ public:
 
     // NOTE: We can probably eliminate player from here eventually
     // When the map can provide a list of all moving agents
-    void run(Player*);
+    void run();
 
 private:
     void prepare_horizontal_move();

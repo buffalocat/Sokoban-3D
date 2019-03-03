@@ -315,6 +315,7 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
                 //(at level Sticky::AllStick) will not be split.
                 std::vector<GameObject*> sticky_comp {};
                 cur->collect_special_links(map_, Sticky::AllStick, sticky_comp);
+                cur->reset_distance_and_target();
                 if (ObjectModifier* mod = cur->modifier()) {
                     mod->collect_sticky_links(map_, Sticky::AllStick, sticky_comp);
                 }
@@ -332,7 +333,6 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
                 // The middle block couldn't be split; split around instead
                 } else {
                     std::vector<SnakeBlock*> links = cur->links_;
-                    cur->reset_distance_and_target();
                     link_add_check_.insert(cur);
                     for (SnakeBlock* link : links) {
                         cur->remove_link(link, delta_frame_);

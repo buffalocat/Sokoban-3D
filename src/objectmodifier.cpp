@@ -12,6 +12,10 @@ bool ObjectModifier::relation_check() {
 
 void ObjectModifier::relation_serialize(MapFileO&) {}
 
+bool ObjectModifier::is_agent() {
+    return false;
+}
+
 Point3 ObjectModifier::pos() {
     return parent_->pos_;
 }

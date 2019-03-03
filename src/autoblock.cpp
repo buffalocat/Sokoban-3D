@@ -20,6 +20,10 @@ void AutoBlock::deserialize(MapFileI& file, RoomMap* room_map, GameObject* paren
     parent->set_modifier(std::make_unique<AutoBlock>(parent, room_map));
 }
 
+bool AutoBlock::is_agent() {
+    return true;
+}
+
 std::unique_ptr<ObjectModifier> AutoBlock::duplicate(GameObject* parent, RoomMap*, DeltaFrame*) {
     return std::make_unique<AutoBlock>(parent, map_);
 }

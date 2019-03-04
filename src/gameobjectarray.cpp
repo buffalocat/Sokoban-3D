@@ -21,6 +21,14 @@ GameObject* GameObjectArray::operator[](int id) {
     return array_[id].get();
 }
 
+GameObject* GameObjectArray::safe_get(int id) {
+    if (id >= array_.size()) {
+        return nullptr;
+    } else {
+        return array_[id].get();
+    }
+}
+
 // TODO: use a minheap of "deleted IDs" to potentially reuse object IDs.
 void GameObjectArray::destroy(GameObject* obj) {
     array_[obj->id_].reset(nullptr);

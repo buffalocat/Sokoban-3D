@@ -31,20 +31,6 @@ effects_ {std::make_unique<Effects>()} {
     }
 }
 
-
-#include <iostream>
-
-void RoomMap::print_snakes() {
-    for (auto& layer : layers_) {
-        for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
-            SnakeBlock* obj = dynamic_cast<SnakeBlock*>(obj_array_[it->id()]);
-            if (obj) {
-                std::cout << "snake at " << obj->pos_ << "with d = " << obj->distance_ << std::endl;
-            }
-        }
-    }
-}
-
 /*
 void RoomMap::print_listeners() {
     std::cout << "\nPrinting listeners post-move!" << std::endl;

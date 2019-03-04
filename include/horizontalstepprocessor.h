@@ -35,9 +35,7 @@ private:
 
     std::vector<std::unique_ptr<PushComponent>> push_comps_unique_;
 
-    std::vector<SnakeBlock*> link_break_check_;
     std::vector<SnakeBlock*> moving_snakes_;
-    std::vector<SnakeBlock*> snakes_to_reset_;
     std::vector<SnakeBlock*> snakes_to_recheck_;
     std::vector<GameObject*>& moving_blocks_;
     std::vector<GameObject*>& fall_check_;

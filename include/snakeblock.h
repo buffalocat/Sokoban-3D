@@ -22,6 +22,11 @@ public:
 
     void collect_sticky_links(RoomMap*, Sticky sticky_level, std::vector<GameObject*>& links);
 
+    void conditional_drag(std::vector<GameObject*>&);
+    void collect_dragged_snake_links(RoomMap*, Point3 dir, std::vector<GameObject*>&);
+
+    bool moving_push_comp();
+
     bool in_links(SnakeBlock* sb);
     void add_link(SnakeBlock*, DeltaFrame*);
     void add_link_quiet(SnakeBlock*);
@@ -39,16 +44,9 @@ public:
     void collect_maybe_confused_neighbors(RoomMap*, std::unordered_set<SnakeBlock*>& check);
     void update_links_color(RoomMap*, DeltaFrame*);
     void check_add_local_links(RoomMap*, DeltaFrame*);
-    void remove_moving_links(DeltaFrame*);
+    void break_unmoving_links(std::vector<GameObject*>& fall_check, DeltaFrame*);
 
-    // distance_ encodes information about the state of the block during move processing
-    // A snake which is moving has positive distance_
-    // A snake which was not pushed has disitance_ at least 2
-    // target_ is only changed during snake pulling, and is reset afterwards
-    void toggle_push();
-    void record_move();
-    void reset_distance_and_target();
-    bool pushed_and_moving();
+    void reset_internal_state();
 
     virtual void cleanup_on_destruction(RoomMap*);
     virtual void setup_on_undestruction(RoomMap*);
@@ -58,15 +56,10 @@ public:
     Sticky sticky();
 
     std::vector<SnakeBlock*> links_;
-    int ends_;
-
-private:
-    // Temporary data members, which should only be nontrivial during move computations
     SnakeBlock* target_;
+    int ends_;
     unsigned int distance_;
-
-    friend class SnakePuller;
-    friend class RoomMap;
+    bool dragged_;
 };
 
 class SnakePuller {

@@ -26,7 +26,6 @@ public:
     ~RoomMap();
     bool valid(Point3 pos);
 
-    void print_snakes();
     //void print_listeners();
 
     void push_full();

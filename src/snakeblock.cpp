@@ -11,7 +11,7 @@
 #include <algorithm>
 
 SnakeBlock::SnakeBlock(Point3 pos, int color, bool pushable, bool gravitable, int ends):
-GameObject(pos, color, pushable, gravitable), links_ {}, target_ {}, distance_ {0}, ends_ {ends}  {}
+GameObject(pos, color, pushable, gravitable), links_ {}, target_ {}, ends_ {ends}, distance_ {0}, dragged_ {false}  {}
 
 SnakeBlock::~SnakeBlock() {}
 
@@ -70,28 +70,59 @@ Sticky SnakeBlock::sticky() {
     return Sticky::Snake;
 }
 
-void SnakeBlock::toggle_push() {
-    distance_ ^= 3;
-}
-
-void SnakeBlock::record_move() {
-    distance_ ^= 2;
-    // If it has two opposite links, it gets "pushed" for free!
-    // TODO: make this only happen for driven snakes!!!!!
-    /*if ((links_.size() == 2) && ((pos_ - links_[0]->pos_) == (links_[1]->pos_ - pos_))) {
-        distance_ = 1;
-    }*/
-}
-
-void SnakeBlock::reset_distance_and_target() {
+void SnakeBlock::reset_internal_state() {
     distance_ = 0;
     target_ = nullptr;
+    dragged_ = false;
 }
 
-bool SnakeBlock::pushed_and_moving() {
-    return distance_ == 1;
+void SnakeBlock::collect_dragged_snake_links(RoomMap* room_map, Point3 dir, std::vector<GameObject*>& weak_links) {
+    // Were we pushed by the object behind us? If so, drag all links
+    // NOTE: this does no harm even if obj is a link
+    if (GameObject* obj = room_map->view(pos_ - dir)) {
+        if (obj->comp_) {
+            for (SnakeBlock* link : links_) {
+                link->conditional_drag(weak_links);
+            }
+            return;
+        }
+    }
+    // If there aren't 2 links, there's no need to drag anything
+    if (links_.size() < 2) {
+        return;
+    }
+    for (int i = 0; i < 2; ++i) {
+        Point3 link_pos {links_[i]->pos_};
+        // If there's a link behind us, drag the other
+        if (link_pos + dir == pos_) {
+            links_[1 - i]->conditional_drag(weak_links);
+            return;
+        }
+        // If there's a link in front of us, don't drag anything
+        if (link_pos == pos_ + dir) {
+            return;
+        }
+    }
+    // At this point, we have 2 links, both of which are to the side
+    for (SnakeBlock* link : links_) {
+        link->conditional_drag(weak_links);
+    }
 }
 
+void SnakeBlock::conditional_drag(std::vector<GameObject*>& weak_links) {
+    if (!comp_) {
+        dragged_ = true;
+        weak_links.push_back(this);
+    }
+}
+
+bool SnakeBlock::moving_push_comp() {
+    if (PushComponent* comp = push_comp()) {
+        return comp->moving_;
+    } else {
+        return false;
+    }
+}
 
 void SnakeBlock::draw(GraphicsManager* gfx) {
     FPoint3 p {real_pos()};
@@ -185,18 +216,21 @@ void SnakeBlock::collect_maybe_confused_neighbors(RoomMap* room_map, std::unorde
         for (Point3 d : H_DIRECTIONS) {
             auto snake = dynamic_cast<SnakeBlock*>(room_map->view(shifted_pos(d)));
             // TODO: Make sure these conditions are reasonable
-            if (snake && (snake->distance_ == 0) && (color_ == snake->color_) && snake->available()) {
+            if (snake && (color_ == snake->color_) && snake->available()) {
                 check.insert(snake);
             }
         }
     }
 }
 
-void SnakeBlock::remove_moving_links(DeltaFrame* delta_frame) {
+void SnakeBlock::break_unmoving_links(std::vector<GameObject*>& fall_check, DeltaFrame* delta_frame) {
     auto links_copy = links_;
     for (SnakeBlock* link : links_copy) {
-        if (link->distance_) {
-            remove_link(link, delta_frame);
+        if (PushComponent* comp = link->push_comp()) {
+            if (comp->blocked_) {
+                remove_link(link, delta_frame);
+                fall_check.push_back(link);
+            }
         }
     }
 }
@@ -227,7 +261,7 @@ bool SnakeBlock::confused(RoomMap* room_map) {
 }
 
 void SnakeBlock::cleanup_on_destruction(RoomMap* room_map) {
-    reset_distance_and_target();
+    reset_internal_state();
     for (SnakeBlock* link : links_) {
         link->remove_link_one_way(this);
     }
@@ -264,61 +298,37 @@ moving_blocks_ {moving_blocks}, link_add_check_ {link_add_check}, fall_check_ {f
 SnakePuller::~SnakePuller() {}
 
 void SnakePuller::prepare_pull(SnakeBlock* cur) {
-    // If the snake has no links or was directly pushed, it doesn't pull anything!
-    if (cur->links_.size() == 0 || cur->pushed_and_moving()) {
+    SnakeBlock* prev {};
+    // A moving snake can have at most one link which isn't moving already
+    for (SnakeBlock* link : cur->links_) {
+        if (!link->moving_push_comp()) {
+            prev = cur;
+            cur = link;
+            break;
+        }
+    }
+    // This block didn't have anything to pull!
+    if (!prev) {
         return;
     }
-    SnakeBlock* prev {};
-    for (SnakeBlock* link : cur->links_) {
-        if (link->pushed_and_moving()) {
-            prev = link;
-            break;
-        }
-    }
-    unsigned int d = 2;
-    // NOTE: this ensures we don't pull the wrong end on the first check
-    // TODO: make sure it's right
-    if (!prev) {
-        ++d;
-        prev = cur;
-        cur = cur->links_[0];
-        cur->target_ = prev;
-    }
+    prev->distance_ = 1;
+    cur->target_ = prev;
+    // At the beginning of this loop, it's guaranteed that cur->comp_ == nullptr
     while (true) {
-        // If we reach the end of the snake, we can pull it
-        if (cur->links_.size() == 1) {
-            link_add_check_.insert(cur);
-            cur->collect_maybe_confused_neighbors(map_, link_add_check_);
-            snakes_to_pull_.push_back(cur);
-            break;
-        }
-        // Progress down the snake
-        for (SnakeBlock* link : cur->links_) {
-            if (link != prev) {
-                cur->distance_ = d;
-                ++d;
-                prev = cur;
-                cur = link;
-                break;
-            }
-        }
-        // If we reach another block with a component initialized, nothing gets pulled (yet)
-        if (cur->comp_) {
-            return;
-        }
-        // If we reach a block with an initialized but shorter distance, we're done
-        if (cur->distance_ > 0 &&  cur->distance_ <= d) {
+        // We've reached a block for the second time (i.e. from the other direction)
+        if (cur->distance_ > 0) {
             // The chain was odd length; split the middle block!
-            if (d == cur->distance_) {
+            if (cur->distance_ == prev->distance_ + 1) {
                 // TODO: Make sure this is *really* the condition we want
                 // For now, a snake which is linked to anything else
                 //(at level Sticky::AllStick) will not be split.
                 std::vector<GameObject*> sticky_comp {};
                 cur->collect_special_links(map_, Sticky::AllStick, sticky_comp);
-                cur->reset_distance_and_target();
+                cur->reset_internal_state();
                 if (ObjectModifier* mod = cur->modifier()) {
                     mod->collect_sticky_links(map_, Sticky::AllStick, sticky_comp);
                 }
+                // The split succeeded
                 if (sticky_comp.empty()) {
                     std::vector<SnakeBlock*> links = cur->links_;
                     map_->destroy(cur, delta_frame_);
@@ -340,28 +350,48 @@ void SnakePuller::prepare_pull(SnakeBlock* cur) {
                         snakes_to_pull_.push_back(link);
                     }
                 }
+                return;
             // The chain was even length; cut!
-            } else {
+            } else if (cur->distance_ == prev->distance_) {
                 link_add_check_.insert(cur);
                 link_add_check_.insert(prev);
                 cur->remove_link(prev, delta_frame_);
                 snakes_to_pull_.push_back(cur);
                 snakes_to_pull_.push_back(prev);
+                return;
             }
-            return;
         }
         cur->target_ = prev;
+        // If cur is the end of the snake, pull it
+        if (cur->links_.size() == 1) {
+            link_add_check_.insert(cur);
+            cur->collect_maybe_confused_neighbors(map_, link_add_check_);
+            snakes_to_pull_.push_back(cur);
+            return;
+        }
+        // Progress down the snake
+        for (SnakeBlock* link : cur->links_) {
+            if (link != prev) {
+                cur->distance_ = prev->distance_ + 1;
+                prev = cur;
+                cur = link;
+                break;
+            }
+        }
+        if (cur->moving_push_comp()) {
+            return;
+        }
     }
 }
 
 void SnakePuller::perform_pulls() {
     for (SnakeBlock* cur : snakes_to_pull_) {
         while (SnakeBlock* next = cur->target_) {
-            cur->reset_distance_and_target();
+            cur->reset_internal_state();
             moving_blocks_.push_back(cur);
             map_->shift(cur, (next->pos_ - cur->pos_), delta_frame_);
             cur = next;
         }
-        cur->reset_distance_and_target();
+        cur->reset_internal_state();
     }
 }

@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <iostream>
 
 #include "point.h"
 #include "color_constants.h"

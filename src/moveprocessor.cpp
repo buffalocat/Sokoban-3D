@@ -55,7 +55,6 @@ void MoveProcessor::move_bound(Player* player, Point3 dir) {
 }
 
 void MoveProcessor::move_general(Point3 dir) {
-    map_->print_snakes();
     HorizontalStepProcessor(map_, delta_frame_, dir, fall_check_, moving_blocks_).run();
 }
 

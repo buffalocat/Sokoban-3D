@@ -17,6 +17,7 @@ enum class Texture {
     SwitchDown = 6,
     Blank = 7,
     AutoBlock = 8,
+    Car = 12,
 };
 
 Texture operator |(Texture a, Texture b);

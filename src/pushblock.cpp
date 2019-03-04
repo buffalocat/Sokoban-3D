@@ -6,6 +6,7 @@
 
 #include "objectmodifier.h"
 #include "autoblock.h"
+#include "car.h"
 
 PushBlock::PushBlock(Point3 pos, int color, bool pushable, bool gravitable, Sticky sticky):
 GameObject(pos, color, pushable, gravitable), sticky_ {sticky} {}
@@ -70,6 +71,8 @@ void PushBlock::draw(GraphicsManager* gfx) {
     }
     if (dynamic_cast<AutoBlock*>(modifier())) {
         tex = tex | Texture::AutoBlock;
+    } else if (dynamic_cast<Car*>(modifier())) {
+        tex = tex | Texture::Car;
     }
     gfx->set_tex(tex);
     gfx->draw_cube();

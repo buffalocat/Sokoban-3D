@@ -7,6 +7,7 @@
 
 #include "objectmodifier.h"
 #include "autoblock.h"
+#include "car.h"
 
 #include <algorithm>
 
@@ -139,6 +140,8 @@ void SnakeBlock::draw(GraphicsManager* gfx) {
     }
     if (dynamic_cast<AutoBlock*>(modifier())) {
         tex = tex | Texture::AutoBlock;
+    } else if (dynamic_cast<Car*>(modifier())) {
+        tex = tex | Texture::Car;
     }
     gfx->set_tex(tex);
     gfx->draw_cube();

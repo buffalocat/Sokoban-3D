@@ -67,9 +67,7 @@ bool HorizontalStepProcessor::compute_push_component(GameObject* start_block) {
         if (GameObject* in_front = map_->view(block->pos_ + dir_)) {
             if (in_front->pushable_) {
                 if (auto sb = dynamic_cast<SnakeBlock*>(in_front)) {
-                    if (in_front->push_comp()) {
-                        snakes_to_recheck_.push_back(sb);
-                    }
+                    snakes_to_recheck_.push_back(sb);
                 }
                 if (compute_push_component(in_front)) {
                     comp->add_pushing(in_front->push_comp());

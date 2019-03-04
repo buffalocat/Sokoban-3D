@@ -16,7 +16,8 @@ map_ {room_map}, delta_frame_ {delta_frame}, layers_fallen_ {} {}
 
 FallStepProcessor::~FallStepProcessor() {}
 
-void FallStepProcessor::run() {
+// Returns whether anything falls
+bool FallStepProcessor::run() {
     while (!fall_check_.empty()) {
         std::vector<GameObject*> next_fall_check {};
         for (GameObject* block : fall_check_) {
@@ -36,6 +37,9 @@ void FallStepProcessor::run() {
     }
     fall_comps_unique_.erase(std::remove_if(fall_comps_unique_.begin(), fall_comps_unique_.end(),
                                             [](auto& comp) { return comp->settled_; }), fall_comps_unique_.end());
+    if (fall_comps_unique_.empty()) {
+        return false;
+    }
     // Collect all falling snakes, and their adjacent maybe-confused snakes
     for (auto& comp : fall_comps_unique_) {
         for (GameObject* block : comp->blocks_) {
@@ -69,6 +73,7 @@ void FallStepProcessor::run() {
     for (SnakeBlock* snake : snake_check_) {
         snake->check_add_local_links(map_, delta_frame_);
     }
+    return true;
 }
 
 void FallStepProcessor::collect_above(FallComponent* comp, std::vector<GameObject*>& above_list) {

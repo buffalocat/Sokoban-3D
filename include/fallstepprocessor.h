@@ -15,7 +15,7 @@ public:
     FallStepProcessor(RoomMap*, DeltaFrame*, std::vector<GameObject*>&&);
     ~FallStepProcessor();
 
-    void run();
+    bool run();
     void check_land_first(FallComponent* comp);
     void collect_above(FallComponent* comp, std::vector<GameObject*>& above_list);
     bool drop_check(FallComponent* comp);

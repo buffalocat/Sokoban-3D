@@ -7,7 +7,7 @@
 #include "player.h"
 #include "delta.h"
 #include "roommap.h"
-#include "switch.h"
+#include "door.h"
 
 #include "horizontalstepprocessor.h"
 #include "fallstepprocessor.h"
@@ -20,10 +20,6 @@ frames_ {0}, state_ {} {}
 MoveProcessor::~MoveProcessor() {}
 
 bool MoveProcessor::try_move(Player* player, Point3 dir) {
-    if (!delta_frame_) {
-        throw NullDeltaFrameException {};
-    }
-    state_ = MoveStep::Horizontal;
     if (player->state_ == RidingState::Bound) {
         move_bound(player, dir);
     } else {
@@ -32,7 +28,8 @@ bool MoveProcessor::try_move(Player* player, Point3 dir) {
     if (moving_blocks_.empty()) {
         return false;
     }
-    frames_ = MOVEMENT_FRAMES;
+    state_ = MoveStep::Horizontal;
+    frames_ = HORIZONTAL_MOVEMENT_FRAMES;
     return true;
 }
 
@@ -60,14 +57,20 @@ void MoveProcessor::move_general(Point3 dir) {
 
 bool MoveProcessor::update() {
     if (--frames_ == 0) {
-        perform_switch_checks();
-        begin_fall_cycle();
-        return true;
+        switch (state_) {
+        case MoveStep::Horizontal:
+        case MoveStep::Fall:
+            perform_switch_checks();
+            try_fall_step();
+            break;
+        default:
+            break;
+        }
     }
     for (GameObject* block : moving_blocks_) {
         block->update_animation();
     }
-    return false;
+    return frames_ == 0;
 }
 
 void MoveProcessor::abort() {
@@ -77,9 +80,6 @@ void MoveProcessor::abort() {
 }
 
 void MoveProcessor::color_change(Player* player) {
-    if (!delta_frame_) {
-        throw NullDeltaFrameException {};
-    }
     Car* car = player->get_car(map_, false);
     if (!(car && car->cycle_color(false))) {
         return;
@@ -91,26 +91,25 @@ void MoveProcessor::color_change(Player* player) {
             fall_check_.push_back(block);
         }
     }
-    begin_fall_cycle();
+    try_fall_step();
 }
 
-void MoveProcessor::begin_fall_cycle() {
-    if (!delta_frame_) {
-        throw NullDeltaFrameException {};
-    }
-    state_ = MoveStep::Fall;
-    // TODO: "split" this loop to allow for animation in between fall steps!
-    while (!fall_check_.empty()) {
-        FallStepProcessor(map_, delta_frame_, std::move(fall_check_)).run();
+void MoveProcessor::try_fall_step() {
+    moving_blocks_.clear();
+    if (!fall_check_.empty()) {
+        if (FallStepProcessor(map_, delta_frame_, std::move(fall_check_)).run()) {
+            state_ = MoveStep::Fall;
+            frames_ = FALL_MOVEMENT_FRAMES;
+        }
         fall_check_.clear();
-        perform_switch_checks();
     }
+}
+
+void MoveProcessor::try_door_move(Door* door) {
+
 }
 
 void MoveProcessor::perform_switch_checks() {
-    if (!delta_frame_) {
-        throw NullDeltaFrameException {};
-    }
     map_->alert_activated_listeners(delta_frame_, this);
     map_->reset_local_state();
     map_->check_signalers(delta_frame_, this);

@@ -122,8 +122,10 @@ constexpr float ORTHO_HEIGHT = (float)SCREEN_HEIGHT/(float)MESH_SIZE;
 const int DEFAULT_BOARD_WIDTH = 17;
 const int DEFAULT_BOARD_HEIGHT = 13;
 
-// Must satisfy MAX_COOLDOWN < MOVEMENT_FRAMES for smooth motion
-const int MOVEMENT_FRAMES = 8;
+
+// Must satisfy MAX_COOLDOWN < HORIZONTAL_MOVEMENT_FRAMES for smooth motion
+const int HORIZONTAL_MOVEMENT_FRAMES = 8;
+const int FALL_MOVEMENT_FRAMES = 4;
 const int MAX_COOLDOWN = 7;
 
 const int UNDO_COMBO_FIRST = 4;

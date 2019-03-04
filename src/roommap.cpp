@@ -345,7 +345,7 @@ void RoomMap::set_initial_state(bool editor_mode) {
         return;
     }
     mp.perform_switch_checks();
-    mp.begin_fall_cycle();
+    mp.try_fall_step();
 }
 
 // This function does just one of the things that set_initial_state does

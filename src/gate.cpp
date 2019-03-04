@@ -63,7 +63,7 @@ void Gate::apply_state_change(RoomMap* room_map, DeltaFrame* delta_frame, MovePr
         } else {
             room_map->take_loud(body_, delta_frame);
         }
-        GameObject* above = room_map->view(pos() + Point3{0,0,2});
+        GameObject* above = room_map->view(body_->pos_ + Point3{0,0,1});
         if (above && above->gravitable_) {
             mp->add_to_fall_check(above);
         }
@@ -80,7 +80,8 @@ void Gate::map_callback(RoomMap* room_map, DeltaFrame* delta_frame, MoveProcesso
     check_waiting(room_map, delta_frame, mp);
 }
 
-// TODO: make sure Gate listeners are handled correctly in all cases!!
+// TODO: make sure Gate listeners are handled correctly in all cases
+// Could disable listener creation when the gate is retracted, too.
 void Gate::setup_on_put(RoomMap* room_map) {
     if (body_) {
         room_map->add_listener(this, body_->pos_);
@@ -93,6 +94,8 @@ void Gate::cleanup_on_take(RoomMap* room_map) {
         room_map->remove_listener(this, body_->pos_);
     }
 }
+
+// TODO: cleanup GateBody on destruction (if retracted!)
 
 void Gate::draw(GraphicsManager* gfx, FPoint3 p) {
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z + 0.5f, p.y));

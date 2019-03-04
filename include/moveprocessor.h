@@ -8,6 +8,7 @@ class GameObject;
 class RoomMap;
 class DeltaFrame;
 class SnakeBlock;
+class Door;
 
 enum class MoveStep {
     Horizontal = 1,
@@ -21,13 +22,13 @@ public:
     MoveProcessor(RoomMap*, DeltaFrame*);
     ~MoveProcessor();
 
-    struct NullDeltaFrameException : public std::exception {};
-
     bool try_move(Player*, Point3);
     void color_change(Player*);
 
     void perform_switch_checks();
-    void begin_fall_cycle();
+    void try_fall_step();
+
+    void try_door_move(Door*);
 
     void add_to_fall_check(GameObject*);
 

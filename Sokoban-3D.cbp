@@ -94,6 +94,7 @@
 		<Unit filename="include/editorstate.h" />
 		<Unit filename="include/editortab.h" />
 		<Unit filename="include/effects.h" />
+		<Unit filename="include/fallstepprocessor.h" />
 		<Unit filename="include/gameobject.h" />
 		<Unit filename="include/gameobjectarray.h" />
 		<Unit filename="include/gamestate.h" />

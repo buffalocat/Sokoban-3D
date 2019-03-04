@@ -11,19 +11,32 @@
 #include <algorithm>
 
 SwitchTab::SwitchTab(EditorState* editor, GraphicsManager* gfx): EditorTab(editor, gfx),
-model_switches_ {}, model_switchables_ {} {}
+model_switches_ {}, model_switchables_ {}, model_persistent_ {}, model_threshold_ {} {}
 
 SwitchTab::~SwitchTab() {}
 
 static bool inspect_mode = false;
 static Signaler* selected_sig = nullptr;
+static bool* persistent = nullptr;
+static int* threshold = nullptr;
 
 static std::vector<Switch*>* switches = nullptr;
 static std::vector<Switchable*>* switchables = nullptr;
 
+enum class Threshold {
+    All,
+    Any,
+    Custom,
+};
+
+static Threshold threshold_mode = Threshold::All;
+
 void SwitchTab::init() {
     model_switches_.clear();
     model_switchables_.clear();
+    model_persistent_ = false;
+    model_threshold_ = 0;
+    threshold_mode = Threshold::All;
     selected_sig = nullptr;
 }
 
@@ -54,6 +67,14 @@ void SwitchTab::main_loop(EditorRoom* eroom) {
         int len = get_signaler_labels(labels, signalers);
         if (ImGui::ListBox("Signalers##SWITCH", &current, labels, len, len)) {
             selected_sig = signalers[current].get();
+            int cur = selected_sig->threshold_;
+            if (cur == selected_sig->switches_.size()) {
+                threshold_mode = Threshold::All;
+            } else if (cur == 1) {
+                threshold_mode = Threshold::Any;
+            } else {
+                threshold_mode = Threshold::Custom;
+            }
         }
         if (selected_sig) {
             switches = &selected_sig->switches_;
@@ -106,16 +127,51 @@ void SwitchTab::main_loop(EditorRoom* eroom) {
 
     const static int MAX_LABEL_LENGTH = 64;
     static char label_buf[MAX_LABEL_LENGTH] = "";
+
+    persistent = &model_persistent_;
+    threshold = &model_threshold_;
     if (inspect_mode) {
         if (selected_sig) {
             snprintf(label_buf, MAX_LABEL_LENGTH, "%s", selected_sig->label_.c_str());
             if (ImGui::InputText("Label##SWITCH_signaler_label", label_buf, MAX_LABEL_LENGTH)) {
                 selected_sig->label_ = std::string(label_buf);
             }
+            persistent = &selected_sig->persistent_;
+            threshold = &selected_sig->threshold_;
+        } else {
+            return;
         }
     } else {
         ImGui::InputText("Label##SWITCH_signaler_label", label_buf, MAX_LABEL_LENGTH);
+        persistent = &model_persistent_;
+        threshold = &model_threshold_;
     }
+
+    ImGui::Checkbox("Persistent?##SWITCH_persistent", persistent);
+
+    ImGui::Separator();
+    ImGui::Text("Activation Threshold:");
+
+    ImGui::RadioButton("All##SWITCH_threshold", &threshold_mode, Threshold::All);
+    ImGui::RadioButton("Any##SWITCH_threshold", &threshold_mode, Threshold::Any);
+    ImGui::RadioButton("Custom##SWITCH_threshold", &threshold_mode, Threshold::Custom);
+
+    switch (threshold_mode) {
+    case Threshold::All:
+        *threshold = switches->size();
+        break;
+    case Threshold::Any:
+        *threshold = 1;
+        break;
+    case Threshold::Custom:
+        ImGui::InputInt("Switch Threshold##SWITCH_threshold", threshold);
+        if (*threshold < 0) {
+            *threshold = 0;
+        }
+        break;
+    }
+
+    ImGui::Separator();
 
     if (inspect_mode) {
         if (ImGui::Button("Erase Selected Signaler##SWITCH")) {
@@ -131,7 +187,7 @@ void SwitchTab::main_loop(EditorRoom* eroom) {
             if (label.empty()) {
                 label = "UNNAMED";
             }
-            auto signaler = std::make_unique<Signaler>(label, 0, model_switches_.size(), false, false);
+            auto signaler = std::make_unique<Signaler>(label, 0, *threshold, *persistent, false);
             for (auto& obj : model_switches_) {
                 signaler->push_switch_mutual(obj);
             }

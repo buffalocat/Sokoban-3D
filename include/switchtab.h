@@ -23,6 +23,8 @@ public:
 private:
     std::vector<Switch*> model_switches_;
     std::vector<Switchable*> model_switchables_;
+    bool model_persistent_;
+    int model_threshold_;
 };
 
 #endif // SWITCHTAB_H

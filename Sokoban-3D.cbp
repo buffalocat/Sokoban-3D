@@ -76,6 +76,7 @@
 		<Unit filename="include/autoblock.h" />
 		<Unit filename="include/camera.h" />
 		<Unit filename="include/car.h" />
+		<Unit filename="include/color_constants.cpp" />
 		<Unit filename="include/color_constants.h" />
 		<Unit filename="include/colorcycle.h" />
 		<Unit filename="include/common_constants.h" />

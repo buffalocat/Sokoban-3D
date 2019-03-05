@@ -115,28 +115,14 @@ void PlayingState::handle_input() {
     }
     for (auto p : MOVEMENT_KEYS) {
         if (glfwGetKey(window_, p.first) == GLFW_PRESS) {
-            move_processor_ = std::make_unique<MoveProcessor>(room_map, delta_frame_.get());
+            move_processor_ = std::make_unique<MoveProcessor>(this, room_map, delta_frame_.get());
             // p.second == direction of movement
             if (!move_processor_->try_move(player_, p.second)) {
                 move_processor_.reset(nullptr);
                 return;
             }
             input_cooldown = MAX_COOLDOWN;
-            // TODO: Consider whether Doors should use listeners
             Point3 pos_below;
-            if (player_->state_ == RidingState::Riding) {
-                pos_below = player_->shifted_pos({0,0,-2});
-            } else {
-                pos_below = player_->shifted_pos({0,0,-1});
-            }
-            if (GameObject* door_obj = room_map->view(pos_below)) {
-                if (Door* door = dynamic_cast<Door*>(door_obj->modifier())) {
-                    if (door->dest() && door->state()) {
-                        use_door(door->dest());
-                    }
-                }
-            }
-            return;
         }
     }
     if (glfwGetKey(window_, GLFW_KEY_X) == GLFW_PRESS) {
@@ -144,10 +130,9 @@ void PlayingState::handle_input() {
         input_cooldown = MAX_COOLDOWN;
         return;
     } else if (glfwGetKey(window_, GLFW_KEY_C) == GLFW_PRESS) {
-        move_processor_ = std::make_unique<MoveProcessor>(room_map, delta_frame_.get());
+        move_processor_ = std::make_unique<MoveProcessor>(this, room_map, delta_frame_.get());
         move_processor_->color_change(player_);
         // TODO: when there's color change animation, don't reset MP yet!
-        move_processor_.reset(nullptr);
         input_cooldown = MAX_COOLDOWN;
         return;
     }
@@ -181,37 +166,28 @@ bool PlayingState::load_room(std::string name) {
     return true;
 }
 
-#include <iostream>
-
-// IMPORTANT TODO: Fix door movement
-void PlayingState::use_door(MapLocation* dest) {
+bool PlayingState::try_use_door(Door* door, std::vector<GameObject*>& objs) {
+    MapLocation* dest = door->dest();
     if (!loaded_rooms_.count(dest->name)) {
         load_room(dest->name);
     }
     Room* dest_room = loaded_rooms_[dest->name].get();
     RoomMap* cur_map = room_->map();
     RoomMap* dest_map = dest_room->map();
-    if (dest_map->view(dest->pos + Point3{0,0,1})) {
-        return;
-    } else if (player_->state_ == RidingState::Riding && dest_map->view(dest->pos + Point3{0,0,2})) {
-        return;
-    }
-    delta_frame_->push(std::make_unique<DoorMoveDelta>(this, room_, player_->pos_));
-    room_ = dest_room;
-    cur_map->take(player_);
-    if (player_->state_ == RidingState::Riding) {
-        Car* car = player_->get_car(cur_map, true);
-        cur_map->take(car->parent_);
-        car->parent_->pos_ = dest->pos + Point3{0,0,1};
-        dest_map->put(car->parent_);
-        player_->pos_ = dest->pos + Point3{0,0,2};
-    } else {
-        player_->pos_ = dest->pos + Point3{0,0,1};
-        if (player_->state_ == RidingState::Bound) {
-            if (!dest_map->view(player_->shifted_pos({0,0,-1}))) {
-                player_->state_ = RidingState::Free;
-            }
+    // TODO: maybe branch depending on whether cur_map == dest_map
+    for (GameObject* obj : objs) {
+        Point3 offset = obj->pos_ - door->pos();
+        if (dest_map->view(dest->pos + offset)) {
+            return false;
         }
     }
-    dest_map->put(player_);
+    delta_frame_->push(std::make_unique<DoorMoveDelta>(this, room_, objs));
+    // Iterate again to perform the motion (just compute offsets again, whatever)
+    for (GameObject* obj : objs) {
+        Point3 offset = obj->pos_ - door->pos();
+        cur_map->take(obj);
+        obj->pos_ = dest->pos + offset;
+        dest_map->put(obj);
+    }
+    return true;
 }

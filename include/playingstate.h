@@ -11,6 +11,7 @@
 class GameObjectArray;
 class GraphicsManager;
 class Room;
+class GameObject;
 class Player;
 class MoveProcessor;
 
@@ -18,7 +19,7 @@ class UndoStack;
 class DeltaFrame;
 class DoorMoveDelta;
 
-struct MapLocation;
+class Door;
 
 class PlayingState: public GameState {
 public:
@@ -29,10 +30,11 @@ public:
     void handle_input();
     bool activate_room(std::string);
     bool load_room(std::string);
-    void use_door(MapLocation* dest);
+
+    bool try_use_door(Door*, std::vector<GameObject*>&);
 
 private:
-    std::map<std::string, std::unique_ptr<Room>> loaded_rooms_;
+    std::unordered_map<std::string, std::unique_ptr<Room>> loaded_rooms_;
     std::unique_ptr<GameObjectArray> objs_;
     std::unique_ptr<MoveProcessor> move_processor_;
     std::unique_ptr<UndoStack> undo_stack_;

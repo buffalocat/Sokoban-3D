@@ -182,14 +182,14 @@ private:
 
 class DoorMoveDelta: public Delta {
 public:
-    DoorMoveDelta(PlayingState* state, Room* room, Point3 pos);
+    DoorMoveDelta(PlayingState* state, Room* room, std::vector<GameObject*>& objs);
     ~DoorMoveDelta();
     void revert();
 
 private:
     PlayingState* state_;
     Room* room_;
-    Point3 pos_;
+    std::vector<std::pair<GameObject*, Point3>> pairs_;
 };
 
 

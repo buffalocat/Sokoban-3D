@@ -322,7 +322,7 @@ void RoomMap::set_initial_state(bool editor_mode) {
     // Using a "fake" DeltaFrame just this once means we
     // don't have to do a bunch of redundant checks during play
     DeltaFrame dummy_df {};
-    MoveProcessor mp = MoveProcessor(this, &dummy_df);
+    MoveProcessor mp = MoveProcessor(nullptr, this, &dummy_df);
     for (auto& layer : layers_) {
         for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
             GameObject* obj = obj_array_[it->id()];

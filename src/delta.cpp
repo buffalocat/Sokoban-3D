@@ -163,25 +163,25 @@ void RemoveLinkDelta::revert() {
 }
 
 
-DoorMoveDelta::DoorMoveDelta(PlayingState* state, Room* room, Point3 pos):
-state_ {state}, room_ {room}, pos_ {pos} {}
+DoorMoveDelta::DoorMoveDelta(PlayingState* state, Room* room, std::vector<GameObject*>& objs):
+state_ {state}, room_ {room}, pairs_ {} {
+    for (GameObject* obj : objs) {
+        pairs_.push_back(std::make_pair(obj, obj->pos_));
+    }
+}
 
 DoorMoveDelta::~DoorMoveDelta() {}
 
 void DoorMoveDelta::revert() {
     RoomMap* cur_map = state_->room_->map();
     RoomMap* dest_map = room_->map();
-    Player* player = state_->player_;
     state_->room_ = room_;
-    cur_map->take(player);
-    if (Car* car = player->get_car(cur_map, true)) {
-        GameObject* car_concrete = car->parent_;
-        cur_map->take(car_concrete);
-        car_concrete->pos_ = pos_ + Point3{0,0,-1};
-        dest_map->put(car_concrete);
+    for (auto& p : pairs_) {
+        GameObject* obj = p.first;
+        cur_map->just_take(obj);
+        obj->pos_ = p.second;
+        dest_map->just_put(obj);
     }
-    player->pos_ = pos_;
-    dest_map->put(player);
 }
 
 

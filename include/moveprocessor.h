@@ -5,6 +5,7 @@
 
 class Player;
 class GameObject;
+class PlayingState;
 class RoomMap;
 class DeltaFrame;
 class SnakeBlock;
@@ -13,13 +14,14 @@ class Door;
 enum class MoveStep {
     Horizontal = 1,
     Fall = 2,
-    DoorInt = 3,
-    DoorExt = 4,
+    ColorChange = 3,
+    DoorInt,
+    DoorExt,
 };
 
 class MoveProcessor {
 public:
-    MoveProcessor(RoomMap*, DeltaFrame*);
+    MoveProcessor(PlayingState*, RoomMap*, DeltaFrame*);
     ~MoveProcessor();
 
     bool try_move(Player*, Point3);
@@ -42,6 +44,7 @@ private:
     std::vector<GameObject*> moving_blocks_;
     std::vector<GameObject*> fall_check_;
 
+    PlayingState* playing_state_;
     RoomMap* map_;
     DeltaFrame* delta_frame_;
 

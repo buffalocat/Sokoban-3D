@@ -28,11 +28,11 @@ Point3 MapFileI::read_point3() {
 }
 
 std::string MapFileI::read_str() {
-    unsigned char n[1];
-    char b[256];
-    read(n, 1);
-    file_.read(b, n[0]);
-    return std::string(b, n[0]);
+    unsigned char n;
+    char b[256] = "";
+    read(&n, 1);
+    file_.read(b, n);
+    return std::string(b, n);
 }
 
 MapFileI& operator>>(MapFileI& f, int& v) {

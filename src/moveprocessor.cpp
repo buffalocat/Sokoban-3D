@@ -9,12 +9,14 @@
 #include "roommap.h"
 #include "door.h"
 
+#include "playingstate.h"
+
 #include "horizontalstepprocessor.h"
 #include "fallstepprocessor.h"
 
-MoveProcessor::MoveProcessor(RoomMap* room_map, DeltaFrame* delta_frame):
+MoveProcessor::MoveProcessor(PlayingState* playing_state, RoomMap* room_map, DeltaFrame* delta_frame):
 fall_check_ {}, moving_blocks_ {},
-map_ {room_map}, delta_frame_ {delta_frame},
+playing_state_ {playing_state}, map_ {room_map}, delta_frame_ {delta_frame},
 frames_ {0}, state_ {} {}
 
 MoveProcessor::~MoveProcessor() {}
@@ -60,6 +62,7 @@ bool MoveProcessor::update() {
         switch (state_) {
         case MoveStep::Horizontal:
         case MoveStep::Fall:
+        case MoveStep::ColorChange:
             perform_switch_checks();
             try_fall_step();
             break;
@@ -84,6 +87,9 @@ void MoveProcessor::color_change(Player* player) {
     if (!(car && car->cycle_color(false))) {
         return;
     }
+    state_ = MoveStep::ColorChange;
+    // TODO: consider renaming
+    frames_ = FALL_MOVEMENT_FRAMES;
     delta_frame_->push(std::make_unique<ColorChangeDelta>(car));
     fall_check_.push_back(car->parent_);
     for (Point3 d : DIRECTIONS) {
@@ -91,7 +97,6 @@ void MoveProcessor::color_change(Player* player) {
             fall_check_.push_back(block);
         }
     }
-    try_fall_step();
 }
 
 void MoveProcessor::try_fall_step() {
@@ -106,7 +111,31 @@ void MoveProcessor::try_fall_step() {
 }
 
 void MoveProcessor::try_door_move(Door* door) {
-
+    if (!door->state()) {
+        return;
+    }
+    std::vector<GameObject*> objs_to_move {};
+    // TODO: make this more general later
+    if (GameObject* above = map_->view(door->pos_above())) {
+        if (Player* player = dynamic_cast<Player*>(above)) {
+            objs_to_move.push_back(player);
+        } else if (Car* car = dynamic_cast<Car*>(above->modifier())) {
+            if (Player* player = dynamic_cast<Player*>(map_->view(car->pos_above()))) {
+                if (player->state_ == RidingState::Riding) {
+                    objs_to_move.push_back(player);
+                    objs_to_move.push_back(above);
+                }
+            }
+        }
+    }
+    if (objs_to_move.empty()) {
+        return;
+    }
+    // IMPORTANT TODO: separate the acts of "entering" and "exiting" the door
+    if (playing_state_->try_use_door(door, objs_to_move)) {
+        // I'm actually not sure what should be done when a door successfully gets entered
+    }
+    return;
 }
 
 void MoveProcessor::perform_switch_checks() {

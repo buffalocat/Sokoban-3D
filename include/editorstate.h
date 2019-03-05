@@ -5,7 +5,7 @@
 #include <memory>
 #include <string>
 
-#include "common.h"
+
 #include "editorbasestate.h"
 #include "editortab.h"
 #include "room.h"

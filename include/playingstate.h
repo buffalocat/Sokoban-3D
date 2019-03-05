@@ -1,11 +1,11 @@
 #ifndef PLAYINGSTATE_H
 #define PLAYINGSTATE_H
 
-#include <map>
-#include <string>
 #include <memory>
+#include <string>
+#include <vector>
+#include <unordered_map>
 
-#include "common.h"
 #include "gamestate.h"
 
 class GameObjectArray;
@@ -19,6 +19,8 @@ class UndoStack;
 class DeltaFrame;
 class DoorMoveDelta;
 
+class Point3;
+
 class Door;
 
 class PlayingState: public GameState {
@@ -31,7 +33,7 @@ public:
     bool activate_room(std::string);
     bool load_room(std::string);
 
-    bool try_use_door(Door*, std::vector<GameObject*>&);
+    bool can_use_door(Door*, std::vector<GameObject*>&, bool* same_room);
 
 private:
     std::unordered_map<std::string, std::unique_ptr<Room>> loaded_rooms_;

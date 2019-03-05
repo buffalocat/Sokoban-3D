@@ -2,6 +2,17 @@
 
 #include <unistd.h>
 
+#include "graphicsmanager.h"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma GCC diagnostic ignored "-Wswitch-default"
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+#pragma GCC diagnostic pop
+
 #include "gameobject.h"
 
 #include "gameobjectarray.h"
@@ -12,6 +23,18 @@
 #include "moveprocessor.h"
 #include "door.h"
 #include "mapfile.h"
+#include "car.h"
+
+#include "common_constants.h"
+#include "string_constants.h"
+
+const std::unordered_map<int, Point3> MOVEMENT_KEYS {
+    {GLFW_KEY_RIGHT, {1, 0, 0}},
+    {GLFW_KEY_LEFT,  {-1,0, 0}},
+    {GLFW_KEY_DOWN,  {0, 1, 0}},
+    {GLFW_KEY_UP,    {0,-1, 0}},
+};
+
 
 PlayingState::PlayingState(std::string name, Point3 pos, bool testing):
     GameState(), loaded_rooms_ {}, objs_ {std::make_unique<GameObjectArray>()},
@@ -123,6 +146,7 @@ void PlayingState::handle_input() {
             }
             input_cooldown = MAX_COOLDOWN;
             Point3 pos_below;
+            return;
         }
     }
     if (glfwGetKey(window_, GLFW_KEY_X) == GLFW_PRESS) {
@@ -166,7 +190,7 @@ bool PlayingState::load_room(std::string name) {
     return true;
 }
 
-bool PlayingState::try_use_door(Door* door, std::vector<GameObject*>& objs) {
+bool PlayingState::can_use_door(Door* door, std::vector<GameObject*>& objs, bool* same_room) {
     MapLocation* dest = door->dest();
     if (!loaded_rooms_.count(dest->name)) {
         load_room(dest->name);
@@ -174,20 +198,22 @@ bool PlayingState::try_use_door(Door* door, std::vector<GameObject*>& objs) {
     Room* dest_room = loaded_rooms_[dest->name].get();
     RoomMap* cur_map = room_->map();
     RoomMap* dest_map = dest_room->map();
-    // TODO: maybe branch depending on whether cur_map == dest_map
+    *same_room = (cur_map == dest_map);
     for (GameObject* obj : objs) {
         Point3 offset = obj->pos_ - door->pos();
         if (dest_map->view(dest->pos + offset)) {
             return false;
         }
     }
+    return true;
+}
+/* This code will still be used, but not here
     delta_frame_->push(std::make_unique<DoorMoveDelta>(this, room_, objs));
-    // Iterate again to perform the motion (just compute offsets again, whatever)
     for (GameObject* obj : objs) {
         Point3 offset = obj->pos_ - door->pos();
         cur_map->take(obj);
         obj->pos_ = dest->pos + offset;
         dest_map->put(obj);
     }
-    return true;
 }
+*/

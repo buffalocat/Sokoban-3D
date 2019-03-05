@@ -4,7 +4,7 @@
 #include <string>
 #include <memory>
 
-#include "common.h"
+#include "point.h"
 
 class GameObjectArray;
 class GraphicsManager;
@@ -46,5 +46,6 @@ private:
     void read_walls(MapFileI& file);
     void read_player_data(MapFileI& file);
 };
+
 
 #endif // ROOM_H

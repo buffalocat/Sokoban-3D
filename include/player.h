@@ -4,7 +4,8 @@
 #include <memory>
 
 #include "pushblock.h"
-#include "car.h"
+
+class Car;
 
 class Player: public PushBlock {
 public:

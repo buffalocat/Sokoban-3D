@@ -1,8 +1,11 @@
 #ifndef DOORTAB_H
 #define DOORTAB_H
 
-#include "common.h"
+#include <string>
+
+
 #include "editortab.h"
+#include "point.h"
 
 class Door;
 

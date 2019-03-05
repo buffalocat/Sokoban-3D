@@ -3,6 +3,8 @@
 #include "gameobject.h"
 #include "room.h"
 #include "roommap.h"
+
+#include "car.h"
 #include "snakeblock.h"
 #include "player.h"
 #include "switch.h"

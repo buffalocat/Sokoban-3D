@@ -1,8 +1,9 @@
 #ifndef GAMESTATE_H
 #define GAMESTATE_H
 
-#include "common.h"
+#include <memory>
 
+class GLFWwindow;
 class GraphicsManager;
 
 class GameState {

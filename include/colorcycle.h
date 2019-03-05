@@ -1,7 +1,7 @@
 #ifndef COLORCYCLE_H
 #define COLORCYCLE_H
 
-#include "common.h"
+#include "common_constants.h"
 
 class ColorCycle {
 public:

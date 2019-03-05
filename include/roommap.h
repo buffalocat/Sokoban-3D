@@ -1,9 +1,12 @@
 #ifndef ROOMMAP_H
 #define ROOMMAP_H
 
+#include <memory>
+#include <vector>
+#include <unordered_map>
 #include <unordered_set>
 
-#include "common.h"
+#include "point.h"
 
 class GameObjectArray;
 class Signaler;

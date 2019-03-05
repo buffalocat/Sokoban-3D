@@ -1,9 +1,10 @@
 #ifndef OBJECTMODIFIER_H
 #define OBJECTMODIFIER_H
 
+#include <memory>
 #include <vector>
 
-#include "common.h"
+#include "common_enums.h"
 #include "point.h"
 
 class GameObject;

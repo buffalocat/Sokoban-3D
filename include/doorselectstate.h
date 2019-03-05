@@ -1,7 +1,7 @@
 #ifndef DOORSELECTSTATE_H
 #define DOORSELECTSTATE_H
 
-#include "common.h"
+
 #include "editorbasestate.h"
 
 class Room;

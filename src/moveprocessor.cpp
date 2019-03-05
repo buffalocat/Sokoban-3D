@@ -1,13 +1,13 @@
 #include "moveprocessor.h"
 
-#include <iostream>
+#include "common_constants.h"
 
-#include "common.h"
 #include "gameobject.h"
 #include "player.h"
 #include "delta.h"
 #include "roommap.h"
 #include "door.h"
+#include "car.h"
 
 #include "playingstate.h"
 
@@ -116,6 +116,7 @@ void MoveProcessor::try_door_move(Door* door) {
     }
     std::vector<GameObject*> objs_to_move {};
     // TODO: make this more general later
+    // Also, it should probably be the responsibility of the objects/door, not the MoveProcessor
     if (GameObject* above = map_->view(door->pos_above())) {
         if (Player* player = dynamic_cast<Player*>(above)) {
             objs_to_move.push_back(player);
@@ -131,11 +132,10 @@ void MoveProcessor::try_door_move(Door* door) {
     if (objs_to_move.empty()) {
         return;
     }
-    // IMPORTANT TODO: separate the acts of "entering" and "exiting" the door
-    if (playing_state_->try_use_door(door, objs_to_move)) {
-        // I'm actually not sure what should be done when a door successfully gets entered
+    bool same_room;
+    if (!playing_state_->can_use_door(door, objs_to_move, &same_room)) {
+        return;
     }
-    return;
 }
 
 void MoveProcessor::perform_switch_checks() {

@@ -2,7 +2,7 @@
 #define GATE_H
 
 #include "switchable.h"
-#include "common.h"
+
 
 class GateBody;
 class GraphicsManager;

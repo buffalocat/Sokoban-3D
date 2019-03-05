@@ -1,6 +1,6 @@
 #include "gatebody.h"
 
-#include "common.h"
+
 #include "point.h"
 #include "gate.h"
 #include "mapfile.h"

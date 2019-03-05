@@ -1,7 +1,9 @@
 #ifndef SWITCHTAB_H
 #define SWITCHTAB_H
 
-#include "common.h"
+#include <memory>
+#include <vector>
+
 #include "editortab.h"
 
 class Switch;

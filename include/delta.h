@@ -2,8 +2,10 @@
 #define DELTA_H
 
 #include <deque>
+#include <memory>
+#include <vector>
 
-#include "common.h"
+#include "point.h"
 
 class Room;
 class RoomMap;
@@ -18,9 +20,7 @@ class PlayingState;
 class Car;
 class GateBody;
 
-struct Point;
-enum class Layer;
-
+enum class RidingState;
 
 class Delta {
 public:

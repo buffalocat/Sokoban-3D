@@ -1,7 +1,7 @@
 #ifndef PRESSSWITCH_H
 #define PRESSSWITCH_H
 
-#include "common.h"
+
 #include "objectmodifier.h"
 #include "switch.h"
 

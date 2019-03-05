@@ -1,7 +1,7 @@
 #ifndef SAVELOADTAB_H
 #define SAVELOADTAB_H
 
-#include "common.h"
+
 #include "editortab.h"
 
 class SaveLoadTab: public EditorTab {

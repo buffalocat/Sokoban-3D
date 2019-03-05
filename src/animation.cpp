@@ -1,5 +1,7 @@
 #include "animation.h"
 
+#include "common_constants.h"
+
 Animation::Animation() {}
 
 Animation::~Animation() {}

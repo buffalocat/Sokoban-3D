@@ -1,7 +1,10 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "common.h"
+#include <memory>
+#include <vector>
+
+#include "point.h"
 
 class RoomMap;
 class MapFileI;

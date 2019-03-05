@@ -1,7 +1,7 @@
 #ifndef MAINMENUSTATE_H
 #define MAINMENUSTATE_H
 
-#include "common.h"
+
 #include "gamestate.h"
 
 class MainMenuState: public GameState {

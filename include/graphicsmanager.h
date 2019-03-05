@@ -1,7 +1,7 @@
 #ifndef GRAPHICSMANAGER_H
 #define GRAPHICSMANAGER_H
 
-#include "common.h"
+#include "color_constants.h"
 #include "shader.h"
 
 class GLFWwindow;
@@ -30,7 +30,7 @@ public:
     void set_model(glm::mat4);
     void set_view(glm::mat4);
     void set_projection(glm::mat4);
-    void set_color(glm::vec4);
+    void set_color(Color4);
     void set_tex(Texture);
 
     void draw_cube();
@@ -44,7 +44,7 @@ private:
     glm::mat4 view_;
     glm::mat4 projection_;
 
-    glm::vec4 color_;
+    Color4 color_;
     Texture tex_;
 
     void init_vertex_attributes();

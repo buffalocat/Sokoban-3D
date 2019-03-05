@@ -1,8 +1,15 @@
 #include <cmath>
 
 #include "camera.h"
+
+#include "common_enums.h"
 #include "roommap.h"
 #include "mapfile.h"
+
+const float DEFAULT_CAM_RADIUS = 12.0;
+const float DEFAULT_CAM_TILT = 0.3;
+const float DEFAULT_CAM_ROTATION = 0.0;
+
 
 CameraContext::CameraContext(int x, int y, int w, int h, int priority): x_ {x}, y_ {y}, w_ {w}, h_ {h}, priority_ {priority} {}
 

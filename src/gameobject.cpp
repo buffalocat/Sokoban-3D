@@ -1,6 +1,6 @@
-#include "common.h"
-
 #include "gameobject.h"
+
+#include "common_constants.h"
 
 #include "roommap.h"
 #include "graphicsmanager.h"
@@ -10,6 +10,13 @@
 #include "animation.h"
 
 #include "component.h"
+
+
+Sticky operator &(Sticky a, Sticky b) {
+    return static_cast<Sticky>(static_cast<unsigned char>(a) &
+                               static_cast<unsigned char>(b));
+}
+
 
 // id_ begins in an "inconsistent" state - it *must* be set by the GameObjectArray
 GameObject::GameObject(Point3 pos, int color, bool pushable, bool gravitable):
@@ -164,6 +171,7 @@ FPoint3 GameObject::real_pos() {
     }
 }
 
+/*
 void GameObject::draw_force_indicators(GraphicsManager* gfx, glm::mat4& model) {
     gfx->set_tex(Texture::Blank);
     if (!pushable_) {
@@ -185,3 +193,4 @@ void GameObject::draw_force_indicators(GraphicsManager* gfx, glm::mat4& model) {
         gfx->draw_cube();
     }
 }
+*/

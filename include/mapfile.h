@@ -2,10 +2,18 @@
 #define MAPFILE_H
 
 #include <fstream>
+#include <string>
 
-#include "common.h"
+#include "point.h"
 
 class ColorCycle;
+
+enum class MapCode;
+enum class ObjCode;
+enum class ModCode;
+enum class CameraCode;
+enum class Sticky;
+enum class RidingState;
 
 class MapFileI {
 public:

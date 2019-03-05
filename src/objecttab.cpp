@@ -1,10 +1,10 @@
 #include "objecttab.h"
 
+#include "color_constants.h"
+
 #include "editorstate.h"
 #include "room.h"
 #include "roommap.h"
-
-#include "common.h"
 
 #include "gameobject.h"
 #include "pushblock.h"

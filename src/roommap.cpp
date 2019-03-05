@@ -3,22 +3,17 @@
 #include <algorithm>
 
 #include "gameobjectarray.h"
-
 #include "gameobject.h"
 #include "delta.h"
-
 #include "snakeblock.h"
 #include "switch.h"
 #include "signaler.h"
 #include "mapfile.h"
-
 #include "objectmodifier.h"
-
 #include "maplayer.h"
-
 #include "effects.h"
-
 #include "moveprocessor.h"
+#include "common_constants.h"
 
 RoomMap::RoomMap(GameObjectArray& obj_array, int width, int height, int depth):
 agents_ {}, obj_array_ {obj_array},
@@ -254,10 +249,10 @@ void RoomMap::destroy(GameObject* obj, DeltaFrame* delta_frame) {
 
 void RoomMap::undestroy(GameObject* obj) {
     just_put(obj);
+    obj->setup_on_undestruction(this);
     if (obj->is_agent()) {
         agents_.push_back(obj);
     }
-    obj->setup_on_undestruction(this);
 }
 
 void RoomMap::remove_agent(GameObject* obj) {

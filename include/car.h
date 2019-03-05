@@ -1,7 +1,7 @@
 #ifndef CAR_H
 #define CAR_H
 
-#include "common.h"
+
 #include "objectmodifier.h"
 #include "colorcycle.h"
 #include "mapfile.h"

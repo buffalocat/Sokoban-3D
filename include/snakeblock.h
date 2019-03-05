@@ -5,7 +5,7 @@
 #include <unordered_set>
 
 
-#include "common.h"
+
 #include "gameobject.h"
 
 class SnakeBlock: public GameObject {

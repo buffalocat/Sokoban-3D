@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "common_constants.h"
+
 #include "room.h"
 #include "roommap.h"
 #include "gameobject.h"

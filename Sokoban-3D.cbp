@@ -78,7 +78,8 @@
 		<Unit filename="include/car.h" />
 		<Unit filename="include/color_constants.h" />
 		<Unit filename="include/colorcycle.h" />
-		<Unit filename="include/common.h" />
+		<Unit filename="include/common_constants.h" />
+		<Unit filename="include/common_enums.h" />
 		<Unit filename="include/component.h" />
 		<Unit filename="include/dear/imgui.cpp" />
 		<Unit filename="include/dear/imgui_demo.cpp" />
@@ -122,6 +123,7 @@
 		<Unit filename="include/snakeblock.h" />
 		<Unit filename="include/snaketab.h" />
 		<Unit filename="include/stb_image.h" />
+		<Unit filename="include/string_constants.h" />
 		<Unit filename="include/switch.h" />
 		<Unit filename="include/switchable.h" />
 		<Unit filename="include/switchtab.h" />
@@ -138,7 +140,6 @@
 			<Option virtualFolder="ObjectModifiers/" />
 		</Unit>
 		<Unit filename="src/colorcycle.cpp" />
-		<Unit filename="src/common.cpp" />
 		<Unit filename="src/component.cpp">
 			<Option virtualFolder="MoveProcessing/" />
 		</Unit>

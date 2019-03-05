@@ -2,6 +2,15 @@
 
 #include "graphicsmanager.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma GCC diagnostic ignored "-Wswitch-default"
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+#pragma GCC diagnostic pop
+
 GameState::GameState():
 gfx_ {}, window_ {},
 parent_ {}, current_state_ptr_ {},

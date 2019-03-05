@@ -132,10 +132,10 @@ void GraphicsManager::set_projection(glm::mat4 projection) {
     }
 }
 
-void GraphicsManager::set_color(glm::vec4 color) {
-    if (color != color_) {
+void GraphicsManager::set_color(Color4 color) {
+    if (!(color == color_)) {
         color_ = color;
-        shader_.setVec4("color", color);
+        shader_.setVec4("color", glm::vec4(color.r, color.g, color.b, color.a));
     }
 }
 

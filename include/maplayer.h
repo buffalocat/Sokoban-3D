@@ -1,7 +1,12 @@
 #ifndef MAPLAYER_H
 #define MAPLAYER_H
 
-#include "common.h"
+#include <memory>
+#include <vector>
+#include <unordered_map>
+
+#include "common_enums.h"
+#include "point.h"
 
 class GameObject;
 class DeltaFrame;

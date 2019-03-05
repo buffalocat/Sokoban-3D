@@ -4,7 +4,8 @@
 #include <vector>
 #include <memory>
 
-#include "common.h"
+#include "common_enums.h"
+#include "point.h"
 
 class ObjectModifier;
 class Animation;
@@ -39,7 +40,7 @@ public:
     void abstract_shift(Point3 dpos, DeltaFrame* delta_frame);
 
     virtual void draw(GraphicsManager*) = 0;
-    void draw_force_indicators(GraphicsManager*, glm::mat4& model);
+    //void draw_force_indicators(GraphicsManager*, glm::mat4& model);
 
     virtual void setup_on_put(RoomMap*);
     virtual void cleanup_on_take(RoomMap*);

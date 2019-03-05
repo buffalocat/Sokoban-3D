@@ -16,11 +16,16 @@ const float MAX_WIDTH = 16.0;
 
 void Effects::sort_by_distance(float angle) {}
 
+void Effects::update() {
+    for (auto& trail : trails_) {
+        --trail.opacity;
+    }
+}
+
 void Effects::draw(GraphicsManager* gfx) {
     for (auto& trail : trails_) {
-        glm::vec4 color = COLORS[trail.color];
-        color.w = trail.opacity/MAX_OPACITY;
-        --trail.opacity;
+        Color4 color = COLORS[trail.color];
+        color.a = trail.opacity/MAX_OPACITY;
         gfx->set_color(color);
         Point3 base = trail.base;
         glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(base.x, base.z, base.y));

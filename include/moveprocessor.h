@@ -1,7 +1,7 @@
 #ifndef MOVEPROCESSOR_H
 #define MOVEPROCESSOR_H
 
-#include "common.h"
+#include <vector>
 
 class Player;
 class GameObject;
@@ -10,6 +10,8 @@ class RoomMap;
 class DeltaFrame;
 class SnakeBlock;
 class Door;
+
+class Point3;
 
 enum class MoveStep {
     Horizontal = 1,

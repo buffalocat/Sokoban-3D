@@ -1,6 +1,3 @@
-// *** ADDED BY HEADER FIXUP ***
-#include <istream>
-// *** END ***
 #ifndef SHADER_H
 #define SHADER_H
 
@@ -14,6 +11,7 @@
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #pragma GCC diagnostic pop
 
@@ -21,6 +19,8 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+
+#include <string>
 
 class Shader
 {

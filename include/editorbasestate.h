@@ -1,13 +1,14 @@
 #ifndef EDITORBASESTATE_H
 #define EDITORBASESTATE_H
 
-#include "common.h"
 #include "gamestate.h"
+#include "point.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
 #include <dear/imgui.h>
 #pragma GCC diagnostic pop
+#include <string>
 
 class Room;
 class RoomMap;

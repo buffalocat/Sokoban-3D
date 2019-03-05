@@ -2,7 +2,6 @@
 
 #include <unistd.h>
 
-
 #include "gameobjectarray.h"
 #include "graphicsmanager.h"
 #include "gamestate.h"
@@ -10,6 +9,10 @@
 #include "gameobject.h"
 #include "player.h"
 #include "mapfile.h"
+#include "room.h"
+#include "roommap.h"
+#include "camera.h"
+#include "string_constants.h"
 
 #include "saveloadtab.h"
 #include "objecttab.h"
@@ -17,10 +20,6 @@
 #include "switchtab.h"
 #include "modifiertab.h"
 #include "snaketab.h"
-
-#include "room.h"
-#include "roommap.h"
-#include "camera.h"
 
 #define INIT_TAB(NAME)\
 tabs_[#NAME] = std::make_unique<NAME ## Tab>(this, gfx);

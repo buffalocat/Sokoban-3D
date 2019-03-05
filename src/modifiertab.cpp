@@ -4,7 +4,7 @@
 #include "room.h"
 #include "roommap.h"
 
-#include "common.h"
+#include "color_constants.h"
 
 #include "gameobject.h"
 

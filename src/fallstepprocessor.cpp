@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "common.h"
+
 #include "component.h"
 #include "gameobject.h"
 #include "roommap.h"

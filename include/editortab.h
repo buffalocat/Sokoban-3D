@@ -1,8 +1,6 @@
 #ifndef EDITORTAB_H
 #define EDITORTAB_H
 
-#include "common.h"
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
 #include <dear/imgui.h>
@@ -11,6 +9,9 @@
 struct EditorRoom;
 class EditorState;
 class GraphicsManager;
+
+class Point3;
+class Color4;
 
 class EditorTab {
 public:
@@ -26,6 +27,7 @@ protected:
     GraphicsManager* gfx_;
 };
 
-ImVec4 unpack_color(glm::vec4 v);
+void clamp(int* n, int a, int b);
+ImVec4 unpack_color(Color4 v);
 
 #endif // EDITORTAB_H

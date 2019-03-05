@@ -1,10 +1,7 @@
-#include <iostream>
-#include <fstream>
-#include <cmath>
-#include <unordered_map>
-#include <unordered_set>
-#include <thread>
 #include <chrono>
+#include <fstream>
+#include <iostream>
+#include <thread>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
@@ -19,9 +16,9 @@
 
 #pragma GCC diagnostic pop
 
+#include "common_constants.h"
 #include "graphicsmanager.h"
 #include "mainmenustate.h"
-
 
 
 bool window_init(GLFWwindow*&);

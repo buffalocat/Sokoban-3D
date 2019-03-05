@@ -1,8 +1,30 @@
 #include "editorbasestate.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma GCC diagnostic ignored "-Wswitch-default"
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+#pragma GCC diagnostic pop
+
+
+#include "common_constants.h"
 #include "room.h"
 #include "roommap.h"
 #include "gameobject.h"
+
+
+const std::unordered_map<int, Point3> EDITOR_MOVEMENT_KEYS {
+    {GLFW_KEY_D, {1, 0, 0}},
+    {GLFW_KEY_A, {-1,0, 0}},
+    {GLFW_KEY_S, {0, 1, 0}},
+    {GLFW_KEY_W, {0,-1, 0}},
+    {GLFW_KEY_E, {0, 0, 1}},
+    {GLFW_KEY_Q, {0, 0,-1}},
+};
+
 
 EditorBaseState::EditorBaseState(): GameState(),
 ortho_cam_ {true}, one_layer_ {false}, keyboard_cooldown_ {0} {}

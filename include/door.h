@@ -4,7 +4,6 @@
 #include <string>
 #include <memory>
 
-#include "common.h"
 #include "objectmodifier.h"
 #include "switchable.h"
 

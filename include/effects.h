@@ -1,7 +1,9 @@
 #ifndef EFFECTS_H
 #define EFFECTS_H
 
-#include "common.h"
+#include <vector>
+
+#include "point.h"
 
 class GameObject;
 class GraphicsManager;
@@ -18,6 +20,7 @@ public:
     Effects();
     ~Effects();
     void sort_by_distance(float angle);
+    void update();
     void draw(GraphicsManager*);
     void push_trail(GameObject*, int height, int drop);
 

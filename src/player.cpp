@@ -1,10 +1,12 @@
 #include "player.h"
+
 #include "pushblock.h"
 
 #include "delta.h"
 #include "roommap.h"
 #include "graphicsmanager.h"
 #include "mapfile.h"
+#include "car.h"
 
 Player::Player(Point3 pos, RidingState state): PushBlock(pos, PINK, true, true, Sticky::None), state_ {state} {}
 

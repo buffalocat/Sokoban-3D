@@ -300,6 +300,7 @@ void RoomMap::draw(GraphicsManager* gfx, float angle) {
     }
     // TODO: draw walls!
     effects_->sort_by_distance(angle);
+    effects_->update();
     effects_->draw(gfx);
 }
 

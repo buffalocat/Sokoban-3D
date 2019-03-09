@@ -53,6 +53,43 @@ void RoomMap::push_sparse() {
     ++depth_;
 }
 
+struct ObjectSerializationHandler {
+    void operator()(int);
+
+    GameObjectArray& obj_array;
+    MapFileO& file;
+    std::vector<GameObject*>& rel_check_objs;
+    std::vector<ObjectModifier*>& rel_check_mods;
+};
+
+void ObjectSerializationHandler::operator()(int id) {
+    if (id == GLOBAL_WALL_ID) {
+        return;
+    }
+    GameObject* obj = obj_array[id];
+    // NOTE: a MapLayer should never pass an invalid ( = 0) id here.
+    // And a nonzero id in the map should correspond to a "real" object
+    // (i.e., it should exist, and not be in a destroyed state)
+    if (obj->skip_serialization()) {
+        return;
+    }
+    file << obj->obj_code();
+    file << obj->pos_;
+    obj->serialize(file);
+    if (ObjectModifier* mod = obj->modifier()) {
+        file << mod->mod_code();
+        mod->serialize(file);
+        if (mod->relation_check()) {
+            rel_check_mods.push_back(mod);
+        }
+    } else {
+        file << ModCode::NONE;
+    }
+    if (obj->relation_check()) {
+        rel_check_objs.push_back(obj);
+    }
+}
+
 void RoomMap::serialize(MapFileO& file) const {
     // Serialize layer types
     for (auto& layer : layers_) {
@@ -61,44 +98,16 @@ void RoomMap::serialize(MapFileO& file) const {
 
     std::vector<GameObject*> rel_check_objs {};
     std::vector<ObjectModifier*> rel_check_mods {};
-    std::vector<Point3> wall_pos {};
+    GameObjIDFunc ser_handler = ObjectSerializationHandler{obj_array_, file, rel_check_objs, rel_check_mods};
     // Serialize raw object data
     file << MapCode::Objects;
     for (auto& layer : layers_) {
-        for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
-            if (it->id() == GLOBAL_WALL_ID) {
-                wall_pos.push_back(it->pos());
-                continue;
-            }
-            GameObject* obj = obj_array_[it->id()];
-            if (!obj || obj->skip_serialization()) {
-                continue;
-            }
-            file << obj->obj_code();
-            file << it->pos();
-            obj->serialize(file);
-            if (ObjectModifier* mod = obj->modifier()) {
-                file << mod->mod_code();
-                mod->serialize(file);
-                if (mod->relation_check()) {
-                    rel_check_mods.push_back(mod);
-                }
-            } else {
-                file << ModCode::NONE;
-            }
-            if (obj->relation_check()) {
-                rel_check_objs.push_back(obj);
-            }
-        }
+        layer->apply_to_rect(MapRect{0,0,width_,height_}, ser_handler);
     }
     file << ObjCode::NONE;
-    // Serialize Wall positions
+    // TODO: Actually Serialize Wall positions
     file << MapCode::Walls;
-    // TODO: replace this with a smarter run-length encoding type of thing
-    file << (int)(wall_pos.size());
-    for (Point3 pos : wall_pos) {
-        file << pos;
-    }
+    file << 0;
     // Serialize relational data
     for (auto obj : rel_check_objs) {
         obj->relation_serialize(file);
@@ -289,14 +298,23 @@ void RoomMap::alert_activated_listeners(DeltaFrame* delta_frame, MoveProcessor* 
     }
 }
 
+struct ObjectDrawer {
+    void operator()(int);
+
+    GameObjectArray& obj_array;
+    GraphicsManager* gfx;
+};
+
+void ObjectDrawer::operator()(int id) {
+    if (id > GLOBAL_WALL_ID) {
+        obj_array[id]->draw(gfx);
+    }
+}
+
 void RoomMap::draw(GraphicsManager* gfx, float angle) {
+    GameObjIDFunc drawer = ObjectDrawer{obj_array_, gfx};
     for (auto& layer : layers_) {
-        for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
-            int id = it->id();
-            if (id > GLOBAL_WALL_ID) {
-                obj_array_[id]->draw(gfx);
-            }
-        }
+        layer->apply_to_rect(MapRect{0,0,width_,height_}, drawer);
     }
     // TODO: draw walls!
     effects_->sort_by_distance(angle);
@@ -305,12 +323,29 @@ void RoomMap::draw(GraphicsManager* gfx, float angle) {
 }
 
 void RoomMap::draw_layer(GraphicsManager* gfx, int z) {
-    MapLayer* layer = layers_[z].get();
-    for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
-        int id = it->id();
-        if (id > GLOBAL_WALL_ID) {
-            obj_array_[id]->draw(gfx);
-        }
+    GameObjIDFunc drawer = ObjectDrawer{obj_array_, gfx};
+    layers_[z].get()->apply_to_rect(MapRect{0,0,width_,height_}, drawer);
+}
+
+struct RoomStateInitializer {
+    void operator()(int id);
+
+    GameObjectArray& obj_array;
+    MoveProcessor& mp;
+    RoomMap* room_map;
+    DeltaFrame* delta_frame;
+};
+
+void RoomStateInitializer::operator()(int id) {
+    GameObject* obj = obj_array[id];
+    if (obj->gravitable_) {
+        mp.add_to_fall_check(obj);
+    }
+    if (SnakeBlock* sb = dynamic_cast<SnakeBlock*>(obj)) {
+        sb->check_add_local_links(room_map, delta_frame);
+    }
+    if (ObjectModifier* mod = obj->modifier()) {
+        room_map->activate_listener_of(mod);
     }
 }
 
@@ -319,24 +354,11 @@ void RoomMap::set_initial_state(bool editor_mode) {
     // don't have to do a bunch of redundant checks during play
     DeltaFrame dummy_df {};
     MoveProcessor mp = MoveProcessor(nullptr, this, &dummy_df);
+    GameObjIDFunc state_initializer = RoomStateInitializer{obj_array_, mp, this, &dummy_df};
     for (auto& layer : layers_) {
-        for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
-            GameObject* obj = obj_array_[it->id()];
-            if (!obj) {
-                continue;
-            }
-            if (obj->gravitable_) {
-                mp.add_to_fall_check(obj);
-            }
-            if (SnakeBlock* sb = dynamic_cast<SnakeBlock*>(obj)) {
-                sb->check_add_local_links(this, &dummy_df);
-            }
-            if (ObjectModifier* mod = obj->modifier()) {
-                activate_listener_of(mod);
-            }
-        }
+        layer->apply_to_rect(MapRect{0,0,width_,height_}, state_initializer);
     }
-    // In editor mode, use effects of snakes, but not switches or other things.
+    // In editor mode, don't check switches or gravity.
     if (editor_mode) {
         return;
     }
@@ -344,16 +366,27 @@ void RoomMap::set_initial_state(bool editor_mode) {
     mp.try_fall_step();
 }
 
+struct SnakeInitializer {
+    void operator()(int id);
+
+    GameObjectArray& obj_array;
+    RoomMap* room_map;
+    DeltaFrame* delta_frame;
+};
+
+void SnakeInitializer::operator()(int id) {
+    if (SnakeBlock* sb = dynamic_cast<SnakeBlock*>(obj_array[id])) {
+        sb->check_add_local_links(room_map, delta_frame);
+    }
+}
+
 // This function does just one of the things that set_initial_state does
 // But it's useful for making the SnakeTab convenient!
 void RoomMap::initialize_automatic_snake_links() {
     DeltaFrame dummy_df {};
+    GameObjIDFunc snake_initializer = SnakeInitializer{obj_array_, this, &dummy_df};
     for (auto& layer : layers_) {
-        for (auto it = layer->begin_iter(); !it->done(); it->advance()) {
-            if (SnakeBlock* sb = dynamic_cast<SnakeBlock*>(obj_array_[it->id()])) {
-                sb->check_add_local_links(this, &dummy_df);
-            }
-        }
+        layer->apply_to_rect(MapRect{0,0,width_,height_}, snake_initializer);
     }
 }
 

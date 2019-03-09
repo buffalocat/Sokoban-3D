@@ -4,71 +4,11 @@
 #include "gameobject.h"
 #include "mapfile.h"
 #include "graphicsmanager.h"
+#include "gameobjectarray.h"
 
 
-MapLayerIterator::~MapLayerIterator() {}
-
-// TODO: Make the Iterator more like a real Iterator!!!!!!!
-FullMapLayerIterator::FullMapLayerIterator(std::vector<std::vector<int>>& map, int z, int width, int height):
-MapLayerIterator(),
-map_ {map}, pos_ {0, 0, z}, width_ {width}, height_ {height} {}
-
-FullMapLayerIterator::~FullMapLayerIterator() {}
-
-void FullMapLayerIterator::advance() {
-    ++pos_.x;
-    if (pos_.x == width_) {
-        pos_.x = 0;
-        ++pos_.y;
-    }
-}
-
-bool FullMapLayerIterator::done() {
-    return pos_.y == height_;
-}
-
-Point3 FullMapLayerIterator::pos() {
-    return pos_;
-}
-
-int FullMapLayerIterator::id() {
-    Point3 pos {pos_};
-    return map_[pos_.x][pos_.y];
-}
-
-
-SparseMapLayerIterator::SparseMapLayerIterator(std::unordered_map<Point2, int, Point2Hash>& map, int z):
-MapLayerIterator(),
-iter_ {map.begin()}, end_ {map.end()}, pos_ {0, 0, z}, id_ {-1} {
-    update_values();
-}
-
-SparseMapLayerIterator::~SparseMapLayerIterator() {}
-
-void SparseMapLayerIterator::advance() {
-    ++iter_;
-    update_values();
-}
-
-bool SparseMapLayerIterator::done() {
-    return iter_ != end_;
-}
-
-void SparseMapLayerIterator::update_values() {
-    if (!done()) {
-        auto p = *iter_;
-        pos_.x = p.first.x;
-        pos_.y = p.first.y;
-        id_ = p.second;
-    }
-}
-
-Point3 SparseMapLayerIterator::pos() {
-    return pos_;
-}
-
-int SparseMapLayerIterator::id() {
-    return id_;
+bool MapRect::contains(Point2 p) {
+    return (x <= p.x) && (p.x < x + w) && (y <= p.y) && (p.y < y + h);
 }
 
 
@@ -76,13 +16,22 @@ MapLayer::MapLayer(RoomMap* room_map, int z): parent_map_ {room_map}, z_ {z} {}
 
 MapLayer::~MapLayer() {}
 
+/*
+template <typename IDFunc>
+MapLayer::apply_to_rect(MapRect rect, IDFunc f) {
+    switch (type()) {
+    case MapCode::FullLayer:
+        static_cast<FullMapLayer>(this)->apply_to_rect(rect, f);
+    case MapCode::SparseLayer:
+        static_cast<SparseMapLayer>(this)->apply_to_rect(rect, f);
+    }
+}
+*/
+
 FullMapLayer::FullMapLayer(RoomMap* room_map, int width, int height, int z):
         MapLayer(room_map, z), map_ {}, width_ {width}, height_ {height} {
     for (int i = 0; i != width; ++i) {
-        map_.push_back({});
-        for (int j = 0; j != height; ++j) {
-            map_[i].push_back({});
-        }
+        map_.push_back(std::vector<int>(height, 0));
     }
 }
 
@@ -96,10 +45,15 @@ MapCode FullMapLayer::type() {
     return MapCode::FullLayer;
 }
 
-std::unique_ptr<MapLayerIterator> FullMapLayer::begin_iter() {
-    return std::make_unique<FullMapLayerIterator>(map_, z_, width_, height_);
+void FullMapLayer::apply_to_rect(MapRect rect, GameObjIDFunc& f) {
+    for (int i = rect.x; i < rect.x + rect.w; ++i) {
+        for (int j = rect.y; j < rect.y + rect.h; ++j) {
+            if (int id = map_[i][j]) {
+                f(id);
+            }
+        }
+    }
 }
-
 
 SparseMapLayer::SparseMapLayer(RoomMap* room_map, int z): MapLayer(room_map, z), map_ {} {}
 
@@ -114,6 +68,10 @@ MapCode SparseMapLayer::type() {
     return MapCode::SparseLayer;
 }
 
-std::unique_ptr<MapLayerIterator> SparseMapLayer::begin_iter() {
-    return std::make_unique<SparseMapLayerIterator>(map_, z_);
+void SparseMapLayer::apply_to_rect(MapRect rect, GameObjIDFunc& f) {
+    for (auto& p : map_) {
+        if (rect.contains(p.first) && p.second) {
+            f(p.second);
+        }
+    }
 }

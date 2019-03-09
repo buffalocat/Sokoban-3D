@@ -4,8 +4,6 @@
 #include <memory>
 #include <unordered_set>
 
-
-
 #include "gameobject.h"
 
 class SnakeBlock: public GameObject {
@@ -61,6 +59,9 @@ public:
     unsigned int distance_;
     bool dragged_;
 };
+
+SnakeBlock* snake_cast(GameObject* obj);
+
 
 class SnakePuller {
 public:

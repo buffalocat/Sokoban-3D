@@ -13,60 +13,17 @@ class DeltaFrame;
 class RoomMap;
 class MapFileO;
 class GraphicsManager;
+class GameObjectArray;
 
-
-class MapLayerIterator {
-public:
-    virtual ~MapLayerIterator();
-
-    virtual void advance() = 0;
-    virtual bool done() = 0;
-
-    virtual Point3 pos() = 0;
-    virtual int id() = 0;
-
-protected:
-    MapLayerIterator() = default;
+struct MapRect {
+    int x;
+    int y;
+    int w;
+    int h;
+    bool contains(Point2);
 };
 
-class FullMapLayerIterator: public MapLayerIterator {
-public:
-    FullMapLayerIterator(std::vector<std::vector<int>>& map, int z, int width, int height);
-    ~FullMapLayerIterator();
-
-    void advance();
-    bool done();
-
-    Point3 pos();
-    int id();
-
-private:
-    std::vector<std::vector<int>>& map_;
-    Point3 pos_;
-    int width_;
-    int height_;
-};
-
-class SparseMapLayerIterator: public MapLayerIterator {
-public:
-    SparseMapLayerIterator(std::unordered_map<Point2, int, Point2Hash>& map, int z);
-    ~SparseMapLayerIterator();
-
-    void advance();
-    bool done();
-
-    Point3 pos();
-    int id();
-
-private:
-    std::unordered_map<Point2, int, Point2Hash>::iterator iter_;
-    std::unordered_map<Point2, int, Point2Hash>::iterator end_;
-    Point3 pos_;
-    int id_;
-
-    void update_values();
-};
-
+using GameObjIDFunc = std::function<void(int)>;
 
 class MapLayer {
 public:
@@ -74,9 +31,10 @@ public:
     virtual ~MapLayer() = 0;
 
     virtual int& at(Point2 pos) = 0;
-
     virtual MapCode type() = 0;
-    virtual std::unique_ptr<MapLayerIterator> begin_iter() = 0;
+
+    //template <typename IDFunc>
+    virtual void apply_to_rect(MapRect, GameObjIDFunc&) = 0;
 
 protected:
     RoomMap* parent_map_;
@@ -89,9 +47,9 @@ public:
     ~FullMapLayer();
 
     int& at(Point2 pos);
-
     MapCode type();
-    std::unique_ptr<MapLayerIterator> begin_iter();
+
+    void apply_to_rect(MapRect, GameObjIDFunc&);
 
 private:
     std::vector<std::vector<int>> map_;
@@ -106,9 +64,9 @@ public:
     ~SparseMapLayer();
 
     int& at(Point2 pos);
-
     MapCode type();
-    std::unique_ptr<MapLayerIterator> begin_iter();
+
+    void apply_to_rect(MapRect, GameObjIDFunc&);
 
 private:
     std::unordered_map<Point2, int, Point2Hash> map_;

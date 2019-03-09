@@ -89,8 +89,8 @@ public:
 
     std::vector<GameObject*> agents_;
 
-private:
     GameObjectArray& obj_array_;
+private:
     std::vector<std::unique_ptr<MapLayer>> layers_;
 
     std::unordered_map<Point3, std::vector<ObjectModifier*>, Point3Hash> listeners_;

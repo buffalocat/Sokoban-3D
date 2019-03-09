@@ -11,6 +11,16 @@
 
 #include <algorithm>
 
+
+SnakeBlock* snake_cast(GameObject* obj) {
+    if ((obj->sticky() & Sticky::Snake) != Sticky::None) {
+        return static_cast<SnakeBlock*>(obj);
+    } else {
+        return nullptr;
+    }
+}
+
+
 SnakeBlock::SnakeBlock(Point3 pos, int color, bool pushable, bool gravitable, int ends):
 GameObject(pos, color, pushable, gravitable), links_ {}, target_ {}, ends_ {ends}, distance_ {0}, dragged_ {false}  {}
 

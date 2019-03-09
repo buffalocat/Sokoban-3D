@@ -2,7 +2,7 @@
 
 #include "colorcycle.h"
 
-MapFileI::MapFileI(std::string path): file_ {} {
+MapFileI::MapFileI(const std::string& path): file_ {} {
     file_.open(path, std::ios::in | std::ios::binary);
 }
 
@@ -86,7 +86,7 @@ MapFileI& operator>>(MapFileI& f, ColorCycle& v) {
 }
 
 
-MapFileO::MapFileO(std::string path): file_ {} {
+MapFileO::MapFileO(const std::string& path): file_ {} {
     file_.open(path, std::ios::out | std::ios::binary);
 }
 
@@ -151,7 +151,7 @@ MapFileO& MapFileO::operator<<(FPoint3 pos) {
     return *this;
 }
 
-MapFileO& MapFileO::operator<<(std::string str) {
+MapFileO& MapFileO::operator<<(const std::string& str) {
     file_ << (unsigned char) str.size();
     file_.write(str.c_str(), str.size());
     return *this;
@@ -189,7 +189,7 @@ MapFileO& MapFileO::operator<<(RidingState state) {
     return *this;
 }
 
-MapFileO& MapFileO::operator<<(ColorCycle& color) {
+MapFileO& MapFileO::operator<<(const ColorCycle& color) {
     file_ << (unsigned char) color.size_;
     file_ << (unsigned char) color.index_;
     for (int i = 0; i < color.size_; ++i) {

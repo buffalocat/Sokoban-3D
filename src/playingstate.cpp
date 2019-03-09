@@ -36,7 +36,7 @@ const std::unordered_map<int, Point3> MOVEMENT_KEYS {
 };
 
 
-PlayingState::PlayingState(std::string name, Point3 pos, bool testing):
+PlayingState::PlayingState(const std::string& name, Point3 pos, bool testing):
     GameState(), loaded_rooms_ {}, objs_ {std::make_unique<GameObjectArray>()},
     move_processor_ {}, room_ {}, player_ {},
     undo_stack_ {std::make_unique<UndoStack>(MAX_UNDO_DEPTH)},
@@ -162,7 +162,7 @@ void PlayingState::handle_input() {
     }
 }
 
-bool PlayingState::activate_room(std::string name) {
+bool PlayingState::activate_room(const std::string& name) {
     if (!loaded_rooms_.count(name)) {
         if (!load_room(name)) {
             return false;
@@ -172,7 +172,7 @@ bool PlayingState::activate_room(std::string name) {
     return true;
 }
 
-bool PlayingState::load_room(std::string name) {
+bool PlayingState::load_room(const std::string& name) {
     // This will be much more complicated when save files are a thing
     std::string path = MAPS_TEMP + name + ".map";
     if (access(path.c_str(), F_OK) == -1) {

@@ -17,7 +17,7 @@ enum class RidingState;
 
 class MapFileI {
 public:
-    MapFileI(std::string path);
+    MapFileI(const std::string& path);
     ~MapFileI();
     void read(unsigned char* b, int n);
 
@@ -43,7 +43,7 @@ MapFileI& operator>>(MapFileI& f, ColorCycle& v);
 
 class MapFileO {
 public:
-    MapFileO(std::string path);
+    MapFileO(const std::string& path);
     ~MapFileO();
 
     MapFileO& operator<<(unsigned char);
@@ -57,8 +57,8 @@ public:
     MapFileO& operator<<(Point3_S16);
     MapFileO& operator<<(FPoint3);
 
-    MapFileO& operator<<(std::string);
-    MapFileO& operator<<(ColorCycle&);
+    MapFileO& operator<<(const std::string&);
+    MapFileO& operator<<(const ColorCycle&);
 
     MapFileO& operator<<(MapCode);
     MapFileO& operator<<(ObjCode);

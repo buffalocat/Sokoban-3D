@@ -14,7 +14,7 @@ class ObjectModifier;
 
 class Signaler {
 public:
-    Signaler(std::string label, int count, int threshold, bool persistent, bool active);
+    Signaler(const std::string& label, int count, int threshold, bool persistent, bool active);
     virtual ~Signaler();
 
     void serialize(MapFileO& file);

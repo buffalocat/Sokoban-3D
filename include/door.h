@@ -16,7 +16,7 @@ class MapFileO;
 struct MapLocation {
     Point3 pos;
     std::string name;
-    MapLocation(Point3 p, std::string room_name);
+    MapLocation(Point3 p, const std::string& room_name);
 };
 
 class Door: public Switchable {
@@ -34,7 +34,7 @@ public:
     void relation_serialize(MapFileO& file);
     bool can_set_state(bool state, RoomMap*);
 
-    void set_dest(Point3, std::string);
+    void set_dest(Point3, const std::string&);
     MapLocation* dest();
 
     void map_callback(RoomMap*, DeltaFrame*, MoveProcessor*);

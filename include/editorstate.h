@@ -49,12 +49,12 @@ public:
     virtual ~EditorState();
     void main_loop();
 
-    void set_active_room(std::string name);
+    void set_active_room(const std::string& name);
     int get_room_names(const char* room_names[]);
-    EditorRoom* get_room(std::string name);
+    EditorRoom* get_room(const std::string& name);
 
-    void new_room(std::string name, int w, int h);
-    bool load_room(std::string name);
+    void new_room(const std::string& name, int w, int h);
+    bool load_room(const std::string& name);
     void save_room(EditorRoom* eroom, bool commit);
     void unload_current_room();
     void commit_current_room();

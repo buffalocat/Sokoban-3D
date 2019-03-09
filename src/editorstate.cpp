@@ -92,7 +92,7 @@ void EditorState::main_loop() {
     ImGui::End();
 }
 
-void EditorState::set_active_room(std::string name) {
+void EditorState::set_active_room(const std::string& name) {
     active_room_ = rooms_[name].get();
 }
 
@@ -105,14 +105,14 @@ int EditorState::get_room_names(const char* room_names[]) {
     return i;
 }
 
-EditorRoom* EditorState::get_room(std::string name) {
+EditorRoom* EditorState::get_room(const std::string& name) {
     if (rooms_.count(name)) {
         return rooms_[name].get();
     }
     return nullptr;
 }
 
-void EditorState::new_room(std::string name, int w, int h) {
+void EditorState::new_room(const std::string& name, int w, int h) {
     if (!name.size()) {
         std::cout << "Room name must be non-empty!" << std::endl;
         return;
@@ -129,7 +129,7 @@ void EditorState::new_room(std::string name, int w, int h) {
     set_active_room(name);
 }
 
-bool EditorState::load_room(std::string name) {
+bool EditorState::load_room(const std::string& name) {
     std::string path = MAPS_MAIN + name + ".map";
     if (access(path.c_str(), F_OK) == -1) {
         return false;

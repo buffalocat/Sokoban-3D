@@ -23,7 +23,7 @@
 #include "signaler.h"
 #include "mapfile.h"
 
-Room::Room(std::string name): name_ {name},
+Room::Room(const std::string& name): name_ {name},
 map_ {}, camera_ {}, offset_pos_ {0,0,0} {}
 
 Room::~Room() {}

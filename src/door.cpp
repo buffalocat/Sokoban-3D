@@ -7,7 +7,7 @@
 #include "roommap.h"
 #include "moveprocessor.h"
 
-MapLocation::MapLocation(Point3 p, std::string room_name): pos {p}, name {room_name} {}
+MapLocation::MapLocation(Point3 p, const std::string& room_name): pos {p}, name {room_name} {}
 
 Door::Door(GameObject* parent, bool def, bool active): Switchable(parent, def, active, false), dest_ {} {}
 
@@ -23,7 +23,7 @@ ModCode Door::mod_code() {
     return ModCode::Door;
 }
 
-void Door::set_dest(Point3 pos, std::string name) {
+void Door::set_dest(Point3 pos, const std::string& name) {
     dest_ = std::make_unique<MapLocation>(pos,name);
 }
 

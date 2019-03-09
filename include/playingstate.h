@@ -25,13 +25,13 @@ class Door;
 
 class PlayingState: public GameState {
 public:
-    PlayingState(std::string name, Point3 pos, bool testing);
+    PlayingState(const std::string& name, Point3 pos, bool testing);
     virtual ~PlayingState();
     void init_player(Point3);
     void main_loop();
     void handle_input();
-    bool activate_room(std::string);
-    bool load_room(std::string);
+    bool activate_room(const std::string&);
+    bool load_room(const std::string&);
 
     bool can_use_door(Door*, std::vector<GameObject*>&, bool* same_room);
 

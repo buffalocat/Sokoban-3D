@@ -7,7 +7,7 @@
 #include "delta.h"
 #include "mapfile.h"
 
-Signaler::Signaler(std::string label, int count, int threshold, bool persistent, bool active):
+Signaler::Signaler(const std::string& label, int count, int threshold, bool persistent, bool active):
 switches_ {}, switchables_ {},
 label_ {label},
 count_ {count}, threshold_ {threshold},

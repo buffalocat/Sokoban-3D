@@ -16,7 +16,7 @@ class GameObject;
 
 class Room {
 public:
-    Room(std::string name);
+    Room(const std::string& name);
     ~Room();
     std::string const name();
     void initialize(GameObjectArray& objs, int w, int h, int d);

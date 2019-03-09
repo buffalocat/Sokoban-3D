@@ -353,7 +353,7 @@ void RoomMap::set_initial_state(bool editor_mode) {
     // Using a "fake" DeltaFrame just this once means we
     // don't have to do a bunch of redundant checks during play
     DeltaFrame dummy_df {};
-    MoveProcessor mp = MoveProcessor(nullptr, this, &dummy_df);
+    MoveProcessor mp = MoveProcessor(nullptr, this, &dummy_df, false);
     GameObjIDFunc state_initializer = RoomStateInitializer{obj_array_, mp, this, &dummy_df};
     for (auto& layer : layers_) {
         layer->apply_to_rect(MapRect{0,0,width_,height_}, state_initializer);

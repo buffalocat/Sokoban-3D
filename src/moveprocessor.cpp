@@ -17,10 +17,11 @@
 #include "horizontalstepprocessor.h"
 #include "fallstepprocessor.h"
 
-MoveProcessor::MoveProcessor(PlayingState* playing_state, RoomMap* room_map, DeltaFrame* delta_frame):
+MoveProcessor::MoveProcessor(PlayingState* playing_state, RoomMap* room_map, DeltaFrame* delta_frame, bool animated):
 fall_check_ {}, moving_blocks_ {},
 playing_state_ {playing_state}, map_ {room_map}, delta_frame_ {delta_frame},
-frames_ {0}, state_ {} {}
+frames_ {0}, state_ {},
+animated_ {animated} {}
 
 MoveProcessor::~MoveProcessor() {}
 
@@ -168,11 +169,12 @@ void MoveProcessor::add_to_fall_check(GameObject* obj) {
     fall_check_.push_back(obj);
 }
 
-// TODO: consider making this more general
-// state = "is the gate_body extending?"
+// This is a bit of a hack; the animation system should be overhauled when we understand it better
 void MoveProcessor::add_gate_transition(GateBody* gate_body, bool state) {
-    gate_body->set_gate_transition_animation(state, this);
-    gate_transitions_.push_back(std::make_pair(gate_body, state));
+    if (animated_) {
+        gate_body->set_gate_transition_animation(state, this);
+        gate_transitions_.push_back(std::make_pair(gate_body, state));
+    }
 }
 
 void MoveProcessor::update_gate_transitions() {

@@ -24,7 +24,7 @@ enum class MoveStep {
 
 class MoveProcessor {
 public:
-    MoveProcessor(PlayingState*, RoomMap*, DeltaFrame*);
+    MoveProcessor(PlayingState*, RoomMap*, DeltaFrame*, bool);
     ~MoveProcessor();
 
     bool try_move(Player*, Point3);
@@ -59,6 +59,8 @@ private:
 
     unsigned int frames_;
     MoveStep state_;
+
+    bool animated_;
 };
 
 #endif // MOVEPROCESSOR_H

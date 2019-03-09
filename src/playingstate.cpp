@@ -138,7 +138,7 @@ void PlayingState::handle_input() {
     }
     for (auto p : MOVEMENT_KEYS) {
         if (glfwGetKey(window_, p.first) == GLFW_PRESS) {
-            move_processor_ = std::make_unique<MoveProcessor>(this, room_map, delta_frame_.get());
+            move_processor_ = std::make_unique<MoveProcessor>(this, room_map, delta_frame_.get(), true);
             // p.second == direction of movement
             if (!move_processor_->try_move(player_, p.second)) {
                 move_processor_.reset(nullptr);
@@ -154,7 +154,7 @@ void PlayingState::handle_input() {
         input_cooldown = MAX_COOLDOWN;
         return;
     } else if (glfwGetKey(window_, GLFW_KEY_C) == GLFW_PRESS) {
-        move_processor_ = std::make_unique<MoveProcessor>(this, room_map, delta_frame_.get());
+        move_processor_ = std::make_unique<MoveProcessor>(this, room_map, delta_frame_.get(), true);
         move_processor_->color_change(player_);
         // TODO: when there's color change animation, don't reset MP yet!
         input_cooldown = MAX_COOLDOWN;

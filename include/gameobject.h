@@ -4,6 +4,19 @@
 #include <vector>
 #include <memory>
 
+// Later we won't need this, but for now it's convenient for draw_force_indicators()
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma GCC diagnostic ignored "-Weffc++"
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wswitch-default"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wmissing-declarations"
+
+#include <glm/glm.hpp>
+
+#pragma GCC diagnostic pop
+
 #include "common_enums.h"
 #include "point.h"
 
@@ -40,7 +53,7 @@ public:
     void abstract_shift(Point3 dpos, DeltaFrame* delta_frame);
 
     virtual void draw(GraphicsManager*) = 0;
-    //void draw_force_indicators(GraphicsManager*, glm::mat4& model);
+    void draw_force_indicators(GraphicsManager*, glm::mat4& model);
 
     virtual void setup_on_put(RoomMap*);
     virtual void cleanup_on_take(RoomMap*);

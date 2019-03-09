@@ -76,9 +76,7 @@ void PushBlock::draw(GraphicsManager* gfx) {
     }
     gfx->set_tex(tex);
     gfx->draw_cube();
-    // TODO: once walls are a thing, make sure to turn this back on!
-    // Also, give walls a unique texture, maybe?
-    //draw_force_indicators(gfx, model);
+    draw_force_indicators(gfx, model);
     if (modifier_) {
         modifier()->draw(gfx, p);
     }

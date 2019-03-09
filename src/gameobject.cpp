@@ -173,26 +173,18 @@ FPoint3 GameObject::real_pos() {
     }
 }
 
-/*
 void GameObject::draw_force_indicators(GraphicsManager* gfx, glm::mat4& model) {
     gfx->set_tex(Texture::Blank);
     if (!pushable_) {
         gfx->set_color(COLORS[BLACK]);
-        gfx->set_model(glm::scale(model, glm::vec3(1.02, 0.6, 0.6)));
-        gfx->draw_cube();
-        gfx->set_model(glm::scale(model, glm::vec3(0.6, 1.02, 0.6)));
-        gfx->draw_cube();
-        gfx->set_model(glm::scale(model, glm::vec3(0.6, 0.6, 1.02)));
+        auto new_model = glm::translate(model, glm::vec3(0.0, -0.2, 0.0));
+        gfx->set_model(glm::scale(new_model, glm::vec3(1.1, .1, 1.1)));
         gfx->draw_cube();
     }
     if (!gravitable_) {
         gfx->set_color(COLORS[WHITE]);
-        gfx->set_model(glm::scale(model, glm::vec3(1.04, 0.4, 0.4)));
-        gfx->draw_cube();
-        gfx->set_model(glm::scale(model, glm::vec3(0.4, 1.04, 0.4)));
-        gfx->draw_cube();
-        gfx->set_model(glm::scale(model, glm::vec3(0.4, 0.4, 1.04)));
+        auto new_model = glm::translate(model, glm::vec3(0.0, 0.2, 0.0));
+        gfx->set_model(glm::scale(new_model, glm::vec3(1.1, .1, 1.1)));
         gfx->draw_cube();
     }
 }
-*/

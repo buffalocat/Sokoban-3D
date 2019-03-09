@@ -155,6 +155,7 @@ void SnakeBlock::draw(GraphicsManager* gfx) {
     }
     gfx->set_tex(tex);
     gfx->draw_cube();
+    draw_force_indicators(gfx, model);
     gfx->set_tex(Texture::Blank);
     for (auto link : links_) {
         FPoint3 q = link->real_pos();

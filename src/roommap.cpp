@@ -362,7 +362,7 @@ void RoomMap::set_initial_state(bool editor_mode) {
     if (editor_mode) {
         return;
     }
-    mp.perform_switch_checks();
+    mp.perform_switch_checks(true);
     mp.try_fall_step();
 }
 

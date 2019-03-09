@@ -58,10 +58,9 @@ bool Gate::can_set_state(bool state, RoomMap* room_map) {
 
 void Gate::apply_state_change(RoomMap* room_map, DeltaFrame* delta_frame, MoveProcessor* mp) {
     if (body_) {
+        mp->add_gate_transition(body_, state());
         if (state()) {
             room_map->put_loud(body_, delta_frame);
-        } else {
-            room_map->take_loud(body_, delta_frame);
         }
         GameObject* above = room_map->view(body_->pos_ + Point3{0,0,1});
         if (above && above->gravitable_) {

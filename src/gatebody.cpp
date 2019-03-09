@@ -5,16 +5,24 @@
 #include "gate.h"
 #include "mapfile.h"
 #include "graphicsmanager.h"
+#include "moveprocessor.h"
+
+#include "animation.h"
 
 #include "delta.h"
 
-GateBody::GateBody(Gate* gate, Point3 pos): PushBlock(pos, gate->color_, gate->pushable(), gate->gravitable(), Sticky::None), gate_ {}, gate_pos_ {} {
+GateBody::GateBody(Gate* gate, Point3 pos):
+PushBlock(pos, gate->color_, gate->pushable(), gate->gravitable(), Sticky::None),
+gate_ {}, gate_pos_ {}, transition_animation_ {} {
     set_gate(gate);
 }
 
 // For orphaned GateBodies
 GateBody::GateBody(Point3 pos, int color, bool pushable, bool gravitable):
-PushBlock(pos, color, pushable, gravitable, Sticky::None), gate_ {}, gate_pos_ {} {}
+PushBlock(pos, color, pushable, gravitable, Sticky::None),
+gate_ {}, gate_pos_ {}, transition_animation_ {} {}
+
+GateBody::GateBody(const GateBody& other): PushBlock(other), transition_animation_ {} {}
 
 GateBody::~GateBody() {}
 
@@ -66,10 +74,39 @@ void GateBody::collect_special_links(RoomMap*, Sticky, std::vector<GameObject*>&
     }
 }
 
+void GateBody::set_gate_transition_animation(bool state, MoveProcessor* mp) {
+    transition_animation_ = std::make_unique<GateTransitionAnimation>(state);
+    if (gate_ && state) {
+        if (PositionalAnimation* anim = gate_->parent_->animation_.get()) {
+            animation_ = anim->duplicate();
+            mp->add_to_moving_blocks(this);
+        }
+    }
+}
+
+// TODO: consider making this (and StateAnimation) available to all objects (if useful)
+bool GateBody::update_state_animation() {
+    if (transition_animation_ && transition_animation_->update()) {
+        transition_animation_.reset(nullptr);
+        return true;
+    }
+    return false;
+}
+
+void GateBody::reset_state_animation() {
+    transition_animation_.reset(nullptr);
+}
+
+bool GateBody::state_animation() {
+    return transition_animation_ != nullptr;
+}
+
+
 void GateBody::draw(GraphicsManager* gfx) {
     FPoint3 p {real_pos()};
-    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z, p.y));
-    model = glm::scale(model, glm::vec3(0.7f, 1.0f, 0.7f));
+    float height = transition_animation_ ? transition_animation_->height() : 1.0f;
+    glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z - (1.0 - height)/2, p.y));
+    model = glm::scale(model, glm::vec3(0.7f, height, 0.7f));
     gfx->set_tex(Texture::Edges);
     gfx->set_model(model);
     gfx->set_color(COLORS[color_]);

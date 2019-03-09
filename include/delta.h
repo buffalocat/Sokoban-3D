@@ -37,8 +37,12 @@ public:
     void push(std::unique_ptr<Delta>);
     bool trivial();
 
+    void reset_changed();
+    bool changed();
+
 private:
     std::vector<std::unique_ptr<Delta>> deltas_;
+    bool changed_;
 };
 
 
@@ -241,12 +245,13 @@ private:
 
 class ColorChangeDelta: public Delta {
 public:
-    ColorChangeDelta(Car* car);
+    ColorChangeDelta(Car* car, bool undo);
     ~ColorChangeDelta();
     void revert();
 
 private:
     Car* car_;
+    bool undo_;
 };
 
 class GatePosDelta: public Delta {

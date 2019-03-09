@@ -8,7 +8,7 @@
 #include "point.h"
 
 class ObjectModifier;
-class Animation;
+class PositionalAnimation;
 class DeltaFrame;
 class RoomMap;
 class GraphicsManager;
@@ -62,17 +62,12 @@ public:
 
     void reset_animation();
     void set_linear_animation(Point3);
-    void update_animation();
+    bool update_animation(); // Return whether the animation is done
     void shift_pos_from_animation();
     FPoint3 real_pos();
 
-protected:
-    GameObject(Point3 pos, int color, bool pushable, bool gravitable);
-
-// Data members
     std::unique_ptr<ObjectModifier> modifier_;
-    std::unique_ptr<Animation> animation_;
-public:
+    std::unique_ptr<PositionalAnimation> animation_;
     Component* comp_;
     Point3 pos_;
     int id_;
@@ -81,6 +76,9 @@ public:
     bool gravitable_;
 
     bool tangible_;
+
+protected:
+    GameObject(Point3 pos, int color, bool pushable, bool gravitable);
 };
 
 #endif // GAMEOBJECT_H

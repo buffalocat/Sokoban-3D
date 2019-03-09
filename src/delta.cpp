@@ -15,8 +15,7 @@
 
 Delta::~Delta() {}
 
-
-DeltaFrame::DeltaFrame(): deltas_ {} {}
+DeltaFrame::DeltaFrame(): deltas_ {}, changed_ {false} {}
 
 DeltaFrame::~DeltaFrame() {}
 
@@ -28,10 +27,19 @@ void DeltaFrame::revert() {
 
 void DeltaFrame::push(std::unique_ptr<Delta> delta) {
     deltas_.push_back(std::move(delta));
+    changed_ = true;
 }
 
 bool DeltaFrame::trivial() {
     return deltas_.empty();
+}
+
+void DeltaFrame::reset_changed() {
+    changed_ = false;
+}
+
+bool DeltaFrame::changed() {
+    return changed_;
 }
 
 
@@ -226,12 +234,12 @@ void RidingStateDelta::revert() {
 }
 
 
-ColorChangeDelta::ColorChangeDelta(Car* car): car_ {car} {}
+ColorChangeDelta::ColorChangeDelta(Car* car, bool undo): car_ {car}, undo_ {undo} {}
 
 ColorChangeDelta::~ColorChangeDelta() {}
 
 void ColorChangeDelta::revert() {
-    car_->cycle_color(true);
+    car_->cycle_color(undo_);
 }
 
 

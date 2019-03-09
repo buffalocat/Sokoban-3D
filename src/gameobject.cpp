@@ -144,10 +144,12 @@ void GameObject::set_linear_animation(Point3 d) {
     animation_ = std::make_unique<LinearAnimation>(d);
 }
 
-void GameObject::update_animation() {
+bool GameObject::update_animation() {
     if (animation_ && animation_->update()) {
         animation_.reset(nullptr);
+        return true;
     }
+    return false;
 }
 
 void GameObject::shift_pos_from_animation() {

@@ -33,6 +33,9 @@ const int DEFAULT_BOARD_HEIGHT = 13;
 
 // Must satisfy MAX_COOLDOWN < HORIZONTAL_MOVEMENT_FRAMES for smooth motion
 const int HORIZONTAL_MOVEMENT_FRAMES = 8;
+const int SWITCH_RESPONSE_FRAMES = 4;
+const float GATE_INTERPOLATION[] = {.96, .9, .8, .6, 0};
+const int COLOR_CHANGE_MOVEMENT_FRAMES = 4;
 const int FALL_MOVEMENT_FRAMES = 4;
 const int MAX_COOLDOWN = 7;
 

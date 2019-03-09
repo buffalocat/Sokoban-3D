@@ -1,9 +1,12 @@
 #include "moveprocessor.h"
 
+#include <algorithm>
+
 #include "common_constants.h"
 
 #include "gameobject.h"
 #include "player.h"
+#include "gatebody.h"
 #include "delta.h"
 #include "roommap.h"
 #include "door.h"
@@ -31,7 +34,7 @@ bool MoveProcessor::try_move(Player* player, Point3 dir) {
         return false;
     }
     state_ = MoveStep::Horizontal;
-    frames_ = HORIZONTAL_MOVEMENT_FRAMES;
+    frames_ = HORIZONTAL_MOVEMENT_FRAMES - SWITCH_RESPONSE_FRAMES;
     return true;
 }
 
@@ -61,10 +64,15 @@ bool MoveProcessor::update() {
     if (--frames_ == 0) {
         switch (state_) {
         case MoveStep::Horizontal:
-        case MoveStep::Fall:
+            // Even if no switch checks occur, the next frame chunk
+            // cannot be skipped - horizontal animation must finish.
+            perform_switch_checks(false);
+            break;
+        case MoveStep::PreFallSwitch:
         case MoveStep::ColorChange:
-            perform_switch_checks();
             try_fall_step();
+            // If nothing happens, skip the next forced wait.
+            perform_switch_checks(true);
             break;
         default:
             break;
@@ -73,12 +81,16 @@ bool MoveProcessor::update() {
     for (GameObject* block : moving_blocks_) {
         block->update_animation();
     }
+    update_gate_transitions();
     return frames_ == 0;
 }
 
 void MoveProcessor::abort() {
     for (GameObject* block : moving_blocks_) {
         block->reset_animation();
+    }
+    for (auto& p : gate_transitions_) {
+        p.first->reset_state_animation();
     }
 }
 
@@ -89,8 +101,8 @@ void MoveProcessor::color_change(Player* player) {
     }
     state_ = MoveStep::ColorChange;
     // TODO: consider renaming
-    frames_ = FALL_MOVEMENT_FRAMES;
-    delta_frame_->push(std::make_unique<ColorChangeDelta>(car));
+    frames_ = COLOR_CHANGE_MOVEMENT_FRAMES;
+    delta_frame_->push(std::make_unique<ColorChangeDelta>(car, true));
     fall_check_.push_back(car->parent_);
     for (Point3 d : DIRECTIONS) {
         if (GameObject* block = map_->view(car->shifted_pos(d))) {
@@ -102,11 +114,19 @@ void MoveProcessor::color_change(Player* player) {
 void MoveProcessor::try_fall_step() {
     moving_blocks_.clear();
     if (!fall_check_.empty()) {
-        if (FallStepProcessor(map_, delta_frame_, std::move(fall_check_)).run()) {
-            state_ = MoveStep::Fall;
-            frames_ = FALL_MOVEMENT_FRAMES;
-        }
+        FallStepProcessor(map_, delta_frame_, std::move(fall_check_)).run();
         fall_check_.clear();
+    }
+}
+
+void MoveProcessor::perform_switch_checks(bool skippable) {
+    delta_frame_->reset_changed();
+    map_->alert_activated_listeners(delta_frame_, this);
+    map_->reset_local_state();
+    map_->check_signalers(delta_frame_, this);
+    if (!skippable || delta_frame_->changed()) {
+        state_ = MoveStep::PreFallSwitch;
+        frames_ = FALL_MOVEMENT_FRAMES;
     }
 }
 
@@ -138,12 +158,31 @@ void MoveProcessor::try_door_move(Door* door) {
     }
 }
 
-void MoveProcessor::perform_switch_checks() {
-    map_->alert_activated_listeners(delta_frame_, this);
-    map_->reset_local_state();
-    map_->check_signalers(delta_frame_, this);
+// NOTE: could be dangerous if repeated calls are made
+// Either make sure this doesn't happen, or check for presence here.
+void MoveProcessor::add_to_moving_blocks(GameObject* obj) {
+    moving_blocks_.push_back(obj);
 }
 
 void MoveProcessor::add_to_fall_check(GameObject* obj) {
     fall_check_.push_back(obj);
+}
+
+// TODO: consider making this more general
+// state = "is the gate_body extending?"
+void MoveProcessor::add_gate_transition(GateBody* gate_body, bool state) {
+    gate_body->set_gate_transition_animation(state, this);
+    gate_transitions_.push_back(std::make_pair(gate_body, state));
+}
+
+void MoveProcessor::update_gate_transitions() {
+    for (auto& p : gate_transitions_) {
+        // A retracting object disappears at this point
+        if (p.first->update_state_animation() && !p.second) {
+            map_->take_loud(p.first, delta_frame_);
+        }
+    }
+    gate_transitions_.erase(std::remove_if(gate_transitions_.begin(), gate_transitions_.end(),
+                                      [](auto& p){return !p.first->state_animation();}),
+                                      gate_transitions_.end());
 }

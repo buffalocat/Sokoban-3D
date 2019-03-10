@@ -7,7 +7,7 @@
 #include "roommap.h"
 #include "moveprocessor.h"
 
-MapLocation::MapLocation(Point3 p, const std::string& room_name): pos {p}, name {room_name} {}
+MapLocation::MapLocation(Point3_S16 p, const std::string& room_name): pos {p}, name {room_name} {}
 
 Door::Door(GameObject* parent, bool def, bool active): Switchable(parent, def, active, false), dest_ {} {}
 
@@ -23,7 +23,7 @@ ModCode Door::mod_code() {
     return ModCode::Door;
 }
 
-void Door::set_dest(Point3 pos, const std::string& name) {
+void Door::set_dest(Point3_S16 pos, const std::string& name) {
     dest_ = std::make_unique<MapLocation>(pos,name);
 }
 
@@ -71,7 +71,7 @@ void Door::cleanup_on_take(RoomMap* room_map) {
 
 void Door::draw(GraphicsManager* gfx, FPoint3 p) {
     glm::mat4 model = glm::translate(glm::mat4(), glm::vec3(p.x, p.z + 0.5f, p.y));
-    model = glm::scale(model, glm::vec3(1, 0.1f, 1));
+    model = glm::scale(model, glm::vec3(0.9f, 0.1f, 0.9f));
     gfx->set_model(model);
     if (dest_ && state()) {
         gfx->set_color(COLORS[BLUE]);

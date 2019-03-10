@@ -279,7 +279,8 @@ void Room::read_snake_link(MapFileI& file) {
 
 void Room::read_door_dest(MapFileI& file) {
     Point3 pos {file.read_point3()};
-    Point3 exit_pos {file.read_point3()};
+    Point3_S16 exit_pos;
+    file >> exit_pos;
     auto door = static_cast<Door*>(map_->view(pos)->modifier());
     door->set_dest(exit_pos, file.read_str());
 }

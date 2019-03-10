@@ -19,6 +19,7 @@ struct Point3_S16 {
     int z;
     Point3_S16(): x {0}, y {0}, z {0} {}
     Point3_S16(int ax, int ay, int az): x {ax}, y {ay}, z {az} {}
+    Point3_S16& operator+=(const Point3& p);
     explicit Point3_S16(const Point3&);
 };
 

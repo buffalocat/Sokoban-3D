@@ -198,10 +198,11 @@ bool PlayingState::can_use_door(Door* door, std::vector<GameObject*>& objs, bool
     Room* dest_room = loaded_rooms_[dest->name].get();
     RoomMap* cur_map = room_->map();
     RoomMap* dest_map = dest_room->map();
+    Point3 dest_pos_local = Point3{dest->pos} + Point3{dest_room->offset_pos_};
     *same_room = (cur_map == dest_map);
     for (GameObject* obj : objs) {
         Point3 offset = obj->pos_ - door->pos();
-        if (dest_map->view(dest->pos + offset)) {
+        if (dest_map->view(dest_pos_local + offset)) {
             return false;
         }
     }

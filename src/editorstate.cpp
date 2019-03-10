@@ -150,7 +150,6 @@ bool EditorState::load_room(const std::string& name, bool from_main) {
     room->map()->set_initial_state(true);
     room->set_cam_pos(start_pos);
     rooms_[name] = std::make_unique<EditorRoom>(std::move(room), start_pos);
-    set_active_room(name);
     return true;
 }
 
@@ -169,6 +168,7 @@ EditorRoom* EditorState::reload(EditorRoom* eroom) {
     std::string name = eroom->name();
     save_room(eroom, false);
     load_room(name, false);
+    set_active_room(name);
     return active_room_;
 }
 

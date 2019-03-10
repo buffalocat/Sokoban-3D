@@ -38,9 +38,12 @@ private:
     std::string name_;
     std::unique_ptr<RoomMap> map_;
     std::unique_ptr<Camera> camera_;
+
+public:
     Point3_S16 offset_pos_;
     // This is used exclusively for making sure doors between rooms stay accurate
 
+private:
     void read_objects(MapFileI& file);
     void read_camera_rects(MapFileI& file);
     void read_snake_link(MapFileI& file);

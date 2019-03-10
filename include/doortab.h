@@ -20,7 +20,7 @@ public:
 
 private:
     Door* entrance_;
-    std::string exit_name_;
+    EditorRoom* exit_room_;
     Point3 exit_pos_;
     Door* exit_;
 };

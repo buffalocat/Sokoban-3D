@@ -36,4 +36,4 @@ maps/temp/*
 !maps/temp/.keep
 
 # ImGui ini
-imgui.ini
+*.ini

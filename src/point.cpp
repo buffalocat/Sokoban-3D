@@ -8,6 +8,10 @@ Point3& Point3::operator+=(const Point3& p) {
     return *this = *this + p;
 }
 
+Point3_S16& Point3_S16::operator+=(const Point3& p) {
+    return *this = {x + p.x, y + p.y, z + p.z};
+}
+
 Point3& Point3::operator-=(const Point3& p) {
     return *this = *this - p;
 }

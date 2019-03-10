@@ -40,7 +40,7 @@ void RoomMap::print_listeners() {
 RoomMap::~RoomMap() {}
 
 bool RoomMap::valid(Point3 pos) {
-    return (0 <= pos.x) && (pos.x < width_) && (0 <= pos.y) && (pos.y < height_) && (0 <= pos.z) && ((unsigned int)(pos.z) < layers_.size());
+    return (0 <= pos.x) && (pos.x < width_) && (0 <= pos.y) && (pos.y < height_) && (0 <= pos.z) && (pos.z < depth_);
 }
 
 void RoomMap::push_full() {
@@ -367,6 +367,7 @@ void RoomMap::extend_by(Point3 d) {
         for (int i = layers_.size() - 1; i >= layers_.size() + d.z; --i) {
             layers_[i]->apply_to_rect(MapRect{0,0,width_,height_}, destroyer);
         }
+        layers_.erase(layers_.begin(), layers_.begin() + d.z);
     }
     if (d.y < 0) {
         for (auto& layer : layers_) {

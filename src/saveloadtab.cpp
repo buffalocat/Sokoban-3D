@@ -21,7 +21,9 @@ void SaveLoadTab::main_loop(EditorRoom* eroom) {
     ImGui::InputText(".map##SAVELOAD", map_name_input, IM_ARRAYSIZE(map_name_input));
 
     if (ImGui::Button("Load Map##SAVELOAD")) {
-        if (!editor_->load_room(map_name_input, true)) {
+        if (editor_->load_room(map_name_input, true)) {
+            editor_->set_active_room(map_name_input);
+        } else {
             std::cout << "Failed to load room." << std::endl;
         }
     }
@@ -118,6 +120,7 @@ void SaveLoadTab::main_loop(EditorRoom* eroom) {
         shift_height = 0;
         shift_depth = 0;
         eroom->start_pos += dpos;
+        eroom->room->offset_pos_ += dpos;
         if (!eroom->map()->valid(eroom->start_pos)) {
             eroom->start_pos = {0,0,0};
         }

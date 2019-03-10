@@ -62,6 +62,10 @@ public:
     void draw(GraphicsManager*, float angle);
     void draw_layer(GraphicsManager*, int z);
 
+    void shift_all_objects(Point3 d);
+    void extend_by(Point3 d);
+    void shift_by(Point3 d);
+
     void set_initial_state(bool editor_mode);
     void reset_local_state();
 

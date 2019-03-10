@@ -112,7 +112,7 @@ EditorRoom* EditorState::get_room(const std::string& name) {
     return nullptr;
 }
 
-void EditorState::new_room(const std::string& name, int w, int h) {
+void EditorState::new_room(const std::string& name, int width, int height, int depth) {
     if (!name.size()) {
         std::cout << "Room name must be non-empty!" << std::endl;
         return;
@@ -122,15 +122,20 @@ void EditorState::new_room(const std::string& name, int w, int h) {
         return;
     }
     auto room = std::make_unique<Room>(name);
-    room->initialize(*objs_, w, h, 16);
+    room->initialize(*objs_, width, height, depth);
     room->map()->create(std::make_unique<Player>(Point3 {0,0,2}, RidingState::Free), nullptr);
     room->set_cam_pos({0,0,2});
     rooms_[name] = std::make_unique<EditorRoom>(std::move(room), Point3 {0,0,2});
     set_active_room(name);
 }
 
-bool EditorState::load_room(const std::string& name) {
-    std::string path = MAPS_MAIN + name + ".map";
+bool EditorState::load_room(const std::string& name, bool from_main) {
+    std::string path;
+    if (from_main) {
+        path = MAPS_MAIN + name + ".map";
+    } else {
+        path = MAPS_TEMP + name + ".map";
+    }
     if (access(path.c_str(), F_OK) == -1) {
         return false;
     }
@@ -158,6 +163,13 @@ void EditorState::save_room(EditorRoom* eroom, bool commit) {
     }
     MapFileO file{path};
     eroom->room->write_to_file(file, eroom->start_pos);
+}
+
+EditorRoom* EditorState::reload(EditorRoom* eroom) {
+    std::string name = eroom->name();
+    save_room(eroom, false);
+    load_room(name, false);
+    return active_room_;
 }
 
 void EditorState::unload_current_room() {

@@ -63,6 +63,13 @@ Point3 GameObject::shifted_pos(Point3 d) {
     return pos_ + d;
 }
 
+void GameObject::shift_internal_pos(Point3 d) {
+    pos_ += d;
+    if (modifier_) {
+        modifier_->shift_internal_pos(d);
+    }
+}
+
 void GameObject::setup_on_put(RoomMap* room_map) {
     if (modifier_) {
         modifier_->setup_on_put(room_map);

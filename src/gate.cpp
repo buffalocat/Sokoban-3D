@@ -27,7 +27,7 @@ void Gate::serialize(MapFileO& file) {
     bool body_alive = (body_ != nullptr);
     file << color_ << default_ << active_ << waiting_ << body_alive;
     if (body_alive) {
-        file << Point3_S16{body_->pos_};
+        file << Point3_S16{body_->pos_ - pos()};
     }
 }
 
@@ -39,11 +39,17 @@ void Gate::deserialize(MapFileI& file, RoomMap* room_map, GameObject* parent) {
     if (b[4]) {
         Point3_S16 body_pos {};
         file >> body_pos;
-        auto gate_body_unique = std::make_unique<GateBody>(gate.get(), Point3{body_pos});
+        auto gate_body_unique = std::make_unique<GateBody>(gate.get(), Point3{body_pos} + parent->pos_);
         gate->body_ = gate_body_unique.get();
         room_map->create_abstract(std::move(gate_body_unique), nullptr);
     }
     parent->set_modifier(std::move(gate));
+}
+
+void Gate::shift_internal_pos(Point3 d) {
+    if ((body_ != nullptr) && !state()) {
+        body_->shift_internal_pos(d);
+    }
 }
 
 void Gate::collect_sticky_links(RoomMap*, Sticky, std::vector<GameObject*>& to_check) {

@@ -35,6 +35,7 @@ public:
 
     Point3 pos();
     Point3 shifted_pos(Point3 d);
+    virtual void shift_internal_pos(Point3 d);
     Point3 pos_above(); // A convenience function often needed by Modifiers
     int color();
     bool pushable();

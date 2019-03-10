@@ -44,12 +44,12 @@ bool RoomMap::valid(Point3 pos) {
 }
 
 void RoomMap::push_full() {
-    layers_.push_back(std::make_unique<FullMapLayer>(this, width_, height_, depth_));
+    layers_.push_back(std::make_unique<FullMapLayer>(this, width_, height_));
     ++depth_;
 }
 
 void RoomMap::push_sparse() {
-    layers_.push_back(std::make_unique<SparseMapLayer>(this, depth_));
+    layers_.push_back(std::make_unique<SparseMapLayer>(this));
     ++depth_;
 }
 
@@ -325,6 +325,101 @@ void RoomMap::draw(GraphicsManager* gfx, float angle) {
 void RoomMap::draw_layer(GraphicsManager* gfx, int z) {
     GameObjIDFunc drawer = ObjectDrawer{obj_array_, gfx};
     layers_[z].get()->apply_to_rect(MapRect{0,0,width_,height_}, drawer);
+}
+
+struct ObjectShifter {
+    void operator()(int);
+
+    GameObjectArray& obj_array;
+    RoomMap* room_map;
+    Point3 dpos;
+};
+
+void ObjectShifter::operator()(int id) {
+    if (id > GLOBAL_WALL_ID) {
+        obj_array[id]->shift_internal_pos(dpos);
+    }
+}
+
+void RoomMap::shift_all_objects(Point3 d) {
+    GameObjIDFunc shifter = ObjectShifter{obj_array_, this, d};
+    for (auto& layer : layers_) {
+        layer->apply_to_rect(MapRect{0,0,width_,height_}, shifter);
+    }
+}
+
+struct ObjectDestroyer {
+    void operator()(int);
+
+    GameObjectArray& obj_array;
+    RoomMap* room_map;
+};
+
+void ObjectDestroyer::operator()(int id) {
+    if (id > GLOBAL_WALL_ID) {
+        room_map->destroy(obj_array[id], nullptr);
+    }
+}
+
+void RoomMap::extend_by(Point3 d) {
+    GameObjIDFunc destroyer = ObjectDestroyer{obj_array_, this};
+    if (d.z < 0) {
+        for (int i = layers_.size() - 1; i >= layers_.size() - d.z; --i) {
+            layers_[i]->apply_to_rect(MapRect{0,0,width_,height_}, destroyer);
+        }
+    }
+    if (d.y < 0) {
+        for (auto& layer : layers_) {
+            layer->apply_to_rect(MapRect{0, height_ + d.y, width_, height_}, destroyer);
+        }
+    }
+    if (d.x < 0) {
+        for (auto& layer : layers_) {
+            layer->apply_to_rect(MapRect{width_ + d.x, 0, width_, height_}, destroyer);
+        }
+    }
+    width_ += d.x;
+    height_ += d.y;
+    depth_ += d.z;
+    for (auto& layer : layers_) {
+        layer->extend_by(d.x, d.y);
+    }
+    for (int i = 0; i < d.z; ++i) {
+        // Don't use push_full because we're tracking the depth manually!
+        layers_.insert(layers_.end(), std::make_unique<FullMapLayer>(this, width_, height_));
+    }
+    shift_all_objects(d);
+}
+
+void RoomMap::shift_by(Point3 d) {
+    GameObjIDFunc destroyer = ObjectDestroyer{obj_array_, this};
+    // First clean up objects if necessary, then actually shift the map
+    if (d.z < 0) {
+        for (int i = 0; i < -d.z; ++i) {
+            layers_[i]->apply_to_rect(MapRect{0,0,width_,height_}, destroyer);
+        }
+        layers_.erase(layers_.begin(), layers_.begin() - d.z);
+    }
+    if (d.y < 0) {
+        for (auto& layer : layers_) {
+            layer->apply_to_rect(MapRect{0,0,width_,-d.y}, destroyer);
+        }
+    }
+    if (d.x < 0) {
+        for (auto& layer : layers_) {
+            layer->apply_to_rect(MapRect{0,0,-d.x,height_}, destroyer);
+        }
+    }
+    width_ += d.x;
+    height_ += d.y;
+    depth_ += d.z;
+    for (auto& layer : layers_) {
+        layer->shift_by(d.x, d.y);
+    }
+    for (int i = 0; i < d.z; ++i) {
+        layers_.insert(layers_.begin(), std::make_unique<FullMapLayer>(this, width_, height_));
+    }
+    shift_all_objects(d);
 }
 
 struct RoomStateInitializer {

@@ -24,6 +24,8 @@ Point3 ObjectModifier::shifted_pos(Point3 d) {
     return parent_->pos_ + d;
 }
 
+void ObjectModifier::shift_internal_pos(Point3 d) {}
+
 Point3 ObjectModifier::pos_above() {
     return parent_->pos_ + Point3{0,0,1};
 }

@@ -31,6 +31,9 @@ public:
     void draw(GraphicsManager*, GameObject* target, bool ortho, bool one_layer);
     void update_view(GraphicsManager*, Point3 vpos, FPoint3 rpos, bool ortho);
 
+    void extend_by(Point3 d);
+    void shift_by(Point3 d);
+
 private:
     std::string name_;
     std::unique_ptr<RoomMap> map_;

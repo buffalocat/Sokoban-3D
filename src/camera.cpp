@@ -7,7 +7,7 @@
 #include "mapfile.h"
 
 const float DEFAULT_CAM_RADIUS = 12.0;
-const float DEFAULT_CAM_TILT = 0.3;
+const float DEFAULT_CAM_TILT = 0.5;
 const float DEFAULT_CAM_ROTATION = 0.0;
 
 

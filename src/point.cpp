@@ -12,6 +12,10 @@ Point3& Point3::operator-=(const Point3& p) {
     return *this = *this - p;
 }
 
+Point2 operator+(const Point2& p, const Point2& q) {
+    return {p.x + q.x, p.y + q.y};
+}
+
 Point3 operator+(const Point3& p, const Point3& q) {
     return {p.x + q.x, p.y + q.y, p.z + q.z};
 }

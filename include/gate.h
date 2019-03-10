@@ -18,6 +18,8 @@ public:
     void serialize(MapFileO& file);
     static void deserialize(MapFileI&, RoomMap*, GameObject*);
 
+    void shift_internal_pos(Point3 d);
+
     void map_callback(RoomMap*, DeltaFrame*, MoveProcessor*);
     void collect_sticky_links(RoomMap*, Sticky, std::vector<GameObject*>&);
 

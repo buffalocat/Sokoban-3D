@@ -97,6 +97,15 @@ void Room::update_view(GraphicsManager* gfx, Point3 vpos, FPoint3 rpos, bool ort
     gfx->set_projection(projection);
 }
 
+void Room::extend_by(Point3 d) {
+    map_->extend_by(d);
+}
+
+void Room::shift_by(Point3 d) {
+    map_->shift_by(d);
+    // TODO: shift camera rects also?
+}
+
 void Room::write_to_file(MapFileO& file, Point3 start_pos) {
     file << MapCode::Dimensions;
     file << map_->width_;

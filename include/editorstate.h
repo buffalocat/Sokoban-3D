@@ -53,9 +53,10 @@ public:
     int get_room_names(const char* room_names[]);
     EditorRoom* get_room(const std::string& name);
 
-    void new_room(const std::string& name, int w, int h);
-    bool load_room(const std::string& name);
+    void new_room(const std::string& name, int width, int height, int depth);
+    bool load_room(const std::string& name, bool from_main);
     void save_room(EditorRoom* eroom, bool commit);
+    EditorRoom* reload(EditorRoom* eroom);
     void unload_current_room();
     void commit_current_room();
     void commit_all();

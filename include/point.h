@@ -7,6 +7,7 @@
 struct Point2 {
     int x;
     int y;
+    Point2& operator+=(const Point2& p);
 };
 
 struct Point3;
@@ -41,6 +42,8 @@ struct FPoint3 {
     FPoint3(float ax, float ay, float az): x {ax}, y {ay}, z {az} {}
     FPoint3(const Point3& p): x {static_cast<float>(p.x)}, y {static_cast<float>(p.y)}, z {static_cast<float>(p.z)} {}
 };
+
+Point2 operator+(const Point2& p, const Point2& q);
 
 Point3 operator+(const Point3& p, const Point3& q);
 Point3 operator-(const Point3& p, const Point3& q);

@@ -12,24 +12,13 @@ bool MapRect::contains(Point2 p) {
 }
 
 
-MapLayer::MapLayer(RoomMap* room_map, int z): parent_map_ {room_map}, z_ {z} {}
+MapLayer::MapLayer(RoomMap* room_map): parent_map_ {room_map} {}
 
 MapLayer::~MapLayer() {}
 
-/*
-template <typename IDFunc>
-MapLayer::apply_to_rect(MapRect rect, IDFunc f) {
-    switch (type()) {
-    case MapCode::FullLayer:
-        static_cast<FullMapLayer>(this)->apply_to_rect(rect, f);
-    case MapCode::SparseLayer:
-        static_cast<SparseMapLayer>(this)->apply_to_rect(rect, f);
-    }
-}
-*/
 
-FullMapLayer::FullMapLayer(RoomMap* room_map, int width, int height, int z):
-        MapLayer(room_map, z), map_ {}, width_ {width}, height_ {height} {
+FullMapLayer::FullMapLayer(RoomMap* room_map, int width, int height):
+        MapLayer(room_map), map_ {}, width_ {width}, height_ {height} {
     for (int i = 0; i != width; ++i) {
         map_.push_back(std::vector<int>(height, 0));
     }
@@ -55,7 +44,46 @@ void FullMapLayer::apply_to_rect(MapRect rect, GameObjIDFunc& f) {
     }
 }
 
-SparseMapLayer::SparseMapLayer(RoomMap* room_map, int z): MapLayer(room_map, z), map_ {} {}
+void FullMapLayer::shift_by(int dx, int dy) {
+    width_ += dx;
+    height_ += dy;
+    if (dy < 0) {
+        for (auto& row : map_) {
+            row.erase(row.begin(), row.begin() - dy);
+        }
+    } else if (dy > 0) {
+        for (auto& row : map_) {
+            row.insert(row.begin(), dy, 0);
+        }
+    }
+    if (dx < 0) {
+        map_.erase(map_.begin(), map_.begin() - dx);
+    } else {
+        map_.insert(map_.begin(), dx, std::vector<int>(height_,0));
+    }
+}
+
+void FullMapLayer::extend_by(int dx, int dy) {
+    width_ += dx;
+    height_ += dy;
+    if (dy < 0) {
+        for (auto& row : map_) {
+            row.erase(row.end() + dy, row.end());
+        }
+    } else if (dy > 0) {
+        for (auto& row : map_) {
+            row.insert(row.end(), dy, 0);
+        }
+    }
+    if (dx < 0) {
+        map_.erase(map_.end() + dx, map_.end());
+    } else {
+        map_.insert(map_.end(), dx, std::vector<int>(height_,0));
+    }
+}
+
+
+SparseMapLayer::SparseMapLayer(RoomMap* room_map): MapLayer(room_map), map_ {} {}
 
 SparseMapLayer::~SparseMapLayer() {}
 
@@ -75,3 +103,14 @@ void SparseMapLayer::apply_to_rect(MapRect rect, GameObjIDFunc& f) {
         }
     }
 }
+
+void SparseMapLayer::shift_by(int dx, int dy) {
+    Point2 dpos = {dx,dy};
+    std::unordered_map<Point2, int, Point2Hash> new_map {};
+    for (auto& p : map_) {
+        new_map[p.first + dpos] = p.second;
+    }
+    map_ = std::move(new_map);
+}
+
+void SparseMapLayer::extend_by(int dx, int dy) {}

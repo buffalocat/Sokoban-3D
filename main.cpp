@@ -53,6 +53,9 @@ int main(void) {
     // for when we want to explore ImGui features
     bool show_demo_window = false;
 
+    ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(550, 680), ImGuiCond_FirstUseEver);
+
     glfwSwapInterval(0);
 
     while(!glfwWindowShouldClose(window)) {
@@ -74,6 +77,7 @@ int main(void) {
         if (!current_state) {
             break;
         }
+
         current_state->check_for_quit();
         current_state->main_loop();
 

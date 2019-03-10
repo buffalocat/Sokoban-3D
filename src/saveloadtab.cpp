@@ -93,6 +93,9 @@ void SaveLoadTab::main_loop(EditorRoom* eroom) {
         extend_width = 0;
         extend_height = 0;
         extend_depth = 0;
+        if (!eroom->map()->valid(eroom->start_pos)) {
+            eroom->start_pos = {0,0,0};
+        }
         eroom = editor_->reload(eroom);
     }
 
@@ -115,6 +118,9 @@ void SaveLoadTab::main_loop(EditorRoom* eroom) {
         shift_height = 0;
         shift_depth = 0;
         eroom->start_pos += dpos;
+        if (!eroom->map()->valid(eroom->start_pos)) {
+            eroom->start_pos = {0,0,0};
+        }
         eroom = editor_->reload(eroom);
     }
 }

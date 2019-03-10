@@ -5,7 +5,7 @@
 		<Option title="Sokoban-3D" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="EditorTabs\;MoveProcessing\;ObjectModifiers\;GameObjects\;GameStates\;" />
+		<Option virtualFolders="Constants\;EditorTabs\;MoveProcessing\;ObjectModifiers\;GameObjects\;GameStates\;" />
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/Debug/Sokoban-3D" prefix_auto="1" extension_auto="1" />
@@ -77,10 +77,16 @@
 		<Unit filename="include/camera.h" />
 		<Unit filename="include/car.h" />
 		<Unit filename="include/color_constants.cpp" />
-		<Unit filename="include/color_constants.h" />
+		<Unit filename="include/color_constants.h">
+			<Option virtualFolder="Constants/" />
+		</Unit>
 		<Unit filename="include/colorcycle.h" />
-		<Unit filename="include/common_constants.h" />
-		<Unit filename="include/common_enums.h" />
+		<Unit filename="include/common_constants.h">
+			<Option virtualFolder="Constants/" />
+		</Unit>
+		<Unit filename="include/common_enums.h">
+			<Option virtualFolder="Constants/" />
+		</Unit>
 		<Unit filename="include/component.h" />
 		<Unit filename="include/dear/imgui.cpp" />
 		<Unit filename="include/dear/imgui_demo.cpp" />
@@ -124,7 +130,9 @@
 		<Unit filename="include/snakeblock.h" />
 		<Unit filename="include/snaketab.h" />
 		<Unit filename="include/stb_image.h" />
-		<Unit filename="include/string_constants.h" />
+		<Unit filename="include/string_constants.h">
+			<Option virtualFolder="Constants/" />
+		</Unit>
 		<Unit filename="include/switch.h" />
 		<Unit filename="include/switchable.h" />
 		<Unit filename="include/switchtab.h" />
